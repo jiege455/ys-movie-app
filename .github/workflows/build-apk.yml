@@ -1,0 +1,54 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Get Flutter dependencies
+      working-directory: ./ys_movie_app
+      run: flutter pub get
+    
+    - name: Build APK
+      working-directory: ./ys_movie_app
+      run: flutter build apk --release --dart-define=API_BASE_URL=https://ys.ddgg888.my/api.php
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: ys_movie_app/build/app/outputs/flutter-apk/app-release.apk
+    
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ys_movie_app/build/app/outputs/flutter-apk/app-release.apk
+        tag_name: v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
+        body: |
+          狐狸影视 APK 自动构建
+          开发者：杰哥网络科技 (qq: 2711793818)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
