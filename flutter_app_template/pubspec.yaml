@@ -1,0 +1,22 @@
+name: ys_movie_app
+description: Flutter 影视App，接入 MacCMS10 后端
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.6.0
+  provider: ^6.1.2
+  better_player: ^0.0.83
+  video_player: ^2.9.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
