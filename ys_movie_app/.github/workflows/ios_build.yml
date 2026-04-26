@@ -1,0 +1,33 @@
+# 文件名：ios_build.yml
+# 作者：杰哥（by：杰哥 / qq：2711793818）
+# 创建日期：2025-12-28
+# 作用：在 GitHub Actions 的 macOS Runner 上构建未签名的 iOS 产物（.app 与 .xcarchive）
+# 解释：用于无 Mac 的场景，云端编译，线下用你自己的证书签名导出 IPA
+name: ios-release-build
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+      - run: flutter --version
+      - run: flutter pub get
+      - run: sudo gem install cocoapods || true
+      - run: cd ios && pod install --repo-update
+      - run: flutter build ios --release --no-codesign
+      - run: xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release -archivePath build/Runner.xcarchive clean archive CODE_SIGNING_ALLOWED=NO
+      - run: mkdir Payload
+      - run: mv build/ios/iphoneos/Runner.app Payload/
+      - run: zip -r release.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-ipa
+          path: release.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runner-xcarchive
+          path: build/Runner.xcarchive

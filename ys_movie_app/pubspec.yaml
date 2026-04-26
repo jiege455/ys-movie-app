@@ -1,0 +1,55 @@
+name: ys_movie_app
+description: Flutter 影视App，接入 MacCMS10 后端
+publish_to: 'none'
+version: 0.0.1+30
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  dio: ^5.3.3
+  shared_preferences: ^2.2.2
+  cached_network_image: ^3.3.0
+  provider: ^6.0.5
+  flutter_staggered_grid_view: ^0.7.0
+  carousel_slider: ^4.2.1
+  chewie: ^1.8.1
+  video_player: ^2.8.1
+  wakelock_plus: ^1.1.4
+  package_info_plus: ^8.0.0
+  url_launcher: ^6.2.1
+  path_provider: ^2.1.1
+  permission_handler: ^11.0.1
+  fluttertoast: ^8.2.9
+  percent_indicator: ^4.2.3
+  pull_to_refresh: ^2.0.0
+  visibility_detector: ^0.4.0+2
+  simple_pip_mode: ^1.1.0
+  flutter_volume_controller: ^1.3.4
+  screen_brightness: ^1.0.1
+  flutter_hls_parser: ^2.0.1
+  battery_plus: ^5.0.3
+  webview_flutter: ^4.4.2
+  dio_cookie_manager: ^2.0.0
+  cookie_jar: ^3.0.1
+  connectivity_plus: ^6.0.3
+  flutter_widget_from_html_core: ^0.15.2
+  share_plus: ^7.2.2
+  image_picker: ^1.1.2
+  dlna_dart: ^0.1.0
+  flutter_native_splash: ^2.4.7
+  better_player:
+    path: ./plugins/better_player
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
