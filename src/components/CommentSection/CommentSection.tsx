@@ -5,8 +5,7 @@ import type { Comment } from '../../api'
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 评论组件
- * 展示视频评论列表，支持发送评论
- */
+ * 展示视频评论列表，支持发送评�? */
 
 interface CommentSectionProps {
   vodId: string
@@ -44,7 +43,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
       setNewComment('')
       loadComments()
     } else {
-      alert('评论发送失败，请稍后重试')
+      alert('评论发送失败，请稍后重�?)
     }
     setSubmitting(false)
   }
@@ -53,14 +52,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
     <div className="bg-white rounded-lg shadow-sm p-4 mt-4">
       <h3 className="text-lg font-bold text-gray-800 mb-4">评论 ({comments.length})</h3>
 
-      {/* 评论输入框 */}
+      {/* 评论输入�?*/}
       {checkLoggedIn() ? (
         <form onSubmit={handleSubmit} className="mb-4">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="写下你的评论..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
             rows={3}
             maxLength={200}
           />
@@ -69,27 +68,27 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
             <button
               type="submit"
               disabled={submitting || !newComment.trim()}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-1.5 rounded-lg transition-colors text-sm"
+              className="bg-sky-500 hover:bg-sky-600 disabled:bg-gray-400 text-white px-4 py-1.5 rounded-lg transition-colors text-sm"
             >
-              {submitting ? '发送中...' : '发送评论'}
+              {submitting ? '发送中...' : '发送评�?}
             </button>
           </div>
         </form>
       ) : (
         <div className="bg-gray-50 rounded-lg p-4 mb-4 text-center">
-          <p className="text-gray-500 text-sm">登录后才能发表评论</p>
+          <p className="text-gray-500 text-sm">登录后才能发表评�?/p>
         </div>
       )}
 
       {/* 评论列表 */}
       {loading ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500"></div>
         </div>
       ) : (
         <div className="space-y-3">
           {comments.length === 0 ? (
-            <p className="text-gray-500 text-center py-4 text-sm">暂无评论，快来抢沙发吧</p>
+            <p className="text-gray-500 text-center py-4 text-sm">暂无评论，快来抢沙发�?/p>
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="border-b border-gray-100 pb-3 last:border-0">
