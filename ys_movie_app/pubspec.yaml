@@ -39,7 +39,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.15.2
   share_plus: ^7.2.2
   image_picker: ^1.1.2
-  dlna_dart: ^0.1.0
+  dlna_dart: ^0.0.8
   flutter_native_splash: ^2.4.0
   better_player:
     path: ./plugins/better_player
