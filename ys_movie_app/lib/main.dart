@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.transparent, // 移除 M3 的粉色表面色调
         ),
-        dialogTheme: const DialogThemeData(
+        dialogTheme: const DialogTheme(
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
         ),
@@ -87,7 +87,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Color(0xFF15202B),
           surfaceTintColor: Colors.transparent,
         ),
-        dialogTheme: const DialogThemeData(
+        dialogTheme: const DialogTheme(
           backgroundColor: Color(0xFF15202B),
           surfaceTintColor: Colors.transparent,
         ),
