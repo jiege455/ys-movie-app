@@ -4,6 +4,7 @@ import { Carousel } from '../../components/Carousel/Carousel'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getHotMovies, getBannerMovies } from '../../api'
 import { useMovieStore } from '../../store/movieStore'
+import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 文件名: Home.tsx
@@ -19,6 +20,7 @@ import { useMovieStore } from '../../store/movieStore'
 export const Home: React.FC = () => {
   const navigate = useNavigate()
   const { movies, setMovies, loading, setLoading } = useMovieStore()
+  const { isDark } = useTheme()
   // 首页轮播数据类型
   type BannerMovie = {
     id: string
@@ -95,16 +97,16 @@ export const Home: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
       {/* 顶部搜索（移动端样式） */}
-      <div className="px-4 pt-4 pb-2 sticky top-0 bg-white z-10">
+      <div className={`px-4 pt-4 pb-2 sticky top-0 z-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
             type="text"
             placeholder="搜影视、演员..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 pr-4 bg-gray-100 rounded-full focus:outline-none"
+            className={`w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none ${isDark ? 'bg-gray-800 text-white placeholder-gray-400' : 'bg-gray-100'}`}
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +134,7 @@ export const Home: React.FC = () => {
         {/* 轮播图区域 */}
         {hotMovies.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">热门推荐</h2>
+            <h2 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>热门推荐</h2>
             <Carousel
               movies={hotMovies}
               onMovieClick={handleMovieClick}
@@ -145,7 +147,7 @@ export const Home: React.FC = () => {
         {/* 视频列表 */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">热播精选</h2>
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>热播精选</h2>
             <button 
               onClick={() => handleCategoryClick('movie')}
               className="text-red-600 hover:text-red-700 text-sm"
@@ -177,14 +179,14 @@ export const Home: React.FC = () => {
           
           {!loading && movies.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">暂无电影数据</p>
+              <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>暂无电影数据</p>
             </div>
           )}
         </section>
 
         {/* 分类导航（简洁移动样式） */}
         <section className="mt-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">分类浏览</h2>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>分类浏览</h2>
           <div className="grid grid-cols-4 gap-3">
             {[
               { name: '动作', icon: '🔥', category: 'action' },
@@ -199,10 +201,10 @@ export const Home: React.FC = () => {
               <button
                 key={genre.category}
                 onClick={() => handleCategoryClick(genre.category)}
-                className="bg-gray-100 rounded-lg p-3 text-center"
+                className={`rounded-lg p-3 text-center ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}
               >
                 <div className="text-xl mb-1">{genre.icon}</div>
-                <div className="text-sm text-gray-800">{genre.name}</div>
+                <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{genre.name}</div>
               </button>
             ))}
           </div>

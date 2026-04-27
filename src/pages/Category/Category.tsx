@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getCategoryMovies } from '../../api'
+import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 文件名: Category.tsx
@@ -13,6 +14,7 @@ export const Category: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const { isDark } = useTheme()
   // 优先从路由状态获取名称，默认显示“分类”
   const categoryName = location.state?.name || '分类'
   
@@ -49,18 +51,18 @@ export const Category: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-14">
+    <div className={`min-h-screen pb-14 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center shadow-sm">
+      <div className={`sticky top-0 z-10 border-b px-4 py-3 flex items-center shadow-sm ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
         <button 
           onClick={() => navigate(-1)} 
-          className="text-gray-700 hover:text-gray-900 mr-3"
+          className={`mr-3 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'}`}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-bold text-gray-900 truncate">{categoryName}</h1>
+        <h1 className={`text-lg font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{categoryName}</h1>
       </div>
 
       {/* 视频列表 */}
@@ -100,7 +102,7 @@ export const Category: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-gray-500">暂无该分类数据</p>
+                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>暂无该分类数据</p>
               </div>
             )}
           </>

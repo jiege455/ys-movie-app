@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { userLogin, userRegister } from '../../api'
 import { useUserStore } from '../../store/userStore'
+import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -12,6 +13,7 @@ import { useUserStore } from '../../store/userStore'
 export const Login: React.FC = () => {
   const navigate = useNavigate()
   const { setIsLoggedIn, setUser } = useUserStore()
+  const { isDark } = useTheme()
   const [isRegister, setIsRegister] = useState(false)
   const [userName, setUserName] = useState('')
   const [userPwd, setUserPwd] = useState('')
@@ -64,9 +66,9 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
+    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`w-full max-w-md rounded-xl shadow-lg p-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+        <h1 className={`text-2xl font-bold text-center mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
           {isRegister ? '注册账号' : '用户登录'}
         </h1>
 
@@ -78,24 +80,24 @@ export const Login: React.FC = () => {
 
         <form onSubmit={isRegister ? handleRegister : handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>用户名</label>
             <input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
               placeholder="请输入用户名"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>密码</label>
             <input
               type="password"
               value={userPwd}
               onChange={(e) => setUserPwd(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
               placeholder="请输入密码"
               required
             />
@@ -103,12 +105,12 @@ export const Login: React.FC = () => {
 
           {isRegister && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>确认密码</label>
               <input
                 type="password"
                 value={userPwd2}
                 onChange={(e) => setUserPwd2(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
                 placeholder="请再次输入密码"
                 required
               />
