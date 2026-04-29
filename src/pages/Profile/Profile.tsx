@@ -58,7 +58,7 @@ export const Profile: React.FC = () => {
     <button
       onClick={toggleTheme}
       className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-      title={isDark ? '切换到浅色模�? : '切换到暗色模�?}
+      title={isDark ? '切换到浅色模式' : '切换到暗色模式'}
     >
       {isDark ? (
         <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,9 +82,10 @@ export const Profile: React.FC = () => {
           <p className="text-gray-600 mb-4">请先登录</p>
           <button
             onClick={() => navigate('/login')}
-            className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            去登�?          </button>
+            去登录
+          </button>
         </div>
       </div>
     )
@@ -97,7 +98,7 @@ export const Profile: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-sky-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                 {user?.user_name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div>
@@ -112,9 +113,10 @@ export const Profile: React.FC = () => {
           <div className="mt-4 flex space-x-4">
             <button
               onClick={handleLogout}
-              className="text-sky-500 hover:text-sky-600 text-sm font-medium"
+              className="text-red-600 hover:text-red-700 text-sm font-medium"
             >
-              退出登�?            </button>
+              退出登录
+            </button>
           </div>
         </div>
       </div>
@@ -127,7 +129,7 @@ export const Profile: React.FC = () => {
               onClick={() => setActiveTab('favorites')}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'favorites'
-                  ? 'text-sky-500 border-b-2 border-sky-500'
+                  ? 'text-red-600 border-b-2 border-red-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -137,7 +139,7 @@ export const Profile: React.FC = () => {
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'history'
-                  ? 'text-sky-500 border-b-2 border-sky-500'
+                  ? 'text-red-600 border-b-2 border-red-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -153,9 +155,10 @@ export const Profile: React.FC = () => {
                     <p className="text-gray-500">暂无收藏</p>
                     <button
                       onClick={() => navigate('/')}
-                      className="mt-2 text-sky-500 hover:text-sky-600 text-sm"
+                      className="mt-2 text-red-600 hover:text-red-700 text-sm"
                     >
-                      去发现好�?                    </button>
+                      去发现好剧
+                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-3">

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /**
- * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 开发者：狐狸影视 (qq: 2711793818)
  * 发现页面占位文件
  */
 class FindPage extends StatelessWidget {

@@ -1,9 +1,14 @@
 import React from 'react'
 import { getImageUrl } from '../../api'
+import { useTheme } from '../../contexts/ThemeContext'
 
 /**
- * 电影数据接口
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 电影卡片组件
+ * 用于展示电影的基本信息，包括海报、标题、评分等
+ * 支持点击事件，点击后跳转到电影详情页
  */
+
 interface MovieProps {
   id: string
   title: string
@@ -14,14 +19,6 @@ interface MovieProps {
   onClick?: (id: string, vodLink?: string) => void
 }
 
-/**
- * 电影卡片组件
- * 用于展示电影的基本信息，包括海报、标题、评分等
- * 支持点击事件，点击后跳转到电影详情页
- * 
- * @param props 电影数据属性
- * @returns 电影卡片React组件
- */
 export const MovieCard: React.FC<MovieProps> = ({
   id,
   title,
@@ -31,42 +28,29 @@ export const MovieCard: React.FC<MovieProps> = ({
   overview,
   onClick
 }) => {
-  /**
-   * 处理卡片点击事件
-   */
+  const { isDark } = useTheme()
+
   const handleClick = () => {
     if (onClick) {
       onClick(id)
     }
   }
 
-  /**
-   * 格式化日期显示
-   * @param dateString 日期字符串
-   * @returns 格式化后的日期
-   */
   const formatDate = (dateString: string) => {
     if (!dateString) return '未知'
-    // MacCMS 年份字段已是年份或空字符串
     return dateString
   }
 
-  /**
-   * 格式化评分显示
-   * @param rating 评分
-   * @returns 格式化后的评分
-   */
   const formatRating = (rating: number) => {
     if (!rating) return '0.0'
     return rating.toFixed(1)
   }
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden group"
+    <div
+      className={`rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden group ${isDark ? 'bg-gray-800' : 'bg-white'}`}
       onClick={handleClick}
     >
-      {/* 电影海报 */}
       <div className="aspect-[2/3] relative overflow-hidden">
         <img
           src={getImageUrl(poster_path)}
@@ -74,18 +58,15 @@ export const MovieCard: React.FC<MovieProps> = ({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           onError={(e) => {
-            // 图片加载失败时的处理
             const target = e.target as HTMLImageElement
             target.src = 'https://via.placeholder.com/300x450?text=No+Image'
           }}
         />
-        
-        {/* 评分标签 */}
+
         <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold">
           {formatRating(vote_average)}
         </div>
-        
-        {/* 悬停遮罩层 */}
+
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="bg-white bg-opacity-90 rounded-full p-3">
@@ -96,21 +77,17 @@ export const MovieCard: React.FC<MovieProps> = ({
           </div>
         </div>
       </div>
-      
-      {/* 电影信息 */}
+
       <div className="p-4">
-        {/* 标题 */}
-        <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
+        <h3 className={`font-bold text-lg mb-2 line-clamp-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
           {title}
         </h3>
-        
-        {/* 年份 */}
-        <p className="text-sm text-gray-600 mb-2">
+
+        <p className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
           {formatDate(release_date)}
         </p>
-        
-        {/* 简介 */}
-        <p className="text-sm text-gray-700 line-clamp-3">
+
+        <p className={`text-sm line-clamp-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
           {overview || '暂无简介'}
         </p>
       </div>

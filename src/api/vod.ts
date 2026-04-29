@@ -4,7 +4,8 @@
  * 说明：视频列表、详情、搜索相关接口
  */
 
-import { api, getImageUrl } from './index'
+import axios from 'axios'
+import { api } from './index'
 
 // ============================================================
 // 类型定义
@@ -30,10 +31,12 @@ export interface MovieDetail extends Movie {
 }
 
 export interface VodEpisode {
+  name?: string
   url: string
 }
 
 export interface VodSource {
+  name?: string
   urls?: VodEpisode[]
 }
 
@@ -122,7 +125,6 @@ export const getCategoryMovies = async (categoryId: string, page: number = 1): P
 export const searchMovies = async (keyword: string): Promise<Movie[]> => {
   try {
     // 优先调用Xunsearch搜索（app_api.php）
-    const { default: axios } = await import('axios')
     const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
     const res: any = await axios.get(appApiBase, {
       params: { ac: 'search', wd: keyword, page: 1, limit: 20 },
@@ -163,7 +165,7 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
  */
 export const searchMoviesAdvanced = async (keyword: string, page: number = 1, limit: number = 20): Promise<{ list: Movie[], total: number, source: string }> => {
   try {
-    const { default: axios } = await import('axios')
+    // 优先调用Xunsearch搜索（app_api.php）
     const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
     const res: any = await axios.get(appApiBase, {
       params: { ac: 'search', wd: keyword, page, limit },
@@ -214,7 +216,7 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
   try {
     const res: any = await api.get('/vod/get_detail', { params: { vod_id: id } })
     const info = res?.info || {}
-    
+
     // 播放列表兼容处理：MacCMS可能返回不同格式
     let playList: VodSource[] = []
     if (info.vod_play_list && Array.isArray(info.vod_play_list)) {
@@ -222,10 +224,9 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
     } else if (info.vod_play_url) {
       // 兼容：有些版本返回vod_play_url字符串，需要解析
       // 格式："源1$$$第1集$url1#第2集$url2$$$源2$$$..."
-      // 这里简单处理，实际可能需要更复杂的解析
-      playList = [{ urls: [{ url: info.vod_play_url }] }]
+      playList = parseVodPlayUrl(info.vod_play_url)
     }
-    
+
     return {
       id: String(info.vod_id || id),
       title: info.vod_name || '',
@@ -240,4 +241,43 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
     console.error('获取视频详情失败:', error)
     return null
   }
+}
+
+/**
+ * 解析MacCMS的vod_play_url字符串为结构化播放列表
+ * 格式："源1名称$$$第1集$url1#第2集$url2$$$源2名称$$$..."
+ */
+function parseVodPlayUrl(playUrl: string): VodSource[] {
+  if (!playUrl) return []
+
+  const sources: VodSource[] = []
+  // MacCMS格式：源名$$$集1$URL1#集2$URL2$$$源名2$$$...
+  const sourceParts = playUrl.split('$$$')
+
+  for (let i = 0; i < sourceParts.length; i += 2) {
+    const sourceName = sourceParts[i] || '默认源'
+    const episodesStr = sourceParts[i + 1] || ''
+
+    if (!episodesStr) continue
+
+    const episodes: VodEpisode[] = []
+    const episodeParts = episodesStr.split('#')
+
+    for (const ep of episodeParts) {
+      const dollarIndex = ep.lastIndexOf('$')
+      if (dollarIndex > 0) {
+        const epName = ep.substring(0, dollarIndex)
+        const epUrl = ep.substring(dollarIndex + 1)
+        if (epUrl) {
+          episodes.push({ name: epName || undefined, url: epUrl })
+        }
+      }
+    }
+
+    if (episodes.length > 0) {
+      sources.push({ name: sourceName, urls: episodes })
+    }
+  }
+
+  return sources.length > 0 ? sources : [{ urls: [{ url: playUrl }] }]
 }

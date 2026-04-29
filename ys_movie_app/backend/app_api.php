@@ -1,6 +1,6 @@
 <?php
 /**
- * 杰哥影视APP专用后端接口 (集成 Xunsearch)
+ * 狐狸影视APP专用后端接口 (集成 Xunsearch)
  * 
  * 功能：
  * 1. APP初始化 (init): 获取轮播图、热搜词、推荐列表

@@ -2,7 +2,7 @@
 <#
 .SYNOPSIS
     狐狸影视 Flutter APK 构建脚本
-    开发者：杰哥网络科技 (qq: 2711793818)
+    开发者：狐狸影视 (qq: 2711793818)
 .DESCRIPTION
     自动检查环境并构建 Flutter APK
     支持 Debug 和 Release 模式
@@ -34,7 +34,7 @@ function Write-Error { param([string]$msg) Write-Host "[ERROR] $msg" -Foreground
 
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  狐狸影视 APK 构建工具" -ForegroundColor Green
-Write-Host "  开发者：杰哥网络科技" -ForegroundColor Green
+Write-Host "  开发者：狐狸影视" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 

@@ -57,7 +57,7 @@ api.interceptors.response.use(
 /**
  * 统一API响应格式
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number
   msg: string
   info?: T

@@ -4,7 +4,8 @@ import 'video.js/dist/video-js.css'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
- * 视频播放器属性接�? */
+ * 视频播放器属性接口
+ */
 interface VideoPlayerProps {
   src: string
   poster?: string
@@ -33,7 +34,8 @@ export interface VideoPlayerRef {
 }
 
 /**
- * 视频播放器组�? * 基于Video.js封装，支持多种视频格式和播放控制
+ * 视频播放器组件
+ * 基于Video.js封装，支持多种视频格式和播放控制
  * 优化：启用高清渲染、硬件加速、自适应尺寸、清晰度切换、画中画
  */
 export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
@@ -122,14 +124,15 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
             await video.requestPictureInPicture()
           }
         } catch (err) {
-          console.error('画中画切换失�?', err)
+          console.error('画中画切换失败:', err)
         }
       }
     }
   }))
 
   /**
-   * 初始化Video.js播放�?   */
+   * 初始化Video.js播放器
+   */
   useEffect(() => {
     if (!videoRef.current) return
 
@@ -163,7 +166,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         nativeAudioTracks: false,
         nativeVideoTracks: false
       },
-      // 控制栏配�?      controlBar: {
+      // 控制栏配置
+      controlBar: {
         playToggle: true,
         volumePanel: { inline: false },
         currentTimeDisplay: true,
@@ -195,7 +199,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
 
     playerRef.current = player
 
-    // 播放器就�?    player.ready(() => {
+    // 播放器就绪
+    player.ready(() => {
       if (!isMountedRef.current) return
       setIsLoading(false)
 
@@ -228,7 +233,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       player.on('error', () => {
         const error = player.error()
         if (error) {
-          console.error('播放器错�?', error.code, error.message)
+          console.error('播放器错误:', error.code, error.message)
           if (isMountedRef.current) {
             setHasError(true)
             setIsLoading(false)
@@ -246,17 +251,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       try {
         const tech: any = player.tech({ IWillNotUseThisInPlugins: true })
         if (tech?.vhs) {
-          // 获取可用清晰度列�?          tech.vhs.playlists.on('loadedplaylist', () => {
+          // 获取可用清晰度列表
+          tech.vhs.playlists.on('loadedplaylist', () => {
             if (!isMountedRef.current) return
             const playlists = tech.vhs.playlists
             if (playlists?.master?.playlists) {
               const availableQualities = playlists.master.playlists
                 .map((p: any, index: number) => {
                   const height = p.attributes?.RESOLUTION?.height
-                  return height ? `${height}p` : `清晰�?{index + 1}`
+                  return height ? `${height}p` : `清晰度${index + 1}`
                 })
                 .filter(Boolean)
-              // 去重并排序（从高到低�?              const uniqueQualities = Array.from(new Set(availableQualities)) as string[]
+              // 去重并排序（从高到低）
+              const uniqueQualities = Array.from(new Set(availableQualities)) as string[]
               uniqueQualities.sort((a: string, b: string) => {
                 const ha = parseInt(a.replace('p', '')) || 0
                 const hb = parseInt(b.replace('p', '')) || 0
@@ -295,7 +302,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
-   * 更新视频�?   */
+   * 更新视频源
+   */
   useEffect(() => {
     if (playerRef.current && src) {
       setHasError(false)
@@ -339,14 +347,16 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         const isPaused = playerRef.current.paused()
 
         if (quality === 'auto') {
-          // 自动选择最高带�?          tech.vhs.playlistController_.selectPlaylist = () => {
+          // 自动选择最高带宽
+          tech.vhs.playlistController_.selectPlaylist = () => {
             const sorted = playlists
               .filter((p: any) => p.attributes?.BANDWIDTH)
               .sort((a: any, b: any) => b.attributes.BANDWIDTH - a.attributes.BANDWIDTH)
             return sorted[0] || playlists[0]
           }
         } else {
-          // 选择指定清晰�?          const height = parseInt(quality.replace('p', ''))
+          // 选择指定清晰度
+          const height = parseInt(quality.replace('p', ''))
           const target = playlists.find((p: any) =>
             p.attributes?.RESOLUTION?.height === height
           )
@@ -355,7 +365,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           }
         }
 
-        // 重新加载播放列表并恢复播放位�?        tech.vhs.playlistController_.load()
+        // 重新加载播放列表并恢复播放位置
+        tech.vhs.playlistController_.load()
         if (currentTime > 0) {
           playerRef.current.currentTime(currentTime)
         }
@@ -365,12 +376,13 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         }
       }
     } catch (e) {
-      console.log('清晰度切换失�?', e)
+      console.log('清晰度切换失败:', e)
     }
   }, [onQualityChange])
 
   /**
-   * 切换画中�?   */
+   * 切换画中画
+   */
   const togglePictureInPicture = useCallback(async () => {
     const video = videoRef.current
     if (!video || !document.pictureInPictureEnabled) return
@@ -382,7 +394,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         await video.requestPictureInPicture()
       }
     } catch (err) {
-      console.error('画中画切换失�?', err)
+      console.error('画中画切换失败:', err)
     }
   }, [])
 
@@ -417,7 +429,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-20">
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-sm">视频加载�?..</p>
+            <p className="text-sm">视频加载中...</p>
           </div>
         </div>
       )}
@@ -426,14 +438,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
           <div className="text-white text-center px-4">
-            <svg className="w-16 h-16 mx-auto mb-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 mx-auto mb-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-lg mb-2">视频加载失败</p>
             <p className="text-gray-400 text-sm mb-4">请检查网络连接或稍后重试</p>
             <button
               onClick={handleRetry}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>
@@ -441,7 +453,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         </div>
       )}
 
-      {/* 清晰度选择器（多码率HLS/DASH源时显示�?*/}
+      {/* 清晰度选择器（多码率HLS/DASH源时显示） */}
       {qualities.length > 1 && !hasError && (
         <div className="absolute top-4 right-4 z-30 flex items-center space-x-2">
           <select
@@ -458,12 +470,12 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         </div>
       )}
 
-      {/* 画中画按�?*/}
+      {/* 画中画按钮 */}
       {isPiPSupported && !hasError && (
         <button
           onClick={togglePictureInPicture}
           className="absolute top-4 z-30 bg-black bg-opacity-70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors"
-          title="画中�?
+          title="画中画"
           style={{ right: qualities.length > 1 ? '100px' : '16px' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -487,7 +499,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         }}
       >
         <p className="vjs-no-js">
-          要查看此视频，请启用JavaScript，并考虑升级到支持HTML5视频的Web浏览器�?        </p>
+          要查看此视频，请启用JavaScript，并考虑升级到支持HTML5视频的Web浏览器。
+        </p>
       </video>
     </div>
   )
