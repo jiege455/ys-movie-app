@@ -602,23 +602,32 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       ),
     );
 
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 优化：启用缓存、优化缓冲配置、支持后台播放通知
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       url,
       // videoFormat: BetterPlayerVideoFormat.hls, // 移除强制HLS
       notificationConfiguration: const BetterPlayerNotificationConfiguration(
-        showNotification: false,
+        showNotification: true,
+        title: "正在播放",
+        author: "狐狸影视",
+        imageUrl: "",
       ),
+      // 开发者：杰哥网络科技
+      // 优化：调整缓冲策略，平衡加载速度和流畅度
       bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-        minBufferMs: 2000,        // 回退到较保守的缓冲设置
-        maxBufferMs: 30000,       // 30秒最大缓冲 (原先10分钟可能太大)
-        bufferForPlaybackMs: 1000, 
-        bufferForPlaybackAfterRebufferMs: 2000,
+        minBufferMs: 15000,        // 最小缓冲 15秒，保证流畅
+        maxBufferMs: 50000,        // 最大缓冲 50秒
+        bufferForPlaybackMs: 2500, // 起播缓冲 2.5秒，加快首帧
+        bufferForPlaybackAfterRebufferMs: 5000, // 重缓冲 5秒
       ),
+      // 开发者：杰哥网络科技
+      // 优化：启用缓存，提升二次播放速度
       cacheConfiguration: const BetterPlayerCacheConfiguration(
-        useCache: false, // 暂时关闭缓存，用户反馈进度条不准
-        maxCacheSize: 100 * 1024 * 1024, // 100MB
-        maxCacheFileSize: 10 * 1024 * 1024, // 10MB
+        useCache: true,
+        maxCacheSize: 200 * 1024 * 1024, // 200MB 缓存
+        maxCacheFileSize: 50 * 1024 * 1024, // 50MB 单文件
       ),
     );
 

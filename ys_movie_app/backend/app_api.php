@@ -15,11 +15,25 @@ header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 
 // 1. 加载 MacCMS 核心
 // --------------------------------------------------------------------
-if (file_exists('include.php')) {
-    require('include.php');
-} elseif (file_exists('../include.php')) {
-    require('../include.php');
-} else {
+// 开发者：杰哥网络科技 (qq: 2711793818)
+// 修复：增加多路径兼容，支持宝塔面板各种部署方式
+$macIncludePaths = [
+    'include.php',
+    '../include.php',
+    '../../include.php',
+    './include.php',
+    dirname(__DIR__) . '/include.php',
+    dirname(dirname(__DIR__)) . '/include.php',
+];
+$macIncludeFound = false;
+foreach ($macIncludePaths as $macPath) {
+    if (file_exists($macPath)) {
+        require($macPath);
+        $macIncludeFound = true;
+        break;
+    }
+}
+if (!$macIncludeFound) {
     echo json_encode(['code' => 0, 'msg' => '错误：找不到 include.php，请将文件上传到苹果CMS根目录']);
     exit;
 }
@@ -415,20 +429,31 @@ if ($ac == 'get_comments') {
 }
 
 // [接口 10] 发布评论
+// 开发者：杰哥网络科技 (qq: 2711793818)
+// 修复：增加用户登录校验，防止匿名刷评论
 if ($ac == 'add_comment') {
     $rid = get_request_param('rid');
     $content = get_request_param('content');
-    $name = get_request_param('name', '游客');
     
     if (empty($rid) || empty($content)) {
         echo json_encode(['code' => 0, 'msg' => '内容不能为空']);
         exit;
     }
     
+    // 获取当前登录用户
+    $userId = $_COOKIE['user_id'] ?? '';
+    $userName = '游客';
+    if (!empty($userId)) {
+        $user = \think\Db::name('user')->where('user_id', $userId)->find();
+        if ($user) {
+            $userName = $user['user_name'] ?? $user['user_nick_name'] ?? '用户' . $userId;
+        }
+    }
+    
     $data = [
         'comment_mid' => 1,
         'comment_rid' => $rid,
-        'comment_name' => $name,
+        'comment_name' => $userName,
         'comment_content' => strip_tags($content),
         'comment_time' => time(),
         'comment_ip' => request()->ip(),
@@ -440,6 +465,144 @@ if ($ac == 'add_comment') {
         echo json_encode(['code' => 1, 'msg' => '评论成功']);
     } else {
         echo json_encode(['code' => 0, 'msg' => '评论失败']);
+    }
+    exit;
+}
+
+// [接口 11] 获取消息列表
+if ($ac == 'message_list') {
+    $page = get_request_param('page', 1);
+    $limit = get_request_param('limit', 20);
+    $userId = $_COOKIE['user_id'] ?? '';
+    
+    if (empty($userId)) {
+        echo json_encode(['code' => 0, 'msg' => '请先登录', 'info' => ['list' => [], 'total' => 0]]);
+        exit;
+    }
+    
+    try {
+        $list = \think\Db::name('message')
+            ->where('user_id', $userId)
+            ->whereOr('user_id', 0)
+            ->order('msg_id desc')
+            ->page($page, $limit)
+            ->select();
+            
+        $total = \think\Db::name('message')
+            ->where('user_id', $userId)
+            ->whereOr('user_id', 0)
+            ->count();
+            
+        $messages = [];
+        foreach ($list as $v) {
+            $messages[] = [
+                'msg_id' => $v['msg_id'],
+                'msg_title' => $v['msg_title'] ?? '系统消息',
+                'msg_content' => $v['msg_content'] ?? '',
+                'msg_type' => $v['msg_type'] ?? 'system',
+                'msg_is_read' => $v['msg_is_read'] ?? 0,
+                'msg_time' => $v['msg_time'] ?? time(),
+                'msg_link' => $v['msg_link'] ?? ''
+            ];
+        }
+        
+        echo json_encode(['code' => 1, 'msg' => 'success', 'info' => ['list' => $messages, 'total' => $total]]);
+    } catch (\Exception $e) {
+        echo json_encode(['code' => 0, 'msg' => $e->getMessage(), 'info' => ['list' => [], 'total' => 0]]);
+    }
+    exit;
+}
+
+// [接口 12] 获取消息统计
+if ($ac == 'message_summary') {
+    $userId = $_COOKIE['user_id'] ?? '';
+    
+    if (empty($userId)) {
+        echo json_encode(['code' => 1, 'info' => ['total' => 0, 'unread' => 0]]);
+        exit;
+    }
+    
+    try {
+        $total = \think\Db::name('message')
+            ->where('user_id', $userId)
+            ->whereOr('user_id', 0)
+            ->count();
+            
+        $unread = \think\Db::name('message')
+            ->where('user_id', $userId)
+            ->whereOr('user_id', 0)
+            ->where('msg_is_read', 0)
+            ->count();
+            
+        echo json_encode(['code' => 1, 'info' => ['total' => $total, 'unread' => $unread]]);
+    } catch (\Exception $e) {
+        echo json_encode(['code' => 0, 'msg' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// [接口 13] 标记消息为已读
+if ($ac == 'message_read') {
+    $msgId = get_request_param('msg_id');
+    $userId = $_COOKIE['user_id'] ?? '';
+    
+    if (empty($msgId) || empty($userId)) {
+        echo json_encode(['code' => 0, 'msg' => '参数错误']);
+        exit;
+    }
+    
+    try {
+        \think\Db::name('message')
+            ->where('msg_id', $msgId)
+            ->where('user_id', $userId)
+            ->update(['msg_is_read' => 1]);
+        echo json_encode(['code' => 1, 'msg' => '已标记为已读']);
+    } catch (\Exception $e) {
+        echo json_encode(['code' => 0, 'msg' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// [接口 14] 标记所有消息为已读
+if ($ac == 'message_read_all') {
+    $userId = $_COOKIE['user_id'] ?? '';
+    
+    if (empty($userId)) {
+        echo json_encode(['code' => 0, 'msg' => '请先登录']);
+        exit;
+    }
+    
+    try {
+        \think\Db::name('message')
+            ->where('user_id', $userId)
+            ->whereOr('user_id', 0)
+            ->where('msg_is_read', 0)
+            ->update(['msg_is_read' => 1]);
+        echo json_encode(['code' => 1, 'msg' => '全部已读']);
+    } catch (\Exception $e) {
+        echo json_encode(['code' => 0, 'msg' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// [接口 15] 删除消息
+if ($ac == 'message_delete') {
+    $msgId = get_request_param('msg_id');
+    $userId = $_COOKIE['user_id'] ?? '';
+    
+    if (empty($msgId) || empty($userId)) {
+        echo json_encode(['code' => 0, 'msg' => '参数错误']);
+        exit;
+    }
+    
+    try {
+        \think\Db::name('message')
+            ->where('msg_id', $msgId)
+            ->where('user_id', $userId)
+            ->delete();
+        echo json_encode(['code' => 1, 'msg' => '删除成功']);
+    } catch (\Exception $e) {
+        echo json_encode(['code' => 0, 'msg' => $e->getMessage()]);
     }
     exit;
 }

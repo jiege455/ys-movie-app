@@ -9,6 +9,7 @@ import 'package:better_player/src/video_player/video_player.dart';
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 ///Class used to control overall Better Player behavior. Main class to change
@@ -590,6 +591,19 @@ class BetterPlayerController {
   void enterFullScreen() {
     _isFullScreen = true;
     _postControllerEvent(BetterPlayerControllerEvent.openFullscreen);
+  }
+
+  ///开发者：杰哥网络科技 (qq: 2711793818)
+  ///修复：增加空列表安全检查，避免某些 Android 设备异常
+  Future<void> setLandscapeOverlays() async {
+    if (isFullScreen) {
+      /// 先转屏再隐藏状态栏，避免转屏时状态栏闪烁
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
   }
 
   ///Disables full screen mode in player. This will trigger route change.

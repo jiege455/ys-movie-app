@@ -45,8 +45,10 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
     }
   }
 
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 修复：增加 duration 非空判断，避免未加载完成时崩溃
   void skipForward() {
-    if (latestValue != null) {
+    if (latestValue != null && latestValue!.duration != null) {
       cancelAndRestartTimer();
       final end = latestValue!.duration!.inMilliseconds;
       final skip = (latestValue!.position +

@@ -332,35 +332,20 @@ class MacApi {
   }
 
   /// 检查是否登录
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 修复：简化逻辑，明确校验优先级，避免过期token误判
   Future<bool> checkLogin({bool force = false}) async {
     await init();
-    
-    // 0. 优先信任最近一次成功登录的 Token（如果有）
     final prefs = await SharedPreferences.getInstance();
-    final localUser = prefs.getString('user_name');
     final hasToken = _appUserToken != null && _appUserToken!.isNotEmpty;
 
-    // 如果强制刷新，则忽略本地快速判断
-    if (!force && (hasToken || (localUser != null && localUser.isNotEmpty))) {
-       // 这是一个快速返回，但也可能导致 token 失效了还认为已登录
-       // 只有当 force=true 时，我们才强制走网络校验
-    } else if (!force) {
-       // 如果不是强制刷新，且本地有痕迹，先乐观返回 true，但也可能导致状态不同步
-       // 为了稳健，我们这里调整逻辑：
-       // 1. 如果 force=true，必须走网络
-       // 2. 如果 force=false，且本地有 Token，优先尝试走网络校验（不阻塞 UI 可以吗？不行，这里是 Future<bool>）
-       // 所以保持原逻辑：force=false 时，优先信任本地，除非 explicit logout
-    }
-
-    // 1. 优先通过 JgApp 插件 userInfo 接口校验 app-user-token
-    try {
-      if (hasToken) {
+    // 1. 强制模式：必须走网络校验
+    if (force) {
+      try {
         final resp = await _dio.get('jgappapi.index/userInfo');
-        // 如果返回 code=1，即使 data 是加密串无法解析，我们也认为是登录成功的
-        // 因为未登录通常返回 code=0 或 1001
         final code = int.tryParse('${resp.data['code'] ?? 0}') ?? 0;
         if (resp.statusCode == 200 && resp.data is Map && code == 1) {
-          // 尝试解析用户信息，如果失败则忽略，但认为登录有效
+          // 更新本地用户信息
           try {
             final data = resp.data['data'];
             if (data is Map && data['user_info'] is Map) {
@@ -371,46 +356,32 @@ class MacApi {
             }
           } catch (_) {}
           return true;
-        } else if (force) {
-           // 强制刷新且校验失败，说明 token 过期
-           return false;
         }
+        // 校验失败，清理本地token
+        await logout();
+        return false;
+      } catch (_) {
+        await logout();
+        return false;
       }
-    } catch (_) {
-       if (force) return false; 
     }
 
-    // 2. 兼容旧逻辑：通过收藏列表来验证 session（依赖 Cookie）
+    // 2. 非强制模式：有token则优先网络校验，无token直接返回false
+    if (!hasToken) return false;
+
     try {
-      final resp = await _dio.get('user/ulog_list', queryParameters: {
-        'ulog_mid': 1, 
-        'ulog_type': 2,
-        'limit': 1,
-      });
+      final resp = await _dio.get('jgappapi.index/userInfo');
       final code = int.tryParse('${resp.data['code'] ?? 0}') ?? 0;
-      if (code == 1) {
-         return true;
+      if (resp.statusCode == 200 && resp.data is Map && code == 1) {
+        return true;
       }
-    } catch (_) {}
-    
-    // 3. 如果以上都失败，但本地存有 user_name，我们最后尝试一次 user/index 
-    if (localUser != null && localUser.isNotEmpty) {
-       try {
-         final resp = await _dio.get('user/index');
-         final code = int.tryParse('${resp.data['code'] ?? 0}') ?? 0;
-         if (resp.data is Map && code == 1) return true;
-         // 有些模版返回 HTML，包含“退出”字样通常意味着已登录
-         if (resp.data is String && resp.data.toString().contains('退出')) return true;
-       } catch (_) {}
+      // token失效，清理本地
+      await logout();
+      return false;
+    } catch (_) {
+      // 网络异常时，有token则乐观认为已登录（避免弱网环境频繁掉线）
+      return true;
     }
-
-    // 4. 终极兜底：如果本地有 Token 或 用户名，且不是强制刷新
-    // 修复：用户反馈登录成功后页面不刷新，可能是因为接口校验失败但其实本地已有凭证
-    if (!force && (hasToken || (localUser != null && localUser.isNotEmpty))) {
-      return true; 
-    }
-
-    return false;
   }
 
   /// 开发者：杰哥
@@ -932,19 +903,18 @@ class MacApi {
     'app-version-code': '$_appVersionCode',
   };
 
-  /// 开发者：杰哥
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
   /// 作用：把 app 版本号转成 JgApp 插件需要的 version_code
-  /// 解释：后端用 1.0.0 -> 100 这种规则判断有没有新版本。
+  /// 解释：后端用 1.0.0 -> 10000 这种规则判断有没有新版本。
+  /// 修复：支持任意版本号，如 1.10.0 -> 11000
   int _parseJgAppVersionCode(String versionName) {
     final parts = versionName.split('.');
     if (parts.length < 3) return 0;
-    final major = int.tryParse(parts[0]) ?? -1;
-    final minor = int.tryParse(parts[1]) ?? -1;
-    final patch = int.tryParse(parts[2]) ?? -1;
-    if (major < 0 || minor < 0 || patch < 0) return 0;
-    if (minor > 9 || patch > 9) return 0;
-    final merged = int.tryParse('$major$minor$patch') ?? 0;
-    return merged;
+    final major = int.tryParse(parts[0]) ?? 0;
+    final minor = int.tryParse(parts[1]) ?? 0;
+    final patch = int.tryParse(parts[2]) ?? 0;
+    // 支持任意版本号，如 1.10.0 -> 11000
+    return major * 10000 + minor * 100 + patch;
   }
 
   /// 获取 APP 初始化数据 (热搜、Banner、推荐)

@@ -41,8 +41,10 @@ export const MovieCard: React.FC<MovieProps> = ({
     return dateString
   }
 
-  const formatRating = (rating: number) => {
-    if (!rating) return '0.0'
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：正确处理 0 分和 undefined 的情况
+  const formatRating = (rating: number | undefined) => {
+    if (rating === undefined || rating === null) return '0.0'
     return rating.toFixed(1)
   }
 

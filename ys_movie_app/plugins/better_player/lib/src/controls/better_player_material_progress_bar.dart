@@ -120,9 +120,11 @@ class _VideoProgressBarState
           widget.onTapDown!();
         }
       },
+      // 开发者：杰哥网络科技 (qq: 2711793818)
+      // 修复：缩小拖拽区域为合理高度，避免与播放器手势冲突
       child: Center(
         child: Container(
-          height: MediaQuery.of(context).size.height / 2,
+          height: 40,
           width: MediaQuery.of(context).size.width,
           color: Colors.transparent,
           child: CustomPaint(

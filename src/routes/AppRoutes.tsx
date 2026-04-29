@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, MovieDetail, Player, Topic, Category, Login, Profile } from '../pages'
+import { Home, MovieDetail, Player, Topic, Category, Login, Profile, MessageCenter } from '../pages'
 import { TabBar } from '../components/TabBar/TabBar'
 
 /**
@@ -15,7 +15,7 @@ import { TabBar } from '../components/TabBar/TabBar'
  */
 const TabBarWrapper: React.FC = () => {
   const location = useLocation()
-  const hideTabBarPaths = ['/player/', '/movie/', '/login']
+  const hideTabBarPaths = ['/player/', '/movie/', '/login', '/messages']
   const shouldHide = hideTabBarPaths.some(path => location.pathname.startsWith(path))
 
   if (shouldHide) return null
@@ -37,6 +37,7 @@ export const AppRoutes: React.FC = () => {
           {/* 用户相关页面 */}
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/messages" element={<MessageCenter />} />
 
           {/* 发现/分类/我的（暂用首页占位） */}
           <Route path="/discover" element={<Home />} />

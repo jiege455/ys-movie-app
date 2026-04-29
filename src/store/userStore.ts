@@ -74,7 +74,9 @@ export const useUserStore = create<UserState>((set) => ({
     favorites: [item, ...state.favorites]
   })),
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：统一转为字符串比较，避免类型不匹配导致删除失败
   removeFavoriteItem: (id) => set((state) => ({
-    favorites: state.favorites.filter((f) => f.id !== id)
+    favorites: state.favorites.filter((f) => String(f.id) !== String(id))
   }))
 }))

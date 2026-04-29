@@ -147,9 +147,11 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
   }
 
   // 降级：使用MacCMS原生搜索
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：MacCMS 搜索参数应为 wd，不是 vod_name
   try {
     const res: any = await api.get('/vod/get_list', {
-      params: { vod_name: keyword, limit: 20 }
+      params: { wd: keyword, limit: 20 }
     })
     const rows = res?.info?.rows || []
     return rows.map(mapVodToMovie)

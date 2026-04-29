@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { userLogin, userRegister } from '../../api'
+import { userLogin, userRegister, ApiResult, UserAuth } from '../../api'
 import { useUserStore } from '../../store/userStore'
 import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 登录/注册页面
- * 用户登录和注册功能
+ * 用户登录和注册功能，注册成功后自动登录
  */
 
 export const Login: React.FC = () => {
@@ -21,6 +21,20 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  /**
+   * 处理登录成功后的统一逻辑
+   */
+  const handleAuthSuccess = (auth: UserAuth, message: string) => {
+    setIsLoggedIn(true)
+    setUser(auth)
+    setError('')
+    alert(message)
+    navigate(-1)
+  }
+
+  /**
+   * 处理登录
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!userName || !userPwd) {
@@ -29,17 +43,19 @@ export const Login: React.FC = () => {
     }
     setLoading(true)
     setError('')
-    const auth = await userLogin(userName, userPwd)
-    if (auth) {
-      setIsLoggedIn(true)
-      setUser(auth)
-      navigate(-1)
+    const result: ApiResult<UserAuth> = await userLogin(userName, userPwd)
+    if (result.success && result.data) {
+      handleAuthSuccess(result.data, '登录成功')
     } else {
-      setError('登录失败，请检查用户名和密码')
+      setError(result.message || '登录失败，请检查用户名和密码')
     }
     setLoading(false)
   }
 
+  /**
+   * 处理注册
+   * 注册成功后自动登录
+   */
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!userName || !userPwd || !userPwd2) {
@@ -50,17 +66,17 @@ export const Login: React.FC = () => {
       setError('两次输入的密码不一致')
       return
     }
+    if (userPwd.length < 6) {
+      setError('密码长度至少6位')
+      return
+    }
     setLoading(true)
     setError('')
-    const success = await userRegister(userName, userPwd, userPwd2)
-    if (success) {
-      setError('')
-      setIsRegister(false)
-      setUserPwd('')
-      setUserPwd2('')
-      alert('注册成功，请登录')
+    const result: ApiResult<UserAuth> = await userRegister(userName, userPwd, userPwd2)
+    if (result.success && result.data) {
+      handleAuthSuccess(result.data, '注册成功，已自动登录')
     } else {
-      setError('注册失败，用户名可能已存在')
+      setError(result.message || '注册失败，用户名可能已存在')
     }
     setLoading(false)
   }
@@ -88,6 +104,8 @@ export const Login: React.FC = () => {
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
               placeholder="请输入用户名"
               required
+              minLength={3}
+              maxLength={20}
             />
           </div>
 
@@ -100,6 +118,7 @@ export const Login: React.FC = () => {
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
               placeholder="请输入密码"
               required
+              minLength={6}
             />
           </div>
 
@@ -113,6 +132,7 @@ export const Login: React.FC = () => {
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300'}`}
                 placeholder="请再次输入密码"
                 required
+                minLength={6}
               />
             </div>
           )}
@@ -131,6 +151,8 @@ export const Login: React.FC = () => {
             onClick={() => {
               setIsRegister(!isRegister)
               setError('')
+              setUserPwd('')
+              setUserPwd2('')
             }}
             className="text-red-600 hover:text-red-700 text-sm"
           >

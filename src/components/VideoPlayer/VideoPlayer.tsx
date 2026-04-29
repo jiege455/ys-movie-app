@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 
@@ -37,6 +37,7 @@ export interface VideoPlayerRef {
  * 视频播放器组件
  * 基于Video.js封装，支持多种视频格式和播放控制
  * 优化：启用高清渲染、硬件加速、自适应尺寸、清晰度切换、画中画
+ * 修复：动态快进步长、键盘快捷键过滤、画中画状态同步、iOS全屏兼容、播放速度记忆
  */
 export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   src,
@@ -60,11 +61,33 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   const [currentQuality, setCurrentQuality] = useState('auto')
   const [qualities, setQualities] = useState<string[]>([])
   const [isPiPSupported, setIsPiPSupported] = useState(false)
+  const [isInPiP, setIsInPiP] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [playbackRate, setPlaybackRate] = useState(() => {
+    // 开发者：杰哥网络科技
+    // 修复：从 localStorage 读取用户上次设置的播放速度
+    const saved = localStorage.getItem('video_playback_rate')
+    return saved ? parseFloat(saved) : 1
+  })
 
   // 同步startTime
   useEffect(() => {
     startTimeRef.current = startTime
   }, [startTime])
+
+  /**
+   * 动态计算跳过时间
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：根据视频时长动态调整快进/后退步长
+   */
+  const skipTime = useMemo(() => {
+    if (!duration) return 10
+    if (duration < 300) return 5
+    if (duration < 1800) return 10
+    return 30
+  }, [duration])
 
   /**
    * 获取视频类型
@@ -131,42 +154,175 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   }))
 
   /**
+   * 快进
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：使用动态步长
+   */
+  const handleForward = useCallback(() => {
+    if (playerRef.current) {
+      const newTime = Math.min(currentTime + skipTime, duration || 0)
+      playerRef.current.currentTime(newTime)
+    }
+  }, [currentTime, duration, skipTime])
+
+  /**
+   * 后退
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：使用动态步长
+   */
+  const handleBackward = useCallback(() => {
+    if (playerRef.current) {
+      const newTime = Math.max(currentTime - skipTime, 0)
+      playerRef.current.currentTime(newTime)
+    }
+  }, [currentTime, skipTime])
+
+  /**
+   * 切换画中画
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：增加状态同步和桌面窗口交互优化
+   */
+  const togglePictureInPicture = useCallback(async () => {
+    const video = videoRef.current
+    if (!video || !document.pictureInPictureEnabled) return
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture()
+      } else {
+        await video.requestPictureInPicture()
+      }
+    } catch (err) {
+      console.error('画中画切换失败:', err)
+    }
+  }, [])
+
+  /**
+   * 进入全屏（兼容 iOS Safari）
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：增加 webkit 前缀兼容
+   */
+  const enterFullscreen = useCallback(() => {
+    const player = playerRef.current
+    if (!player) return
+
+    const el = player.el() as HTMLElement & {
+      webkitEnterFullscreen?: () => void
+      webkitRequestFullscreen?: () => void
+    }
+
+    if (el.requestFullscreen) {
+      el.requestFullscreen()
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen()
+    } else if (el.webkitEnterFullscreen) {
+      el.webkitEnterFullscreen()
+    }
+    setIsFullscreen(true)
+  }, [])
+
+  /**
+   * 退出全屏（兼容 iOS Safari）
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：增加 webkit 前缀兼容
+   */
+  const exitFullscreen = useCallback(() => {
+    const doc = document as Document & {
+      webkitExitFullscreen?: () => void
+      webkitCancelFullScreen?: () => void
+    }
+
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+    } else if (doc.webkitExitFullscreen) {
+      doc.webkitExitFullscreen()
+    } else if (doc.webkitCancelFullScreen) {
+      doc.webkitCancelFullScreen()
+    }
+    setIsFullscreen(false)
+  }, [])
+
+  /**
+   * 切换全屏
+   */
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      exitFullscreen()
+    } else {
+      enterFullscreen()
+    }
+  }, [isFullscreen, enterFullscreen, exitFullscreen])
+
+  /**
+   * 切换播放速度
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：保存用户偏好到 localStorage
+   */
+  const handlePlaybackRateChange = useCallback((rate: number) => {
+    setPlaybackRate(rate)
+    localStorage.setItem('video_playback_rate', rate.toString())
+    if (playerRef.current) {
+      playerRef.current.playbackRate(rate)
+    }
+  }, [])
+
+  /**
    * 初始化Video.js播放器
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：
+   * 1. 增加 src 有效性检查，避免空源初始化失败
+   * 2. 优化加载策略：preload 改为 metadata，减少初始加载时间
+   * 3. 优化缓冲配置，提升播放流畅度
+   * 4. 增加视频源预连接，加速首帧加载
    */
   useEffect(() => {
     if (!videoRef.current) return
+    if (!src || src.trim() === '') return
 
-    // 检查画中画支持
     setIsPiPSupported(document.pictureInPictureEnabled || false)
+
+    // 预连接视频源域名，加速 DNS 解析和 TCP 握手
+    try {
+      const url = new URL(src)
+      const link = document.createElement('link')
+      link.rel = 'preconnect'
+      link.href = url.origin
+      document.head.appendChild(link)
+    } catch (_) {
+      // 相对路径或无效 URL，忽略
+    }
 
     const player = videojs(videoRef.current, {
       controls: true,
       responsive: true,
       fluid: true,
-      preload: 'auto',
+      // 开发者：杰哥网络科技
+      // 优化：preload 从 auto 改为 metadata，只加载元数据，大幅减少初始加载时间
+      // 用户点击播放后再加载视频内容
+      preload: 'metadata',
       poster: poster || '',
-      sources: src ? [{
+      sources: [{
         src: src,
         type: getVideoType(src)
-      }] : [],
-      // 高清渲染优化配置
+      }],
+      playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
       html5: {
         vhs: {
           overrideNative: true,
-          limitRenditionByPlayerDimensions: false,
+          limitRenditionByPlayerDimensions: true,
           useDevicePixelRatio: true,
           allowSeeksWithinUnsafeLiveWindow: true,
           handlePartialData: true,
-          // 缓冲优化
-          maxBufferLength: 60,
-          maxMaxBufferLength: 120,
-          // 清晰度选择优化
+          // 开发者：杰哥网络科技
+          // 优化：减少缓冲长度，加快首帧播放
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          // 启用快速质量切换
           experimentalBufferBasedABR: true
         },
         nativeAudioTracks: false,
         nativeVideoTracks: false
       },
-      // 控制栏配置
       controlBar: {
         playToggle: true,
         volumePanel: { inline: false },
@@ -178,20 +334,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         remainingTimeDisplay: false,
         pictureInPictureToggle: document.pictureInPictureEnabled || false
       },
-      // 用户交互优化
       userActions: {
         click: true,
         doubleClick: true
       },
-      // 自动播放策略
       autoplay: false,
-      // 循环播放
       loop: false,
-      // 静音（某些浏览器自动播放需要）
       muted: false,
-      // 语言
       language: 'zh-CN',
-      // 错误显示
       errorDisplay: {
         message: '视频加载失败，请刷新页面重试'
       }
@@ -199,37 +349,40 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
 
     playerRef.current = player
 
-    // 播放器就绪
+    // 应用保存的播放速度
+    if (playbackRate !== 1) {
+      player.playbackRate(playbackRate)
+    }
+
     player.ready(() => {
       if (!isMountedRef.current) return
       setIsLoading(false)
 
-      // 恢复播放位置
       if (startTimeRef.current > 0) {
         player.currentTime(startTimeRef.current)
       }
 
-      // 绑定事件
       player.on('play', () => { if (isMountedRef.current) onPlay?.() })
       player.on('pause', () => { if (isMountedRef.current) onPause?.() })
       player.on('ended', () => { if (isMountedRef.current) onEnded?.() })
       player.on('timeupdate', () => {
         if (isMountedRef.current) {
-          onTimeUpdate?.(player.currentTime())
+          const time = player.currentTime()
+          setCurrentTime(time)
+          onTimeUpdate?.(time)
         }
       })
       player.on('loadedmetadata', () => {
         if (isMountedRef.current) {
-          const duration = player.duration() || 0
-          onLoadedMetadata?.(duration)
-          // 如果有startTime，在这里再次确保跳转
+          const dur = player.duration() || 0
+          setDuration(dur)
+          onLoadedMetadata?.(dur)
           if (startTimeRef.current > 0 && player.currentTime() < startTimeRef.current) {
             player.currentTime(startTimeRef.current)
           }
         }
       })
 
-      // 错误处理
       player.on('error', () => {
         const error = player.error()
         if (error) {
@@ -242,16 +395,20 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         }
       })
 
-      // 等待播放（缓冲）
       player.on('waiting', () => { if (isMountedRef.current) setIsLoading(true) })
       player.on('playing', () => { if (isMountedRef.current) setIsLoading(false) })
       player.on('canplay', () => { if (isMountedRef.current) setIsLoading(false) })
+
+      // 全屏状态监听
+      const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement)
+      }
+      document.addEventListener('fullscreenchange', handleFullscreenChange)
 
       // HLS/DASH 多码率清晰度处理
       try {
         const tech: any = player.tech({ IWillNotUseThisInPlugins: true })
         if (tech?.vhs) {
-          // 获取可用清晰度列表
           tech.vhs.playlists.on('loadedplaylist', () => {
             if (!isMountedRef.current) return
             const playlists = tech.vhs.playlists
@@ -262,7 +419,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
                   return height ? `${height}p` : `清晰度${index + 1}`
                 })
                 .filter(Boolean)
-              // 去重并排序（从高到低）
               const uniqueQualities = Array.from(new Set(availableQualities)) as string[]
               uniqueQualities.sort((a: string, b: string) => {
                 const ha = parseInt(a.replace('p', '')) || 0
@@ -275,7 +431,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
             }
           })
 
-          // 默认选择最高清晰度
           tech.vhs.playlistController_.selectPlaylist = () => {
             const playlists = tech.vhs.playlists
             if (playlists?.master?.playlists) {
@@ -302,6 +457,79 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
+   * 画中画状态同步
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：监听 enter/leave 事件，确保状态同步
+   */
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleEnterPiP = () => setIsInPiP(true)
+    const handleLeavePiP = () => setIsInPiP(false)
+
+    video.addEventListener('enterpictureinpicture', handleEnterPiP)
+    video.addEventListener('leavepictureinpicture', handleLeavePiP)
+
+    return () => {
+      video.removeEventListener('enterpictureinpicture', handleEnterPiP)
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP)
+    }
+  }, [])
+
+  /**
+   * 键盘快捷键
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 修复：增加输入框焦点判断，避免在输入时触发
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果焦点在输入框/文本域内，不处理快捷键
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
+      }
+
+      // 空格键：播放/暂停
+      if (e.code === 'Space') {
+        e.preventDefault()
+        if (playerRef.current) {
+          if (playerRef.current.paused()) {
+            playerRef.current.play()
+          } else {
+            playerRef.current.pause()
+          }
+        }
+      }
+      // 方向键右：快进
+      if (e.code === 'ArrowRight') {
+        e.preventDefault()
+        handleForward()
+      }
+      // 方向键左：后退
+      if (e.code === 'ArrowLeft') {
+        e.preventDefault()
+        handleBackward()
+      }
+      // F 键：全屏切换
+      if (e.code === 'KeyF') {
+        e.preventDefault()
+        toggleFullscreen()
+      }
+      // M 键：静音切换
+      if (e.code === 'KeyM') {
+        e.preventDefault()
+        if (playerRef.current) {
+          playerRef.current.muted(!playerRef.current.muted())
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleForward, handleBackward, toggleFullscreen])
+
+  /**
    * 更新视频源
    */
   useEffect(() => {
@@ -314,7 +542,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       })
       setQualities([])
       setCurrentQuality('auto')
-      // 恢复播放位置
       if (startTimeRef.current > 0) {
         playerRef.current.currentTime(startTimeRef.current)
       }
@@ -347,7 +574,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         const isPaused = playerRef.current.paused()
 
         if (quality === 'auto') {
-          // 自动选择最高带宽
           tech.vhs.playlistController_.selectPlaylist = () => {
             const sorted = playlists
               .filter((p: any) => p.attributes?.BANDWIDTH)
@@ -355,7 +581,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
             return sorted[0] || playlists[0]
           }
         } else {
-          // 选择指定清晰度
           const height = parseInt(quality.replace('p', ''))
           const target = playlists.find((p: any) =>
             p.attributes?.RESOLUTION?.height === height
@@ -365,12 +590,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           }
         }
 
-        // 重新加载播放列表并恢复播放位置
         tech.vhs.playlistController_.load()
         if (currentTime > 0) {
           playerRef.current.currentTime(currentTime)
         }
-        // 如果之前在播放，继续播放
         if (!isPaused) {
           playerRef.current.play()
         }
@@ -379,24 +602,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       console.log('清晰度切换失败:', e)
     }
   }, [onQualityChange])
-
-  /**
-   * 切换画中画
-   */
-  const togglePictureInPicture = useCallback(async () => {
-    const video = videoRef.current
-    if (!video || !document.pictureInPictureEnabled) return
-
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture()
-      } else {
-        await video.requestPictureInPicture()
-      }
-    } catch (err) {
-      console.error('画中画切换失败:', err)
-    }
-  }, [])
 
   /**
    * 重试播放
@@ -453,7 +658,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         </div>
       )}
 
-      {/* 清晰度选择器（多码率HLS/DASH源时显示） */}
+      {/* 清晰度选择器 */}
       {qualities.length > 1 && !hasError && (
         <div className="absolute top-4 right-4 z-30 flex items-center space-x-2">
           <select
@@ -470,12 +675,33 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         </div>
       )}
 
+      {/* 播放速度选择器 */}
+      {!hasError && (
+        <div
+          className="absolute top-4 z-30 flex items-center space-x-2"
+          style={{ right: qualities.length > 1 ? '160px' : '80px' }}
+        >
+          <select
+            value={playbackRate}
+            onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
+            className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm border border-gray-600 focus:outline-none focus:border-red-500 backdrop-blur-sm cursor-pointer"
+          >
+            <option value={0.5} className="bg-gray-800">0.5x</option>
+            <option value={0.75} className="bg-gray-800">0.75x</option>
+            <option value={1} className="bg-gray-800">1x</option>
+            <option value={1.25} className="bg-gray-800">1.25x</option>
+            <option value={1.5} className="bg-gray-800">1.5x</option>
+            <option value={2} className="bg-gray-800">2x</option>
+          </select>
+        </div>
+      )}
+
       {/* 画中画按钮 */}
       {isPiPSupported && !hasError && (
         <button
           onClick={togglePictureInPicture}
-          className="absolute top-4 z-30 bg-black bg-opacity-70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors"
-          title="画中画"
+          className={`absolute top-4 z-30 bg-black bg-opacity-70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors ${isInPiP ? 'bg-red-600' : ''}`}
+          title={isInPiP ? '退出画中画' : '画中画'}
           style={{ right: qualities.length > 1 ? '100px' : '16px' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -484,11 +710,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         </button>
       )}
 
+      {/* 画中画桌面窗口提示 */}
+      {isInPiP && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
+          画中画模式 - 按 ESC 或点击视频退出
+        </div>
+      )}
+
+      {/* 开发者：杰哥网络科技 (qq: 2711793818) */}
+      {/* 修复：移除 video 标签的 preload 属性，避免与 Video.js 配置冲突 */}
       <video
         ref={videoRef}
         className="video-js vjs-default-skin vjs-big-play-centered"
         controls
-        preload="auto"
         data-setup="{}"
         style={{
           width: '100%',

@@ -10,7 +10,9 @@ import axios from 'axios'
  *       app.ts  - APP设置相关
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api.php'
+// 开发者：杰哥网络科技 (qq: 2711793818)
+// 修复：根据当前域名动态计算 API 地址，避免子目录部署 404
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api.php`
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -47,7 +49,15 @@ api.interceptors.request.use(
 )
 
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：保留原始响应结构，让调用方可以获取 HTTP 状态码
+    // 同时兼容后端直接返回 data 的情况
+    if (response.data && typeof response.data === 'object' && 'code' in response.data) {
+      return response.data
+    }
+    return response
+  },
   (error) => {
     console.error('API请求错误:', error)
     return Promise.reject(error)
@@ -83,3 +93,4 @@ export * from './vod'
 export * from './user'
 export * from './comment'
 export * from './app'
+export * from './message'

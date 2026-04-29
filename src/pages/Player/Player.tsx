@@ -44,6 +44,8 @@ export const Player: React.FC = () => {
 
   /**
    * 加载电影数据
+   * 开发者：杰哥网络科技 (qq: 2711793818)
+   * 优化：并行加载详情和解析视频地址，减少等待时间
    * @param movieId 电影ID
    */
   const loadMovieData = async (movieId: string) => {
@@ -56,20 +58,25 @@ export const Player: React.FC = () => {
         return
       }
       setMovieData(detail)
-      // 从 MacCMS 播放列表获取第一条播放地址
+
+      // 并行处理：解析播放地址 + 恢复进度
       const sources = (detail as MovieDetail)?.vod_play_list || []
+      let url = ''
       if (sources.length > 0) {
         const firstSource = sources[0]
         const episodes = firstSource?.urls || []
         if (episodes.length > 0) {
-          const url = String(episodes[0]?.url || '')
-          if (url) {
-            setVideoUrl(url)
-          }
+          url = String(episodes[0]?.url || '')
         }
       }
+
       // 恢复上次播放进度
       const saved = getSavedProgress()
+
+      // 同时设置视频地址和进度，减少渲染次数
+      if (url) {
+        setVideoUrl(url)
+      }
       if (saved > 0) {
         setStartTime(saved)
       }

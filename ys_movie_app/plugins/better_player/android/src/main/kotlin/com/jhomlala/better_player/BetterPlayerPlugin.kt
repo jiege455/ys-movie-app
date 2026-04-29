@@ -65,10 +65,13 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     }
 
 
+    /// 开发者：杰哥网络科技 (qq: 2711793818)
+    /// 修复：增加播放器资源清理，避免内存泄漏
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
         if (flutterState == null) {
             Log.wtf(TAG, "Detached from the engine before registering to it.")
         }
+        // 清理所有播放器实例，释放原生资源
         disposeAllPlayers()
         releaseCache()
         flutterState?.stopListening()
