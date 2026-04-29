@@ -1,8 +1,8 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    狐狸影视 Flutter APK 构建脚本
-    开发者：狐狸影视 (qq: 2711793818)
+    杰哥影视 Flutter APK 构建脚本
+    开发者：杰哥网络科技 (qq: 2711793818)
 .DESCRIPTION
     自动检查环境并构建 Flutter APK
     支持 Debug 和 Release 模式
@@ -33,8 +33,8 @@ function Write-Warning { param([string]$msg) Write-Host "[WARN] $msg" -Foregroun
 function Write-Error { param([string]$msg) Write-Host "[ERROR] $msg" -ForegroundColor Red }
 
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  狐狸影视 APK 构建工具" -ForegroundColor Green
-Write-Host "  开发者：狐狸影视" -ForegroundColor Green
+Write-Host "  杰哥影视 APK 构建工具" -ForegroundColor Green
+Write-Host "  开发者：杰哥网络科技" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 
@@ -103,7 +103,14 @@ if ([string]::IsNullOrEmpty($androidHome)) {
     $androidHome = $env:ANDROID_SDK_ROOT
 }
 
-if ([string]::IsNullOrEmpty($androidHome) -or !(Test-Path "$androidHome\cmdline-tools")) {
+$androidSdkFound = $false
+if (![string]::IsNullOrEmpty($androidHome)) {
+    if (Test-Path "$androidHome\cmdline-tools") {
+        $androidSdkFound = $true
+    }
+}
+
+if (!$androidSdkFound) {
     Write-Warning "未找到 Android SDK 或 cmdline-tools"
     Write-Info "正在尝试查找 Android SDK..."
 
@@ -128,20 +135,18 @@ if ([string]::IsNullOrEmpty($androidHome) -or !(Test-Path "$androidHome\cmdline-
         $env:ANDROID_SDK_ROOT = $foundSdk
         Write-Success "找到 Android SDK: $foundSdk"
     } else {
-        Write-Error @"
-未找到 Android SDK！请按以下步骤安装：
-
-方法 1：安装 Android Studio（推荐）
-1. 下载 Android Studio：https://developer.android.com/studio
-2. 安装时勾选 "Android SDK"、"Android SDK Command-line Tools"、"Android SDK Build-Tools"
-3. 安装完成后重新运行此脚本
-
-方法 2：仅安装命令行工具
-1. 下载：https://developer.android.com/studio#command-line-tools-only
-2. 解压到 C:\Android\Sdk\cmdline-tools\latest\
-3. 运行：sdkmanager "platforms;android-34" "build-tools;34.0.0"
-4. 设置环境变量 ANDROID_HOME = C:\Android\Sdk
-"@
+        Write-Error "未找到 Android SDK！请按以下步骤安装："
+        Write-Host ""
+        Write-Host "方法 1：安装 Android Studio（推荐）"
+        Write-Host "1. 下载 Android Studio：https://developer.android.com/studio"
+        Write-Host "2. 安装时勾选 Android SDK、Android SDK Command-line Tools、Android SDK Build-Tools"
+        Write-Host "3. 安装完成后重新运行此脚本"
+        Write-Host ""
+        Write-Host "方法 2：仅安装命令行工具"
+        Write-Host "1. 下载：https://developer.android.com/studio#command-line-tools-only"
+        Write-Host "2. 解压到 C:\Android\Sdk\cmdline-tools\latest\"
+        Write-Host "3. 运行：sdkmanager platforms;android-34 build-tools;34.0.0"
+        Write-Host "4. 设置环境变量 ANDROID_HOME = C:\Android\Sdk"
         exit 1
     }
 } else {
