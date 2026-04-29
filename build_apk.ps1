@@ -86,7 +86,7 @@ if (!(Test-Path "$javaHome\bin\java.exe")) {
         $javaHome = $foundJdk
         Write-Success "找到 JDK: $javaHome"
     } else {
-        Write-Error "未找到 JDK 17，请安装 JDK 17 或修改脚本中的 `$javaHome 路径"
+        Write-Error "未找到 JDK 17，请安装 JDK 17 或修改脚本中的路径"
         exit 1
     }
 } else {
