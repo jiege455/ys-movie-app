@@ -807,14 +807,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                   final dev = devices[i];
                   return ListTile(
                     leading: const Icon(Icons.tv, color: Colors.white),
-                    title: Text(dev.info.friendlyName, style: const TextStyle(color: Colors.white)),
+                    title: Text(dev.friendlyName, style: const TextStyle(color: Colors.white)),
                     onTap: () async {
                       Navigator.pop(ctx);
                       try {
                         await dlna.connect(dev);
                         final url = _controller?.betterPlayerDataSource?.url ?? '';
                         await dlna.cast(url, widget.title);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('正在投屏到: ${dev.info.friendlyName}')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('正在投屏到: ${dev.friendlyName}')));
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('投屏失败: $e')));
                       }

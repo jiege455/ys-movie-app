@@ -1,0 +1,5 @@
+[33m619c293[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix: 修复PowerShell脚本UTF-8编码问题
+[33mea8a278[m fix: 修复构建脚本PowerShell语法错误
+[33m9a84db8[m fix: 修复构建脚本编码问题并统一开发者信息
+[33m381ff57[m fix: 全面修复项目问题 - 统一开发者信息、修复乱码、优化暗色模式、完善API接口
+[33m3900619[m Change theme color from red to sky blue
