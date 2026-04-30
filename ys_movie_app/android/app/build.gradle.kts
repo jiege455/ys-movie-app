@@ -42,6 +42,12 @@ android {
     }
 }
 
+dependencies {
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 添加 mediarouter 依赖用于投屏功能
+    implementation("androidx.mediarouter:mediarouter:1.7.0")
+}
+
 flutter {
     source = "../.."
 }
