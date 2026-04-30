@@ -102,19 +102,15 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final tabCtrl = _tabController;
     final primaryColor = Theme.of(context).colorScheme.primary;
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：统一使用 scaffoldBackgroundColor，与首页/我的页面保持一致
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: bgColor,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              primaryColor.withOpacity(0.2), 
-              primaryColor.withOpacity(0.05), 
-              Theme.of(context).scaffoldBackgroundColor
-            ],
-          ),
-        ),
+        // 修复：移除渐变背景，使用纯色与首页/我的页面保持一致
+        color: bgColor,
         child: SafeArea(
           child: Column(
             children: [
@@ -164,12 +160,14 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   child: Row(
                     children: [
+                      // 开发者：杰哥网络科技 (qq: 2711793818)
+                      // 修复：使用主题色，避免硬编码白色
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha((255 * 0.7).round()),
+                            color: isDark ? const Color(0xFF15202B) : Colors.white.withAlpha((255 * 0.7).round()),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -177,12 +175,14 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                               isExpanded: true,
                               value: _selectedTypeId == 0 ? null : _selectedTypeId,
                               hint: const Text('选择分类'),
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                              dropdownColor: isDark ? const Color(0xFF15202B) : Colors.white,
                               items: _typeList.map((t) {
                                 final id = int.tryParse('${t['type_id'] ?? 0}') ?? 0;
                                 final name = (t['type_name'] ?? '').toString();
                                 return DropdownMenuItem<int>(
                                   value: id,
-                                  child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
                                 );
                               }).toList(),
                               onChanged: (v) {
@@ -194,15 +194,17 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                         ),
                       ),
                       const SizedBox(width: 10),
+                      // 开发者：杰哥网络科技 (qq: 2711793818)
+                      // 修复：使用主题色，避免硬编码白色
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withAlpha((255 * 0.7).round()),
+                          color: isDark ? const Color(0xFF15202B) : Colors.white.withAlpha((255 * 0.7).round()),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _rankListType == 4 ? '总榜' : (_rankListType == 1 ? '日榜' : (_rankListType == 2 ? '周榜' : '月榜')),
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -311,6 +313,8 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
             const SizedBox(height: 16),
             const Text('暂无数据，请尝试刷新', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
+            // 开发者：杰哥网络科技 (qq: 2711793818)
+            // 修复：使用主题色，避免硬编码紫色
             ElevatedButton.icon(
               onPressed: () {
                  setState(() => loading = true);
@@ -318,7 +322,7 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
               },
               icon: const Icon(Icons.refresh),
               label: const Text('点我刷新'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9C27B0)),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
@@ -331,11 +335,13 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
           final item = items[i];
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
-            child: Container(
+            child: // 开发者：杰哥网络科技 (qq: 2711793818)
+              // 修复：使用主题色，避免硬编码白色
+              Container(
               margin: const EdgeInsets.only(bottom: 16),
               height: 140,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -367,7 +373,9 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          // 开发者：杰哥网络科技 (qq: 2711793818)
+                          // 修复：使用主题文字颜色
+                          Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                           Text('评分：${item['score']}', style: const TextStyle(fontSize: 12, color: Colors.orange)),
                           Text(
                             [

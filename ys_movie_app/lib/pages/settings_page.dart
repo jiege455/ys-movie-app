@@ -212,10 +212,16 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：优化主题选择界面，增加可视化指示（勾选标记+高亮背景+主题预览）
   void _showThemePicker() {
     final themeProvider = context.read<ThemeProvider>();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         final bg = Theme.of(ctx).cardColor;
@@ -224,30 +230,162 @@ class _SettingsPageState extends State<SettingsPage> {
         return Container(
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text('选择主题', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              // 标题
+              Row(
+                children: [
+                  Text(
+                    '选择主题',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: Icon(Icons.close, color: textColor.withOpacity(0.6)),
+                  ),
+                ],
               ),
-              ListTile(
-                title: Text('粉白', style: TextStyle(color: textColor)),
-                trailing: themeProvider.themeStyle == 'light' ? Icon(Icons.check, color: primary) : null,
-                onTap: () { themeProvider.setThemeStyle('light'); Navigator.pop(ctx); },
+              const SizedBox(height: 8),
+              Text(
+                '当前主题: ${_getThemeName(themeProvider.themeStyle)}',
+                style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6)),
               ),
-              ListTile(
-                title: Text('蓝黑', style: TextStyle(color: textColor)),
-                trailing: themeProvider.themeStyle == 'blue_black' ? Icon(Icons.check, color: primary) : null,
-                onTap: () { themeProvider.setThemeStyle('blue_black'); Navigator.pop(ctx); },
+              const SizedBox(height: 20),
+              
+              // 粉白主题选项
+              _buildThemeOption(
+                context: ctx,
+                title: '粉白',
+                subtitle: '明亮清新',
+                icon: Icons.wb_sunny,
+                iconColor: Colors.pink,
+                bgColor: Colors.white,
+                textColor: Colors.black87,
+                isSelected: themeProvider.themeStyle == 'light',
+                onTap: () {
+                  themeProvider.setThemeStyle('light');
+                  Navigator.pop(ctx);
+                },
               ),
+              const SizedBox(height: 12),
+              
+              // 蓝黑主题选项
+              _buildThemeOption(
+                context: ctx,
+                title: '蓝黑',
+                subtitle: '深邃护眼',
+                icon: Icons.nights_stay,
+                iconColor: Colors.blue,
+                bgColor: const Color(0xFF0B1724),
+                textColor: Colors.white,
+                isSelected: themeProvider.themeStyle == 'blue_black',
+                onTap: () {
+                  themeProvider.setThemeStyle('blue_black');
+                  Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         );
       },
+    );
+  }
+
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 构建主题选项卡片
+  Widget _buildThemeOption({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required Color textColor,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? primary.withOpacity(0.1) : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? primary : Colors.grey.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // 主题预览图标
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              ),
+              child: Icon(icon, color: iconColor, size: 28),
+            ),
+            const SizedBox(width: 16),
+            // 主题信息
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 选中状态指示
+            if (isSelected)
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: primary,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, color: Colors.white, size: 18),
+              )
+            else
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
