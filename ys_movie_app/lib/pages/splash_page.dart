@@ -18,6 +18,8 @@ class _SplashPageState extends State<SplashPage> {
   int _countdown = 3;
   Timer? _timer;
   Map<String, dynamic>? _startupAd;
+  String _loadingText = '正在加载...';
+  bool _showError = false;
 
   @override
   void initState() {

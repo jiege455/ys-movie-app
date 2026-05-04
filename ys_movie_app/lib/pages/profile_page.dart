@@ -336,7 +336,9 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _checkUpdate() async {
+  /// 开发者：杰哥
+  /// 作用：格式化播放时长为 HH:MM:SS 或 MM:SS
+  String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));

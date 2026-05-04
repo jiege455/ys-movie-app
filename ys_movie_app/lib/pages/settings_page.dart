@@ -4,9 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/api.dart';
 import '../services/theme_provider.dart';
-import '../services/store.dart';
 import '../services/cache_service.dart';
-import 'auth_bottom_sheet.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onLogout;
