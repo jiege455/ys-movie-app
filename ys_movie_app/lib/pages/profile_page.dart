@@ -529,6 +529,10 @@ class ProfilePageState extends State<ProfilePage> {
                       _buildStatItem('0', '邀请', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvitePage()))),
                       const SizedBox(width: 24),
                       _buildStatItem(isLoggedIn ? '${userInfo?['points'] ?? 0}' : '0', '积分', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PointsPage()))),
+                      const SizedBox(width: 24),
+                      _buildStatIcon(Icons.calendar_today, '签到', onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('签到成功！')));
+                      }),
                     ],
                   ),
                 ],
@@ -773,6 +777,20 @@ class ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(count, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Removed hardcoded color
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatIcon(IconData icon, String label, {VoidCallback? onTap}) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, size: 24, color: primaryColor),
+          const SizedBox(height: 4),
           Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),

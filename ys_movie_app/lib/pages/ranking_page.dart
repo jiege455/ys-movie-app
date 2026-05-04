@@ -252,6 +252,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   ),
                 ),
               ],
+            ],
             ),
           ),
         ],
@@ -386,6 +387,11 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         itemCount: items.length,
         itemBuilder: (ctx, i) {
           final item = items[i];
+          final rank = i + 1;
+          final isTop3 = rank <= 3;
+          final rankColor = isTop3
+              ? (rank == 1 ? Colors.orange : (rank == 2 ? Colors.grey[400]! : Colors.brown[400]!))
+              : Colors.grey[600]!;
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
             child: Container(
@@ -393,17 +399,36 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
               height: 140,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha((255 * 0.05).round()),
-                    blurRadius: 10,
+                    color: Colors.black.withAlpha((255 * 0.08).round()),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Row(
                 children: [
+                  // 排名编号
+                  Container(
+                    width: 50,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isTop3 ? rankColor.withAlpha(20) : Colors.transparent,
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$rank',
+                        style: TextStyle(
+                          fontSize: isTop3 ? 28 : 22,
+                          fontWeight: FontWeight.bold,
+                          color: rankColor,
+                        ),
+                      ),
+                    ),
+                  ),
                   ClipRRect(
                     borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
                     child: CachedNetworkImage(
