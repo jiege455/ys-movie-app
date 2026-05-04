@@ -1,4 +1,4 @@
-/// 文件名：home_page.dart
+﻿/// 文件名：home_page.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2025-12-16
 /// 作用：首页（顶部分类菜单 + 推荐/分类列表）
@@ -1101,7 +1101,6 @@ class HomeRecommendTab extends StatefulWidget {
 class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepAliveClientMixin {
   bool loading = true;
   double _progress = 0;
-  Timer? _progressTimer;
   List<Map<String, dynamic>> banners = [];
   Map<String, dynamic>? homeAdvert;
   List<Map<String, dynamic>> iconAdverts = [];
@@ -1126,25 +1125,14 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
 
   @override
   void dispose() {
-    _progressTimer?.cancel();
     _bannerTimer?.cancel();
     _bannerCtrl.dispose();
     super.dispose();
   }
 
   void _startProgress() {
-    _progressTimer?.cancel();
-    _progress = 0.06;
+    _progress = 0;
     widget.onLoadChanged?.call(LoadStatus.loading, _progress);
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 120), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (_progress < 0.92) {
-          _progress += 0.04;
-        }
-      });
-      widget.onLoadChanged?.call(LoadStatus.loading, _progress);
-    });
   }
 
   /// 开发者：杰哥
@@ -1206,7 +1194,6 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
   }
 
   void _finishProgress({required bool success}) {
-    _progressTimer?.cancel();
     _progress = 1.0;
     widget.onLoadChanged?.call(success ? LoadStatus.success : LoadStatus.failure, _progress);
   }
@@ -1431,15 +1418,11 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
 
       if (banners.isNotEmpty) _startBannerTimer();
 
-      // 3. 构造分类推荐（动漫、短剧、综艺、电影、电视剧）
+      // 3. 构造分类推荐（并行请求提升加载速度）
       try {
-        // 先清空旧数据，防止重复
-        // typeRecommends.clear(); 
-        // 优化：不要直接 clear，而是构建新列表后一次性替换，避免 UI 闪烁（影子数据）
         List<Map<String, dynamic>> newTypeRecommends = [];
-        
-        // 获取分类列表以查找 ID
-        final initData = await initFuture; // 复用 future
+
+        final initData = await initFuture;
         final typeList = (initData['type_list'] as List?) ?? [];
         
         int getIdByName(String name, int defaultId) {
@@ -1451,46 +1434,55 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         }
 
         // 定义要展示的板块顺序
-        // 用户要求：电视剧推荐 电影推荐 动漫推荐 综艺推荐 短剧推荐
+        // 修复：兼容后台分类名称（分类1/2/3/4 或 电影/电视剧/综艺/动漫）
         final sections = [
-          {'name': '电视剧推荐', 'key': '剧', 'defaultId': 2}, // 包含 电视剧/连续剧
-          {'name': '电影推荐', 'key': '电影', 'defaultId': 1},
-          {'name': '动漫推荐', 'key': '动漫', 'defaultId': 4},
-          {'name': '综艺推荐', 'key': '综艺', 'defaultId': 3},
-          {'name': '短剧推荐', 'key': '短剧', 'defaultId': 0}, // 短剧没有标准ID，必须查找
+          {'name': '电影推荐', 'key': '电影', 'altKey': '分类1', 'defaultId': 1},
+          {'name': '电视剧推荐', 'key': '电视剧', 'altKey': '分类2', 'defaultId': 2},
+          {'name': '综艺推荐', 'key': '综艺', 'altKey': '分类3', 'defaultId': 3},
+          {'name': '动漫推荐', 'key': '动漫', 'altKey': '分类4', 'defaultId': 4},
         ];
 
-        for (var sec in sections) {
-           int tid = getIdByName(sec['key'] as String, sec['defaultId'] as int);
-           // 如果是“剧”，排除“短剧”以免重复（简单的包含匹配可能会误判）
-           if (sec['key'] == '剧') {
-              // 查找名为“电视剧”或“连续剧”的
-              final tv = typeList.firstWhere(
-                (t) => (t['type_name'] as String).contains('电视剧') || (t['type_name'] as String).contains('连续剧'),
-                orElse: () => {'type_id': 2},
-              );
-              tid = int.tryParse('${tv['type_id']}') ?? 2;
-           }
+        int getIdByNameOrAlt(String key, String altKey, int defaultId) {
+           final found = typeList.firstWhere(
+             (t) {
+               final name = (t['type_name'] as String? ?? '').toLowerCase();
+               return name.contains(key.toLowerCase()) || name.contains(altKey.toLowerCase());
+             },
+             orElse: () => {'type_id': defaultId},
+           );
+           return int.tryParse('${found['type_id']}') ?? defaultId;
+        }
 
-           if (tid > 0) {
-             var list = await api.getFiltered(typeId: tid, limit: 9);
-             // 强制截取9个，防止后端返回默认页大小（如20个）导致UI显示过多
-             if (list.length > 9) {
-               list = list.take(9).toList();
-             }
-             if (list.isNotEmpty) {
-               newTypeRecommends.add({
-                 'type_name': sec['name'],
-                 'key': sec['key'],
-                 'items': list.map((m) => {
-                   'id': m['id'],
-                   'title': m['title'],
-                   'poster': m['poster'],
-                   'year': m['year'] ?? '',
-                 }).toList()
-               });
-             }
-           }
+        final futures = <Future<void>>[];
+        final resultsBySection = <int, List<Map<String, dynamic>>>{};
+        for (var i = 0; i < sections.length; i++) {
+          final sec = sections[i];
+          int tid = getIdByNameOrAlt(sec['key'] as String, sec['altKey'] as String, sec['defaultId'] as int);
+          if (tid > 0) {
+            futures.add(api.getFiltered(typeId: tid, limit: 9).then((list) {
+              if (list.length > 9) list = list.take(9).toList();
+              resultsBySection[i] = list;
+            }).catchError((_) {
+              resultsBySection[i] = [];
+            }));
+          }
+        }
+        await Future.wait(futures);
+        for (var i = 0; i < sections.length; i++) {
+          final sec = sections[i];
+          final list = resultsBySection[i];
+          if (list != null && list.isNotEmpty) {
+            newTypeRecommends.add({
+              'type_name': sec['name'],
+              'key': sec['key'],
+              'items': list.map((m) => {
+                'id': m['id'],
+                'title': m['title'],
+                'poster': m['poster'],
+                'year': m['year'] ?? '',
+              }).toList()
+            });
+          }
         }
         
         if (mounted) {
@@ -1889,7 +1881,6 @@ class _HomeCategoryTabState extends State<HomeCategoryTab> with AutomaticKeepAli
   List<Map<String, dynamic>> items = [];
 
   double _progress = 0;
-  Timer? _progressTimer;
   
   // 分页
   final ScrollController _scrollController = ScrollController();
@@ -1945,28 +1936,16 @@ class _HomeCategoryTabState extends State<HomeCategoryTab> with AutomaticKeepAli
 
   @override
   void dispose() {
-    _progressTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
   void _startProgress() {
-    _progressTimer?.cancel();
-    _progress = 0.06;
+    _progress = 0;
     widget.onLoadChanged?.call(widget.typeId, LoadStatus.loading, _progress);
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 120), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (_progress < 0.92) {
-          _progress += 0.04;
-        }
-      });
-      widget.onLoadChanged?.call(widget.typeId, LoadStatus.loading, _progress);
-    });
   }
 
   void _finishProgress({required bool success}) {
-    _progressTimer?.cancel();
     _progress = 1.0;
     widget.onLoadChanged?.call(widget.typeId, success ? LoadStatus.success : LoadStatus.failure, _progress);
   }

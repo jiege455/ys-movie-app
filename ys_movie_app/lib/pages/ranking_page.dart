@@ -25,18 +25,35 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
   int _rankListType = 0;
   List<Map<String, dynamic>> _typeList = const [];
   int _selectedTypeId = 0;
-  
+  final List<bool> _tabLoaded = [true, false, false];
+  final List<GlobalKey<_RankingListState>> _listKeys = [
+    GlobalKey<_RankingListState>(),
+    GlobalKey<_RankingListState>(),
+    GlobalKey<_RankingListState>(),
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController!.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSetting();
     });
   }
 
+  void _onTabChanged() {
+    if (_tabController == null || _tabController!.indexIsChanging) return;
+    final idx = _tabController!.index;
+    if (!_tabLoaded[idx]) {
+      _tabLoaded[idx] = true;
+      _listKeys[idx].currentState?.triggerLoad();
+    }
+  }
+
   @override
   void dispose() {
+    _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
     super.dispose();
   }
@@ -77,6 +94,9 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
 
         if (_rankListType == 0) {
           _tabController ??= TabController(length: _tabs.length, vsync: this);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _listKeys[0].currentState?.triggerLoad();
+          });
         } else {
           _tabController?.dispose();
           _tabController = null;
@@ -148,10 +168,10 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                 Expanded(
                   child: TabBarView(
                     controller: tabCtrl,
-                    children: const [
-                      _RankingList(orderBy: 'hits_day'),
-                      _RankingList(orderBy: 'hits_week'),
-                      _RankingList(orderBy: 'hits_month'),
+                    children: [
+                      _RankingList(key: _listKeys[0], orderBy: 'hits_day', autoLoad: false),
+                      _RankingList(key: _listKeys[1], orderBy: 'hits_week', autoLoad: false),
+                      _RankingList(key: _listKeys[2], orderBy: 'hits_month', autoLoad: false),
                     ],
                   ),
                 ),
@@ -228,7 +248,8 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
 class _RankingList extends StatefulWidget {
   final String orderBy;
   final int? typeId;
-  const _RankingList({required this.orderBy, this.typeId});
+  final bool autoLoad;
+  const _RankingList({super.key, required this.orderBy, this.typeId, this.autoLoad = true});
 
   @override
   State<_RankingList> createState() => _RankingListState();
@@ -236,7 +257,9 @@ class _RankingList extends StatefulWidget {
 
 class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> items = [];
-  bool loading = true;
+  bool loading = false;
+  bool _initialized = false;
+  bool _isLoading = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -244,44 +267,63 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   @override
   void initState() {
     super.initState();
+    if (widget.autoLoad) {
+      _initialized = true;
+      _loadData();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _RankingList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.typeId != widget.typeId || oldWidget.orderBy != widget.orderBy) {
+      setState(() {
+        items = [];
+        loading = true;
+      });
+      _loadData();
+    }
+  }
+
+  void triggerLoad() {
+    if (_initialized) return;
+    _initialized = true;
     _loadData();
   }
 
   Future<void> _loadData() async {
-    // 延时一下等待 Context 稳定，特别是刚进入页面时
-    await Future.delayed(Duration.zero);
-    if (!mounted) return;
-    
+    if (!mounted || _isLoading) return;
+    _isLoading = true;
+
     final api = context.read<MacApi>();
-    // 首次加载显示 loading，后续刷新不全屏 loading
     if (items.isEmpty) setState(() => loading = true);
-    
+
     try {
-      // 这里的 typeId 可以根据实际情况调整，不传就是全部分类
       List<Map<String, dynamic>> res = await api.getFiltered(
         typeId: widget.typeId,
         orderby: widget.orderBy,
         limit: 20,
       );
-      
-      // 自动降级：如果日榜/周榜无数据，尝试获取全部（hits）避免空白
+
       if (res.isEmpty && widget.orderBy.contains('_')) {
-        print('Rank empty for ${widget.orderBy}, fallback to total hits');
         res = await api.getFiltered(
           typeId: widget.typeId,
           orderby: 'hits',
           limit: 20,
         );
       }
-      
+
       if (mounted) {
         setState(() {
           items = res;
         });
       }
     } catch (e) {
-      print('Rank Error: $e');
+      if (mounted) {
+        setState(() => items = []);
+      }
     } finally {
+      _isLoading = false;
       if (mounted) setState(() => loading = false);
     }
   }
@@ -289,32 +331,17 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (!loading && items.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (!loading && items.isEmpty) {
-          setState(() {
-            loading = true;
-          });
-          _loadData();
-        }
-      });
-    }
     if (loading) return const Center(child: CircularProgressIndicator());
-    
-    // 即使为空也允许刷新
-    Widget content;
+
     if (items.isEmpty) {
-      content = Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.sentiment_dissatisfied, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('暂无数据，请尝试刷新', style: TextStyle(color: Colors.grey)),
+            const Text('暂无数据', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
-            // 开发者：杰哥网络科技 (qq: 2711793818)
-            // 修复：使用主题色，避免硬编码紫色
             ElevatedButton.icon(
               onPressed: () {
                  setState(() => loading = true);
@@ -327,17 +354,17 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
           ],
         ),
       );
-    } else {
-      content = ListView.builder(
+    }
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
         padding: const EdgeInsets.only(top: 16, bottom: 20, left: 16, right: 16),
         itemCount: items.length,
         itemBuilder: (ctx, i) {
           final item = items[i];
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
-            child: // 开发者：杰哥网络科技 (qq: 2711793818)
-              // 修复：使用主题色，避免硬编码白色
-              Container(
+            child: Container(
               margin: const EdgeInsets.only(bottom: 16),
               height: 140,
               decoration: BoxDecoration(
@@ -353,7 +380,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
               ),
               child: Row(
                 children: [
-                  // 海报
                   ClipRRect(
                     borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
                     child: CachedNetworkImage(
@@ -365,7 +391,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                       errorWidget: (_, __, ___) => Container(color: Colors.grey[200], child: const Icon(Icons.movie)),
                     ),
                   ),
-                  // 信息
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -373,8 +398,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          // 开发者：杰哥网络科技 (qq: 2711793818)
-                          // 修复：使用主题文字颜色
                           Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                           Text('评分：${item['score']}', style: const TextStyle(fontSize: 12, color: Colors.orange)),
                           Text(
@@ -424,16 +447,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
             ),
           );
         },
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: Stack(
-        children: [
-          // 确保 ListView 充满以支持下拉
-          items.isEmpty ? ListView(children: [SizedBox(height: MediaQuery.of(context).size.height, child: content)]) : content,
-        ],
       ),
     );
   }
@@ -444,7 +457,7 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
     final parts = s
         .replaceAll('主演：', '')
         .replaceAll('主演:', '')
-        .split(RegExp(r'[、,，\\s]+'))
+        .split(RegExp(r'[、,，\s]+'))
         .where((e) => e.trim().isNotEmpty)
         .toList();
     return parts.take(4).toList();
