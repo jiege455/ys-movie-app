@@ -18,6 +18,8 @@ class _SplashPageState extends State<SplashPage> {
   int _countdown = 3;
   Timer? _timer;
   Map<String, dynamic>? _startupAd;
+  String _loadingText = '正在加载...';
+  bool _showError = false;
 
   @override
   void initState() {
@@ -145,14 +147,14 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.movie_filter, size: 80, color: Color(0xFF9C27B0)),
+            Icon(Icons.movie_filter, size: 80, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               '狐狸影视',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF9C27B0),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 10),

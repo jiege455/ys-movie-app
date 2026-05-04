@@ -71,7 +71,7 @@ class _DownloadPageState extends State<DownloadPage> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9C27B0), foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white),
               child: const Text('清空'),
             ),
           ],
@@ -142,7 +142,7 @@ class _DownloadPageState extends State<DownloadPage> {
               ? const Center(child: Text('暂无下载任务', style: TextStyle(color: Colors.grey)))
               : RefreshIndicator(
                   onRefresh: _load,
-                  color: const Color(0xFF9C27B0),
+                  color: Theme.of(context).colorScheme.primary,
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _tasks.length,
@@ -204,13 +204,13 @@ class _DownloadPageState extends State<DownloadPage> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFF3E5F5),
-                                            borderRadius: BorderRadius.circular(99),
-                                          ),
-                                          child: Text(
-                                            _statusText(status),
-                                            style: const TextStyle(fontSize: 11, color: Color(0xFF9C27B0)),
-                                          ),
+                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(99),
+                                        ),
+                                        child: Text(
+                                          _statusText(status),
+                                          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary),
+                                        ),
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
@@ -229,8 +229,8 @@ class _DownloadPageState extends State<DownloadPage> {
                                       child: LinearProgressIndicator(
                                         value: status == 'downloading' ? progress.clamp(0.0, 1.0) : progress.clamp(0.0, 1.0),
                                         minHeight: 6,
-                                        color: const Color(0xFF9C27B0),
-                                        backgroundColor: const Color(0xFFF3E5F5),
+                                        color: Theme.of(context).colorScheme.primary,
+                                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                       ),
                                     ),
                                     const SizedBox(height: 4),

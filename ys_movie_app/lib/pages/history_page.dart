@@ -148,7 +148,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (item['progress'] != null && item['progress']!.isNotEmpty)
-                            Text(item['progress']!, style: const TextStyle(fontSize: 12, color: Color(0xFF9C27B0))),
+                            Text(item['progress']!, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary)),
                           Text(
                             '上次观看：${_formatTime(item['time'])}',
                             style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
@@ -156,7 +156,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         ],
                       ),
                     ),
-                    trailing: const Icon(Icons.play_circle_outline, color: Color(0xFF9C27B0)),
+                    trailing: Icon(Icons.play_circle_outline, color: Theme.of(context).colorScheme.primary),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']!)));
                     },

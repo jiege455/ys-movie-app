@@ -258,7 +258,7 @@ class _SearchPageState extends State<SearchPage> {
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white12 : const Color(0xFFF3E5F5),
+                                  color: isDark ? Colors.white12 : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(name, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary)),
