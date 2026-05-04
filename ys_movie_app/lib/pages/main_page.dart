@@ -145,7 +145,7 @@ class _MainPageState extends State<MainPage> {
           }
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF9C27B0), // 仿照截图的紫色调
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         items: _navItems

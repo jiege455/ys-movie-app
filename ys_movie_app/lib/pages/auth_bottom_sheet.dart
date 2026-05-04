@@ -52,12 +52,11 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     try {
       final api = context.read<MacApi>();
       final init = await api.getAppInit();
-      final config = api.appConfig;
-      final closed = (int.tryParse('${config['system_reg_status'] ?? 1}') ?? 1) == 0;
+      final closed = !api.isRegOpen;
       if (mounted) {
         setState(() {
           _regClosed = closed;
-          _regTip = config['system_reg_tip']?.toString() ?? '注册已关闭';
+          _regTip = '注册已关闭';
         });
       }
       // 如果需要验证码，加载验证码

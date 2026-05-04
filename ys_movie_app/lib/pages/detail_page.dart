@@ -801,6 +801,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   Future<void> _loadAdverts() async {
     final api = context.read<MacApi>();
+    if (!api.isDetailBannerAdOpen) return;
     try {
       final initData = await api.getAppInit(force: false);
       List<dynamic> ads = [];
@@ -894,11 +895,11 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
               final api = context.read<MacApi>();
               
               // 尝试直接通过 API 发送，BetterPlayer 暂未集成弹幕显示
-              final ok = await api.sendDanmaku(widget.vodId, text, time: _betterPlayerController?.videoPlayerController?.value.position.inSeconds ?? 0);
-              if (ok) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('弹幕发送成功')));
+              final res = await api.sendDanmaku(widget.vodId, text, time: _betterPlayerController?.videoPlayerController?.value.position.inSeconds ?? 0);
+              if (res['success'] == true) {
+                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['msg']?.toString() ?? '弹幕发送成功')));
               } else {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('发送失败')));
+                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['msg']?.toString() ?? '发送失败')));
               }
             },
             child: const Text('发送'),
@@ -972,10 +973,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                     _checkLoginAndRun(() async {
                        final api = context.read<MacApi>();
                        final name = await api.getUserName();
-                       final ok = await api.sendComment(widget.vodId, text, name);
+                       final res = await api.sendComment(widget.vodId, text, name);
                        if (mounted) {
-                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? '评论发送成功' : '发送失败')));
-                         if (ok) _loadComments();
+                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['msg']?.toString() ?? (res['success'] == true ? '评论发送成功' : '发送失败'))));
+                         if (res['success'] == true) _loadComments();
                        }
                      });
                   },
@@ -1054,8 +1055,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                           child: Row(
                             children: [
                               _buildTabItem('详情', 0, primaryColor, iconColor),
-                              const SizedBox(width: 24),
-                              _buildTabItem('评论', 1, primaryColor, iconColor),
+                              if (_api.isCommentOpen) ...[
+                                const SizedBox(width: 24),
+                                _buildTabItem('评论', 1, primaryColor, iconColor),
+                              ],
                               const Spacer(),
                               // 竖屏弹幕发送入口
                               InkWell(
@@ -1108,18 +1111,19 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: CachedNetworkImage(
-                                        imageUrl: detail['vod_pic'] ?? '',
-                                        width: 100,
-                                        height: 140,
-                                        fit: BoxFit.cover,
-                                        placeholder: (_, __) => Container(color: cardColor),
-                                        errorWidget: (_, __, ___) => Container(color: cardColor, child: Icon(Icons.broken_image, color: iconColor)),
+                                    if (!_api.isHideDetailPic)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: CachedNetworkImage(
+                                          imageUrl: detail['vod_pic'] ?? '',
+                                          width: 100,
+                                          height: 140,
+                                          fit: BoxFit.cover,
+                                          placeholder: (_, __) => Container(color: cardColor),
+                                          errorWidget: (_, __, ___) => Container(color: cardColor, child: Icon(Icons.broken_image, color: iconColor)),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
+                                    if (!_api.isHideDetailPic) const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,

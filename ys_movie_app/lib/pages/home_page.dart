@@ -981,19 +981,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             child: GestureDetector(
                               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchPage())),
                                 child: Container(
-                                  height: 36,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  height: 40,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
                                   decoration: BoxDecoration(
-                                    color: isDark ? Theme.of(context).cardColor : Colors.white.withAlpha((255 * 0.8).round()),
-                                    borderRadius: BorderRadius.circular(18),
+                                    color: isDark ? const Color(0xFF1E2A3A) : const Color(0xFFF0F0F0),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                   children: [
-                                    Icon(Icons.search, size: 20, color: isDark ? Colors.white54 : Colors.grey),
+                                    Icon(Icons.search, size: 18, color: isDark ? Colors.white38 : Colors.grey),
                                     const SizedBox(width: 8),
                                     Text(
                                       _searchHint,
-                                      style: TextStyle(color: isDark ? Colors.white54 : Colors.grey, fontSize: 14),
+                                      style: TextStyle(color: isDark ? Colors.white38 : Colors.grey, fontSize: 14),
                                     ),
                                   ],
                                 ),
@@ -1009,31 +1009,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TabBar(
                           controller: _tabCtrl,
                           isScrollable: true,
                           tabAlignment: TabAlignment.start,
                           padding: EdgeInsets.zero,
-                            labelColor: Theme.of(context).colorScheme.primary,
-                          unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
+                          labelColor: Theme.of(context).colorScheme.primary,
+                          unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
                           labelStyle: TextStyle(
                             fontSize: _homeTypeFontSize,
                             fontWeight: FontWeight.bold,
                           ),
                           unselectedLabelStyle: TextStyle(
                             fontSize: (_homeTypeFontSize - 2).clamp(10, 30),
+                            fontWeight: FontWeight.normal,
                           ),
-                          indicator: _showHomepageTypeIndicator
-                              ? UnderlineTabIndicator(
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    width: 3,
-                                  ),
-                                )
-                              : const BoxDecoration(),
+                          indicator: const BoxDecoration(),
                           dividerColor: Colors.transparent,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                           tabs: _tabs.map((t) => Tab(text: t)).toList(),
                         ),
                     ),
@@ -1230,7 +1224,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
       
       // 2. 如果插件初始化没带数据，才尝试根据 level 去单独拉取
       if (firstItems.isEmpty) {
-        final configLevel = int.tryParse('${api.appConfig['system_hot_level'] ?? 8}') ?? 8;
+        final configLevel = api.hotLevel;
         print('Home Page: Loading by Level $configLevel...');
         try {
           final recList = await api.getRecommended(level: configLevel, limit: 12);
@@ -1259,19 +1253,12 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         final initData = await initFuture;
         final appInitData = initData;
         
-        // 读取 Banner 切换时长
-        final rawPageSetting = initData['app_page_setting'];
-        if (rawPageSetting is Map) {
-            final inner = (rawPageSetting['app_page_setting'] is Map)
-                ? (rawPageSetting['app_page_setting'] as Map)
-                : rawPageSetting;
-            final bannerTimeRaw = inner['app_page_homepage_banner_time'] ?? inner['app_page_banner_time'];
-            final bannerTime = int.tryParse('${bannerTimeRaw ?? 10}') ?? 10;
-            if (bannerTime > 0) _bannerIntervalSeconds = bannerTime;
-        }
+        // 读取 Banner 切换时长 - 使用统一配置getter
+        final bannerInterval = api.homepageBannerInterval;
+        if (bannerInterval > 0) _bannerIntervalSeconds = bannerInterval;
 
         // 3. 加载广告配置 (Home Advert & Icon Advert)
-        if (initData['home_advert'] is Map) {
+        if (initData['home_advert'] is Map && api.isHomeInsertAdOpen) {
            homeAdvert = initData['home_advert'];
         }
         if (initData['icon_advert'] is List) {
@@ -1342,28 +1329,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
            if (mounted) setState(() => banners = []);
         }
 
-        // 继续原有的 PageSetting 解析
-        if (rawPageSetting is Map) {
-            final inner = (rawPageSetting['app_page_setting'] is Map)
-                ? (rawPageSetting['app_page_setting'] as Map)
-                : rawPageSetting;
-            
-            // 首页横幅广告 (如果 initData 没返回，尝试从 page_setting 找)
-            if (homeAdvert == null) {
-                final homeAdRaw = inner['home_advert'];
-                if (homeAdRaw is Map) {
-                   homeAdvert = homeAdRaw as Map<String, dynamic>;
-                }
-            }
-            
-            // 首页图标广告 (如果自定义广告里没找到图标，且 initData 没返回，才用这里的)
-            if (customIcons.isEmpty && iconAdverts.isEmpty) {
-              final iconAdRaw = inner['home_icon_advert'] ?? inner['icon_advert'];
-              if (iconAdRaw is List) {
-                 iconAdverts = iconAdRaw.cast<Map<String, dynamic>>();
-              }
-            }
-        }
+        // 页面设置广告数据已在前面通过 initData 加载完毕，此处不再重复解析
       
         // 处理自定义图标广告 (Merge into iconAdverts)
         if (customIcons.isNotEmpty) {
@@ -1561,13 +1527,9 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
           // 轮播图
           if (banners.isNotEmpty)
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: AspectRatio(
-                  aspectRatio: _bannerAspectRatio,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: PageView.builder(
+              child: AspectRatio(
+                aspectRatio: _bannerAspectRatio,
+                child: PageView.builder(
                       controller: _bannerCtrl,
                       itemCount: banners.length,
                       onPageChanged: (i) => _bannerIndex = i,
@@ -1597,21 +1559,45 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                               Positioned(
                                 bottom: 0, left: 0, right: 0,
                                 child: Container(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withAlpha((255 * 0.7).round()),
+                                        Colors.black.withAlpha((255 * 0.8).round()),
                                         Colors.transparent
                                       ],
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
                                     ),
                                   ),
-                                  child: Text(
-                                    item['title'],
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item['title'],
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).colorScheme.primary,
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.play_arrow, size: 16, color: Colors.white),
+                                                SizedBox(width: 4),
+                                                Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -1706,35 +1692,175 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                ),
              ),
 
-          // 热播标题
+          // 热门推荐标题
           if (items.isNotEmpty)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Text(
-                  '当前热播',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '热门推荐',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Row(
+                        children: [
+                          Text('更多', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+                          Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white54 : Colors.black54),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             
-          // 热播网格 (横向封面)
+          // 热门推荐横向滑动
           if (items.isNotEmpty)
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate(
-                  (ctx, i) => _buildGridItem(items[i]),
-                  childCount: items.length,
-                ),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, 
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.6, // 横向比例
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: items.length,
+                  itemBuilder: (ctx, i) {
+                    final item = items[i];
+                    return GestureDetector(
+                      onTap: () => _goDetail(item['id']),
+                      child: Container(
+                        width: 120,
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: item['poster'],
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                                  errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.broken_image)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              item['title'],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
+                            if (item['score'] != null && item['score'].toString().isNotEmpty)
+                              Row(
+                                children: [
+                                  const Icon(Icons.star, size: 12, color: Colors.orange),
+                                  Text('${item['score']}', style: const TextStyle(fontSize: 11, color: Colors.orange)),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
+
+          // 继续观看区域
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '继续观看',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage())),
+                    child: Row(
+                      children: [
+                        Text('更多', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+                        Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white54 : Colors.black54),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 5,
+                itemBuilder: (ctx, i) {
+                  return Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1A2A3A) : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                          child: Container(
+                            width: 80,
+                            height: double.infinity,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.movie, color: Colors.grey),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '视频标题 ${i + 1}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '观看到第 ${i + 1} 集',
+                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: 0.3 + (i * 0.15),
+                                    backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                    minHeight: 4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
 
           // 分类推荐
           for (var section in typeRecommends) ...[

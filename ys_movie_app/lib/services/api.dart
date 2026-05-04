@@ -881,8 +881,9 @@ class MacApi {
     return [];
   }
 
-  // 开发者：杰哥
+  // 开发者：杰哥网络科技 (qq: 2711793818)
   // 作用：获取全局配置（联系方式、分享文案、弹幕开关等）
+  // 解释：从插件 init 接口的 config 字段读取后台所有设置
   Map<String, dynamic> get appConfig {
     if (_initData != null && _initData!['config'] is Map) {
       return _initData!['config'] as Map<String, dynamic>;
@@ -890,27 +891,80 @@ class MacApi {
     return {};
   }
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 作用：获取页面级设置（隐藏封面、隐藏版本号等）
+  // 解释：从插件 init 接口的 app_page_setting.app_page_setting 字段读取
+  Map<String, dynamic> get appPageSetting {
+    if (_initData != null &&
+        _initData!['app_page_setting'] is Map &&
+        _initData!['app_page_setting']['app_page_setting'] is Map) {
+      return _initData!['app_page_setting']['app_page_setting'] as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  // ================= 基础配置 =================
   String get contactUrl => appConfig['app_contact_url']?.toString() ?? appConfig['kefu_url']?.toString() ?? '';
   String get contactText => appConfig['app_contact_text']?.toString() ?? '联系客服';
   String get shareText => appConfig['app_share_text']?.toString() ?? '推荐一款很好用的追剧APP，快来下载吧！';
-  bool get isDanmuEnabled => (int.tryParse('${appConfig['system_danmu_status'] ?? 1}') ?? 1) == 1;
+  String get extraFindUrl => appConfig['app_extra_find_url']?.toString() ?? '';
+  int get cacheTime => int.tryParse('${appConfig['init_cache_time'] ?? 60}') ?? 60;
 
-  // 关于我们
-  String get aboutUsAvatar => appConfig['system_config_about_us_avatar_url']?.toString() ?? '';
-  String get aboutUsContent => appConfig['system_config_about_us_content']?.toString() ?? '';
+  // ================= 评论开关 =================
+  bool get isCommentOpen => (int.tryParse('${appConfig['system_comment_status'] ?? 1}') ?? 1) == 1;
+  bool get isCommentAudit => (int.tryParse('${appConfig['system_comment_audit'] ?? 0}') ?? 0) == 1;
 
-  // 开发者：杰哥网络科技 (qq: 2711793818)
-  // 新增：系统配置开关统一读取
-  bool get isRegOpen => (int.tryParse('${appConfig['system_reg_status'] ?? 1}') ?? 1) == 1;
+  // ================= 注册开关 =================
+  bool get isRegOpen => (int.tryParse('${appConfig['system_register_user_status'] ?? 1}') ?? 1) == 1;
   bool get isRegVerify => (int.tryParse('${appConfig['system_reg_verify'] ?? 0}') ?? 0) == 1;
   bool get isRegWarter => (int.tryParse('${appConfig['system_reg_warter'] ?? 0}') ?? 0) == 1;
   int get regNum => int.tryParse('${appConfig['system_reg_num'] ?? 0}') ?? 0;
-  bool get isVpnDetect => (int.tryParse('${appConfig['system_vpn_detect'] ?? 0}') ?? 0) == 1;
+
+  // ================= VPN/试用 =================
+  bool get isVpnDetect => appConfig['system_vpn_check_status'] == true;
   int get trySee => int.tryParse('${appConfig['system_trysee'] ?? 0}') ?? 0;
-  bool get isGbookOpen => (int.tryParse('${appConfig['system_gbook_status'] ?? 1}') ?? 1) == 1;
-  bool get isCommentAudit => (int.tryParse('${appConfig['system_comment_audit'] ?? 0}') ?? 0) == 1;
+
+  // ================= 弹幕开关 =================
+  bool get isDanmuEnabled => (int.tryParse('${appConfig['system_danmu_status'] ?? 1}') ?? 1) == 1;
+  bool get isThirdDanmuEnabled => appConfig['system_third_danmu_status'] == true;
+
+  // ================= 评论/用户 =================
+  bool get isUserAvatarOpen => (int.tryParse('${appConfig['system_user_avatar_status'] ?? 1}') ?? 1) == 1;
   String get hotSearch => appConfig['system_hot_search']?.toString() ?? '';
-  int get cacheTime => int.tryParse('${appConfig['cache_time'] ?? 60}') ?? 60;
+  int get searchListType => int.tryParse('${appConfig['system_config_search_list_type'] ?? 1}') ?? 1;
+
+  // ================= 关于我们 =================
+  String get aboutUsAvatar => appConfig['system_config_about_us_avatar_url']?.toString() ?? '';
+  String get aboutUsContent => appConfig['system_config_about_us_content']?.toString() ?? '';
+
+  // ================= 推荐级别 =================
+  int get bannerLevel => int.tryParse('${appConfig['system_banner_level'] ?? 9}') ?? 9;
+  int get hotLevel => int.tryParse('${appConfig['system_hot_level'] ?? 8}') ?? 8;
+
+  // ================= 页面设置（隐藏封面等）=================
+  bool get isHideVersion => appPageSetting['app_page_version_hide'] == true;
+  bool get isHideDetailPic => appPageSetting['app_page_vod_detail_pic_hide'] == true;
+  bool get isHideMineBg => appPageSetting['app_page_mine_bg_hide'] == true;
+  int get homepageTypeSize => int.tryParse('${appPageSetting['app_page_homepage_type_size'] ?? 14}') ?? 14;
+  int get homepageBannerInterval => int.tryParse('${appPageSetting['app_page_homepage_banner_interval'] ?? 5}') ?? 5;
+  String get rankListType => appPageSetting['app_page_rank_list_type']?.toString() ?? '2';
+  int get vodSourceType => int.tryParse('${appPageSetting['app_vod_source_type'] ?? 0}') ?? 0;
+
+  // ================= 广告开关 =================
+  bool get isSplashAdOpen => appConfig['ad_splash_status'] == true;
+  bool get isHomeInsertAdOpen => appConfig['ad_home_page_insert_status'] == true;
+  bool get isMineBannerAdOpen => appConfig['ad_mine_page_banner_status'] == true;
+  bool get isDetailBannerAdOpen => appConfig['ad_detail_page_banner_status'] == true;
+  bool get isSearchBannerAdOpen => appConfig['ad_search_page_banner_status'] == true;
+
+  // ================= 搜索规则 =================
+  String get searchVodRule {
+    if (_initData != null &&
+        _initData!['app_page_setting'] is Map) {
+      return (_initData!['app_page_setting'] as Map)['search_vod_rule']?.toString() ?? '搜索名称 简介';
+    }
+    return '搜索名称 简介';
+  }
 
   bool containsFilterWord(String text) {
     if (text.isEmpty) return false;
@@ -2279,7 +2333,10 @@ class MacApi {
     return [];
   }
 
-  Future<bool> sendComment(String vodId, String content, String nickname) async {
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 作用：发送评论
+  /// 返回：{'success': true, 'needAudit': false, 'msg': ''}
+  Future<Map<String, dynamic>> sendComment(String vodId, String content, String nickname) async {
     await init();
     
     // 1. 尝试 JgApp 插件接口
@@ -2289,8 +2346,12 @@ class MacApi {
         'comment': content,
       });
       if (resp.data['code'] == 1) {
-         return true;
+         return {'success': true, 'needAudit': false, 'msg': '评论发送成功'};
       }
+      if (resp.data['code'] == 2) {
+         return {'success': true, 'needAudit': true, 'msg': '评论已提交，审核通过后显示'};
+      }
+      return {'success': false, 'needAudit': false, 'msg': resp.data['msg']?.toString() ?? '发送失败'};
     } catch (_) {}
 
     // 2. 降级：app_api.php
@@ -2301,13 +2362,19 @@ class MacApi {
         'content': content,
         'name': nickname,
       });
-      return resp.data['code'] == 1;
+      if (resp.data['code'] == 1) {
+         return {'success': true, 'needAudit': false, 'msg': '评论发送成功'};
+      }
+      return {'success': false, 'needAudit': false, 'msg': resp.data['msg']?.toString() ?? '发送失败'};
     } catch (_) {
-      return false;
+      return {'success': false, 'needAudit': false, 'msg': '网络错误'};
     }
   }
 
-  Future<bool> sendDanmaku(String vodId, String content, {String color = '#FFFFFF', int time = 0}) async {
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 作用：发送弹幕
+  /// 返回：{'success': true, 'needAudit': false, 'msg': ''}
+  Future<Map<String, dynamic>> sendDanmaku(String vodId, String content, {String color = '#FFFFFF', int time = 0}) async {
     await init();
     try {
       final resp = await _dio.post('jgappapi.index/sendDanmu', data: {
@@ -2317,9 +2384,15 @@ class MacApi {
         'time': time,
         'url_position': 0, // 默认第一个播放源
       });
-      return resp.data['code'] == 1;
+      if (resp.data['code'] == 1) {
+         return {'success': true, 'needAudit': false, 'msg': '弹幕发送成功'};
+      }
+      if (resp.data['code'] == 2) {
+         return {'success': true, 'needAudit': true, 'msg': '弹幕已提交，审核通过后显示'};
+      }
+      return {'success': false, 'needAudit': false, 'msg': resp.data['msg']?.toString() ?? '发送失败'};
     } catch (_) {
-      return false;
+      return {'success': false, 'needAudit': false, 'msg': '网络错误'};
     }
   }
 
@@ -2865,7 +2938,6 @@ class MacApi {
     
     for (final api in cloudApis) {
       try {
-        // ... (rest of the logic)
         final resp = await _dio.get(api, queryParameters: {'id': videoUrl});
         
         // 解析 DPlayer 格式

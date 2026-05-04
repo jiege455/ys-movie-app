@@ -67,21 +67,8 @@ class ProfilePageState extends State<ProfilePage> {
     try {
       final api = context.read<MacApi>();
       final initData = await api.getAppInit();
-      final rawPageSetting = initData['app_page_setting'];
-      if (rawPageSetting is! Map) return;
-      final inner = (rawPageSetting['app_page_setting'] is Map)
-          ? (rawPageSetting['app_page_setting'] as Map)
-          : rawPageSetting;
-
-      final hideVersionRaw = inner['app_page_version_hide'];
-      final hideMineBgRaw = inner['app_page_mine_bg_hide'];
-
-      final hideVersion = (hideVersionRaw is bool)
-          ? hideVersionRaw
-          : (int.tryParse('${hideVersionRaw ?? 0}') ?? 0) == 1;
-      final hideMineBg = (hideMineBgRaw is bool)
-          ? hideMineBgRaw
-          : (int.tryParse('${hideMineBgRaw ?? 0}') ?? 0) == 1;
+      final hideVersion = api.isHideVersion;
+      final hideMineBg = api.isHideMineBg;
       final noticeCount = int.tryParse('${initData['notice_count'] ?? 0}') ?? 0;
 
       if (!mounted) return;
@@ -349,20 +336,7 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _clearCache() async {
-    setState(() => loading = true);
-    // 实际清理
-    await CacheService.clearCache();
-    
-    await Future.delayed(const Duration(milliseconds: 500)); // 稍微展示一下清理过程
-    
-    if (mounted) {
-      setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('缓存已清理')));
-    }
-  }
-
-  String _formatDuration(Duration d) {
+  Future<void> _checkUpdate() async {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
@@ -448,14 +422,13 @@ class ProfilePageState extends State<ProfilePage> {
                       GestureDetector(
                         onTap: isLoggedIn ? null : _showLoginDialog,
                         child: Container(
-                          width: 70,
-                          height: 70,
+                          width: 60,
+                          height: 60,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary, // 统一使用主题色（粉色）
+                            color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [BoxShadow(color: Colors.black.withAlpha((255 * 0.1).round()), blurRadius: 10)],
-                            // 修复：使用 DecorationImage 确保图片完美填充圆形，避免歪斜
                             image: isLoggedIn && userInfo?['user_portrait'] != null
                                 ? DecorationImage(
                                     image: CachedNetworkImageProvider(userInfo!['user_portrait']),
@@ -466,8 +439,6 @@ class ProfilePageState extends State<ProfilePage> {
                                     fit: BoxFit.cover,
                                   ),
                           ),
-                          alignment: Alignment.center,
-                          child: null,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -480,7 +451,7 @@ class ProfilePageState extends State<ProfilePage> {
                               onTap: isLoggedIn ? null : _showLoginDialog,
                               child: Text(
                                 isLoggedIn ? (userInfo?['name'] ?? '用户') : '点击登录',
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), // Removed hardcoded color
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -489,21 +460,23 @@ class ProfilePageState extends State<ProfilePage> {
                                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VipPage())),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(4)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withAlpha(30),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      Icon(Icons.diamond, size: 12, color: Colors.amber[700]),
+                                      const SizedBox(width: 4),
                                       Text(
-                                        userInfo?['is_vip'] == true 
-                                          ? (userInfo?['group'] ?? 'VIP会员')
-                                          : (userInfo?['group'] ?? '普通会员'),
+                                        userInfo?['is_vip'] == true ? 'VIP会员' : '普通会员',
                                         style: TextStyle(
                                           fontSize: 10, 
-                                          color: userInfo?['is_vip'] == true ? Colors.amber[700] : (isDark ? Colors.white70 : Colors.black54),
-                                          fontWeight: userInfo?['is_vip'] == true ? FontWeight.bold : FontWeight.normal,
+                                          color: Colors.amber[700],
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      Icon(Icons.arrow_forward_ios, size: 8, color: isDark ? Colors.white70 : Colors.black54),
                                     ],
                                   ),
                                 ),
@@ -513,16 +486,16 @@ class ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
-                      // 设置按钮（放回这里，与登录信息并列）
+                      // 设置按钮
                       IconButton(
-                        icon: const Icon(Icons.settings), // Removed hardcoded color
+                        icon: const Icon(Icons.settings),
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
                         },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   // 统计数据
                   Row(
                     children: [
@@ -645,20 +618,25 @@ class ProfilePageState extends State<ProfilePage> {
                     
                     const SizedBox(height: 16),
                     
-                    // 功能网格卡片
+                    // 常用功能标题
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4, bottom: 12),
+                      child: Text('常用功能', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                    
+                    // 功能网格卡片（8个功能，跟参考图一致）
                     Container(
                       decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10), // 减少水平内边距
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
                       child: GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         crossAxisCount: 4,
-                        mainAxisSpacing: 10, // 减小间距
-                        crossAxisSpacing: 10, // 减小间距
-                        childAspectRatio: 0.9, // 调整比例，让内容更紧凑
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 0.85,
                         children: [
                           _buildGridIcon(Icons.favorite_border, '我的收藏', onTap: () async {
-                             // 如果是本地，从 Store 获取；如果是云端，从 API 获取
                              List<Map<String, dynamic>> items = [];
                              if (isLoggedIn) {
                                 items = cloudFavs;
@@ -677,7 +655,6 @@ class ProfilePageState extends State<ProfilePage> {
                              Navigator.push(context, MaterialPageRoute(builder: (_) => VodListPage(title: '我的收藏', items: items)));
                           }),
                           _buildGridIcon(Icons.download_outlined, '我的缓存', onTap: () async {
-                             // 读取缓存列表
                              final cacheStrings = await StoreService.getCache();
                              final cachedList = cacheStrings.map((e) {
                                 final parts = e.split('|');
@@ -694,8 +671,8 @@ class ProfilePageState extends State<ProfilePage> {
                              if (!mounted) return;
                              Navigator.push(context, MaterialPageRoute(builder: (_) => VodListPage(title: '我的缓存', items: cachedList)));
                           }),
-                          _buildGridIcon(Icons.downloading_rounded, '下载管理', onTap: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadPage()));
+                          _buildGridIcon(Icons.history, '观看历史', onTap: () {
+                             Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()));
                           }),
                           _buildGridIcon(Icons.search, '求片找片', onTap: () {
                              Navigator.push(context, MaterialPageRoute(builder: (_) => const FindPage())).then((_) => refresh());
@@ -708,16 +685,16 @@ class ProfilePageState extends State<ProfilePage> {
                              }
                           }),
                           Stack(
-                            alignment: Alignment.center, // 确保 Stack 居中
+                            alignment: Alignment.center,
                             children: [
-                              Positioned.fill( // 填充整个格子
+                              Positioned.fill(
                                 child: _buildGridIcon(Icons.notifications_none, '消息中心', onTap: () {
                                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MessageCenterPage()));
                                 }),
                               ),
                               if (_noticeCount > 0)
                                 Positioned(
-                                  top: 5, // 微调红点位置
+                                  top: 5,
                                   right: 20,
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
@@ -743,11 +720,8 @@ class ProfilePageState extends State<ProfilePage> {
                           ),
                           _buildGridIcon(Icons.color_lens_outlined, '主题换肤', onTap: _switchTheme),
                           _buildGridIcon(Icons.share_outlined, '分享好友', onTap: () {
-                             // 简单复制链接
                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('分享链接已复制')));
                           }),
-                          _buildGridIcon(Icons.system_update_alt, '检查升级', onTap: _checkUpdate),
-                          _buildGridIcon(Icons.cleaning_services_outlined, '清理缓存', onTap: _clearCache),
                         ],
                       ),
                     ),
@@ -773,6 +747,20 @@ class ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(count, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Removed hardcoded color
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatIcon(IconData icon, String label, {VoidCallback? onTap}) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, size: 24, color: primaryColor),
+          const SizedBox(height: 4),
           Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),

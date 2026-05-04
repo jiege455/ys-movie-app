@@ -69,14 +69,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
     try {
       final api = context.read<MacApi>();
       final initData = await api.getAppInit();
-      final rawPageSetting = initData['app_page_setting'];
-      int rankType = 0;
-      if (rawPageSetting is Map) {
-        final inner = (rawPageSetting['app_page_setting'] is Map)
-            ? (rawPageSetting['app_page_setting'] as Map)
-            : rawPageSetting;
-        rankType = int.tryParse('${inner['app_page_rank_list_type'] ?? 0}') ?? 0;
-      }
+      int rankType = int.tryParse(api.rankListType) ?? 0;
 
       List<Map<String, dynamic>> types = [];
       final rawTypeList = initData['type_list'];
@@ -149,7 +142,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
           SafeArea(
             child: Column(
               children: [
-              // 顶部标题（移除搜索框）
+              // 顶部标题
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -162,6 +155,41 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   ],
                 ),
               ),
+              // 分类标签栏
+              if (_typeList.isNotEmpty)
+                Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _typeList.length,
+                    itemBuilder: (ctx, i) {
+                      final type = _typeList[i];
+                      final id = int.tryParse('${type['type_id'] ?? 0}') ?? 0;
+                      final name = (type['type_name'] ?? '').toString();
+                      final isSelected = _selectedTypeId == id;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedTypeId = id),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? primaryColor.withAlpha(30) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? primaryColor : (isDark ? Colors.white60 : Colors.black54),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               if (_loadingSetting)
                 const Expanded(
                   child: Center(child: CircularProgressIndicator()),
@@ -252,7 +280,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -386,66 +414,82 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         itemCount: items.length,
         itemBuilder: (ctx, i) {
           final item = items[i];
+          final rank = i + 1;
+          final isTop3 = rank <= 3;
+          final rankColor = isTop3
+              ? (rank == 1 ? Colors.orange : (rank == 2 ? Colors.grey[400]! : Colors.brown[400]!))
+              : Colors.grey[600]!;
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              height: 140,
+              margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+              height: 120,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha((255 * 0.05).round()),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
+                  // 排名编号
+                  Container(
+                    width: 40,
+                    height: double.infinity,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$rank',
+                      style: TextStyle(
+                        fontSize: isTop3 ? 24 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: rankColor,
+                      ),
+                    ),
+                  ),
                   ClipRRect(
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                    borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(
                       imageUrl: item['poster'],
-                      width: 100,
+                      width: 80,
                       height: double.infinity,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(color: Colors.grey[200]),
                       errorWidget: (_, __, ___) => Container(color: Colors.grey[200], child: const Icon(Icons.movie)),
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
-                          Text('评分：${item['score']}', style: const TextStyle(fontSize: 12, color: Colors.orange)),
+                          Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                           Text(
                             [
                               if ((item['year'] ?? '').toString().isNotEmpty) '${item['year']}',
                               if ((item['area'] ?? '').toString().isNotEmpty) '${item['area']}',
                               if ((item['lang'] ?? '').toString().isNotEmpty) '${item['lang']}',
-                            ].join('/'),
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ].join(' · '),
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                           Text(
-                            (() {
-                              final raw = (item['overview'] ?? '').toString();
-                              final base = raw.isEmpty ? '暂无简介' : raw;
-                              final noTags = base.replaceAll(RegExp(r'<[^>]*>'), '');
-                              return noTags
-                                  .replaceAll('&nbsp;', ' ')
-                                  .replaceAll('&amp;', '&')
-                                  .replaceAll('&quot;', '"')
-                                  .replaceAll('&#39;', '\'');
-                            })(),
-                            maxLines: 2,
+                            '导演：${item['director'] ?? '未知'}',
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          Text(
+                            '主演：${item['actor'] ?? '未知'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, size: 14, color: Colors.orange),
+                              const SizedBox(width: 4),
+                              Text('${item['score'] ?? '0.0'}', style: const TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.bold)),
+                            ],
                           ),
                           if ((item['actor'] ?? '').toString().isNotEmpty)
                             Wrap(

@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../services/api.dart';
 import '../services/theme_provider.dart';
 import '../services/store.dart';
+import '../services/cache_service.dart';
 import 'auth_bottom_sheet.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -35,9 +36,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _calcCache() async {
-    // 模拟计算缓存
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) setState(() => _cacheSize = '12.5MB');
+    try {
+      final size = await CacheService.getCacheSize();
+      if (mounted) setState(() => _cacheSize = '${size.toStringAsFixed(2)}MB');
+    } catch (_) {
+      if (mounted) setState(() => _cacheSize = '0.00MB');
+    }
   }
 
   Future<void> _loadLoginState() async {
@@ -50,8 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _clearCache() async {
     setState(() => _cacheSize = '清理中...');
-    await Future.delayed(const Duration(seconds: 1));
-    // 这里可以调用 StoreService.clearCache() 等实际逻辑
+    await CacheService.clearCache();
     if (mounted) {
       setState(() => _cacheSize = '0.00MB');
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('缓存已清理')));
@@ -152,6 +155,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showAboutDialog() {
+    final api = context.read<MacApi>();
+    final hideVer = api.isHideVersion;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -162,8 +167,10 @@ class _SettingsPageState extends State<SettingsPage> {
             const Icon(Icons.movie_filter, size: 64, color: Color(0xFF9C27B0)),
             const SizedBox(height: 16),
             const Text('狐狸影视', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Version $_version', style: const TextStyle(color: Colors.grey)),
+            if (!hideVer) ...[
+              const SizedBox(height: 8),
+              Text('Version $_version', style: const TextStyle(color: Colors.grey)),
+            ],
             const SizedBox(height: 16),
             const Text('我们致力于提供最优质的影视观看体验。\n如有侵权请联系我们删除。', textAlign: TextAlign.center),
           ],
@@ -436,11 +443,31 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () async {
               final api = context.read<MacApi>();
               final update = await api.getAppUpdate();
-              if (update == null && mounted) {
+              if (!mounted) return;
+              if (update != null) {
+                final vName = update['version_name']?.toString() ?? '';
+                final desc = update['description']?.toString() ?? '';
+                final isForce = update['is_force'] == true;
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('发现新版本'),
+                    content: Text('版本号：$vName\n\n$desc${isForce ? '\n\n此版本为强制更新' : ''}'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('稍后再说')),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // 通知 HomePage 弹出下载对话框
+                        },
+                        child: const Text('立即更新'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前已是最新版本')));
               }
-              // 如果有更新，Home Page 那边的逻辑会自动弹窗，或者这里也可以简单提示。
-              // 为了简单，这里只提示无更新，有更新的话 HomePage 会自动处理。
             },
           ),
           ListTile(
