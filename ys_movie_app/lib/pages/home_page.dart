@@ -1418,46 +1418,28 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
 
       if (banners.isNotEmpty) _startBannerTimer();
 
-      // 3. 构造分类推荐（并行请求提升加载速度）
+      // 3. 构造分类推荐（自动读取后台分类，无需硬编码）
       try {
         List<Map<String, dynamic>> newTypeRecommends = [];
 
         final initData = await initFuture;
         final typeList = (initData['type_list'] as List?) ?? [];
         
-        int getIdByName(String name, int defaultId) {
-           final found = typeList.firstWhere(
-             (t) => (t['type_name'] as String).contains(name),
-             orElse: () => {'type_id': defaultId},
-           );
-           return int.tryParse('${found['type_id']}') ?? defaultId;
-        }
-
-        // 定义要展示的板块顺序
-        // 修复：兼容后台分类名称（分类1/2/3/4 或 电影/电视剧/综艺/动漫）
-        final sections = [
-          {'name': '电影推荐', 'key': '电影', 'altKey': '分类1', 'defaultId': 1},
-          {'name': '电视剧推荐', 'key': '电视剧', 'altKey': '分类2', 'defaultId': 2},
-          {'name': '综艺推荐', 'key': '综艺', 'altKey': '分类3', 'defaultId': 3},
-          {'name': '动漫推荐', 'key': '动漫', 'altKey': '分类4', 'defaultId': 4},
-        ];
-
-        int getIdByNameOrAlt(String key, String altKey, int defaultId) {
-           final found = typeList.firstWhere(
-             (t) {
-               final name = (t['type_name'] as String? ?? '').toLowerCase();
-               return name.contains(key.toLowerCase()) || name.contains(altKey.toLowerCase());
-             },
-             orElse: () => {'type_id': defaultId},
-           );
-           return int.tryParse('${found['type_id']}') ?? defaultId;
+        // 自动提取后台启用的分类（排除"全部"和特殊页面）
+        final sections = <Map<String, dynamic>>[];
+        for (final t in typeList.whereType<Map>()) {
+          final id = int.tryParse('${t['type_id'] ?? 0}') ?? 0;
+          final name = (t['type_name'] ?? '').toString().trim();
+          // 跳过"全部"和无效分类
+          if (id <= 0 || name.isEmpty || name == '全部') continue;
+          sections.add({'type_id': id, 'type_name': name});
         }
 
         final futures = <Future<void>>[];
         final resultsBySection = <int, List<Map<String, dynamic>>>{};
         for (var i = 0; i < sections.length; i++) {
           final sec = sections[i];
-          int tid = getIdByNameOrAlt(sec['key'] as String, sec['altKey'] as String, sec['defaultId'] as int);
+          final tid = sec['type_id'] as int;
           if (tid > 0) {
             futures.add(api.getFiltered(typeId: tid, limit: 9).then((list) {
               if (list.length > 9) list = list.take(9).toList();
@@ -1473,8 +1455,8 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
           final list = resultsBySection[i];
           if (list != null && list.isNotEmpty) {
             newTypeRecommends.add({
-              'type_name': sec['name'],
-              'key': sec['key'],
+              'type_name': '${sec['type_name']}推荐',
+              'key': sec['type_name'],
               'items': list.map((m) => {
                 'id': m['id'],
                 'title': m['title'],
