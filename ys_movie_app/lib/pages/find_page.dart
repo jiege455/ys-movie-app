@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
 
-/**
- * 开发者：杰哥网络科技 (qq: 2711793818)
- * 作用：求片找片页面，对接后台 jgappapi.index/find 接口
- * 解释：用户提交想看的影片，后台管理员看到后会帮忙找片。
- */
+/// 开发者：杰哥网络科技 (qq: 2711793818)
+/// 作用：求片找片页面，对接后台 jgappapi.index/find 接口
+/// 解释：用户提交想看的影片，后台管理员看到后会帮忙找片。
 class FindPage extends StatefulWidget {
   const FindPage({Key? key}) : super(key: key);
 
@@ -49,8 +47,14 @@ class _FindPageState extends State<FindPage> {
   }
 
   @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _remarkCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(

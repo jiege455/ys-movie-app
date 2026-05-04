@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import 'detail_page.dart';
 import '../services/store.dart';
+import '../services/api.dart';
 import 'dart:io';
 
 /**
- * 开发者：杰哥
+ * 开发者：杰哥网络科技 (qq: 2711793818)
  * 作用：通用视频列表页，用于展示收藏、历史记录等
+ * 修复：收藏页面支持长按删除和取消收藏
  */
 class VodListPage extends StatefulWidget {
   final String title;
@@ -14,8 +17,8 @@ class VodListPage extends StatefulWidget {
   final VoidCallback? onClear;
 
   const VodListPage({
-    super.key, 
-    required this.title, 
+    super.key,
+    required this.title,
     required this.items,
     this.onClear,
   });
@@ -45,6 +48,8 @@ class _VodListPageState extends State<VodListPage> {
     }
     return false;
   }
+
+  bool get _isFavPage => widget.title.contains('收藏');
 
   String _cacheRootPath() {
     for (final it in _items) {
@@ -86,7 +91,9 @@ class _VodListPageState extends State<VodListPage> {
       builder: (ctx) {
         return AlertDialog(
           title: const Text('确认删除'),
-          content: Text('确定删除选中的 $count 条缓存记录吗？\n会同时尝试删除本地文件。'),
+          content: Text(_isCachePage
+              ? '确定删除选中的 $count 条缓存记录吗？\n会同时尝试删除本地文件。'
+              : '确定取消选中的 $count 条收藏吗？'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
             ElevatedButton(
@@ -106,20 +113,31 @@ class _VodListPageState extends State<VodListPage> {
     final ok = await _confirmDelete(count: _selectedIds.length);
     if (!ok) return;
 
-    final ids = _selectedIds.toList();
-    await StoreService.removeCaches(ids);
+    if (_isFavPage) {
+      // 收藏页面：调用API取消收藏
+      final api = context.read<MacApi>();
+      for (final id in _selectedIds) {
+        try {
+          await api.deleteFavByVodId(id);
+        } catch (_) {}
+      }
+    } else if (_isCachePage) {
+      // 缓存页面：删除本地文件
+      final ids = _selectedIds.toList();
+      await StoreService.removeCaches(ids);
 
-    for (final it in _items) {
-      final id = (it['id'] ?? '').toString();
-      if (!_selectedIds.contains(id)) continue;
-      final u = (it['url'] ?? '').toString();
-      if (u.isEmpty) continue;
-      try {
-        final f = File(u);
-        if (await f.exists()) {
-          await f.delete();
-        }
-      } catch (_) {}
+      for (final it in _items) {
+        final id = (it['id'] ?? '').toString();
+        if (!_selectedIds.contains(id)) continue;
+        final u = (it['url'] ?? '').toString();
+        if (u.isEmpty) continue;
+        try {
+          final f = File(u);
+          if (await f.exists()) {
+            await f.delete();
+          }
+        } catch (_) {}
+      }
     }
 
     if (!mounted) return;
@@ -135,18 +153,30 @@ class _VodListPageState extends State<VodListPage> {
     final ok = await _confirmDelete(count: _items.length);
     if (!ok) return;
 
-    final ids = _items.map((e) => (e['id'] ?? '').toString()).where((e) => e.isNotEmpty).toList();
-    await StoreService.removeCaches(ids);
+    if (_isFavPage) {
+      // 收藏页面：逐个取消收藏
+      final api = context.read<MacApi>();
+      for (final it in _items) {
+        final id = (it['id'] ?? '').toString();
+        if (id.isEmpty) continue;
+        try {
+          await api.deleteFavByVodId(id);
+        } catch (_) {}
+      }
+    } else if (_isCachePage) {
+      final ids = _items.map((e) => (e['id'] ?? '').toString()).where((e) => e.isNotEmpty).toList();
+      await StoreService.removeCaches(ids);
 
-    for (final it in _items) {
-      final u = (it['url'] ?? '').toString();
-      if (u.isEmpty) continue;
-      try {
-        final f = File(u);
-        if (await f.exists()) {
-          await f.delete();
-        }
-      } catch (_) {}
+      for (final it in _items) {
+        final u = (it['url'] ?? '').toString();
+        if (u.isEmpty) continue;
+        try {
+          final f = File(u);
+          if (await f.exists()) {
+            await f.delete();
+          }
+        } catch (_) {}
+      }
     }
 
     if (!mounted) return;
@@ -161,27 +191,27 @@ class _VodListPageState extends State<VodListPage> {
   Widget build(BuildContext context) {
     final rootPath = _cacheRootPath();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          if (_isCachePage)
+          if (_isCachePage || _isFavPage)
             IconButton(
               icon: Icon(_selectMode ? Icons.close : Icons.checklist),
               tooltip: _selectMode ? '退出多选' : '多选',
               onPressed: () => _toggleSelectMode(),
             ),
-          if (_isCachePage && !_selectMode)
+          if ((_isCachePage || _isFavPage) && !_selectMode)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: '清空缓存',
+              tooltip: _isFavPage ? '清空收藏' : '清空缓存',
               onPressed: _clearAllCache,
             ),
-          if (_isCachePage && _selectMode)
+          if ((_isCachePage || _isFavPage) && _selectMode)
             IconButton(
               icon: const Icon(Icons.delete_forever_outlined),
-              tooltip: '删除选中',
+              tooltip: _isFavPage ? '取消选中收藏' : '删除选中',
               onPressed: _deleteSelected,
             ),
           if (widget.onClear != null)
@@ -229,7 +259,7 @@ class _VodListPageState extends State<VodListPage> {
                       }
 
                       return GestureDetector(
-                        onLongPress: _isCachePage
+                        onLongPress: (_isCachePage || _isFavPage)
                             ? () {
                                 if (!_selectMode) {
                                   setState(() {
@@ -244,7 +274,7 @@ class _VodListPageState extends State<VodListPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           height: 100,
                           decoration: BoxDecoration(
-                            color: selected 
+                            color: selected
                                 ? (isDark ? const Color(0xFF9C27B0).withOpacity(0.2) : const Color(0xFFF3E5F5))
                                 : (isDark ? Theme.of(context).cardColor : Colors.white),
                             borderRadius: BorderRadius.circular(8),
@@ -260,11 +290,11 @@ class _VodListPageState extends State<VodListPage> {
                           ),
                           child: Row(
                             children: [
-                              if (_isCachePage)
+                              if (_isCachePage || _isFavPage)
                                 Padding(
                                   padding: const EdgeInsets.only(left: 10, right: 6),
                                   child: Icon(
-                                    selected ? Icons.check_circle : (_selectMode ? Icons.radio_button_unchecked : Icons.download_done),
+                                    selected ? Icons.check_circle : (_selectMode ? Icons.radio_button_unchecked : (_isFavPage ? Icons.favorite : Icons.download_done)),
                                     color: selected ? const Color(0xFF9C27B0) : (isDark ? Colors.white38 : Colors.black38),
                                   ),
                                 ),

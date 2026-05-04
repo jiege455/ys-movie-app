@@ -6,11 +6,9 @@ import 'detail_page.dart';
 // by：杰哥 
 // qq： 2711793818
 
-/**
- * 开发者：杰哥
- * 作用：排行榜页面，实现日榜、周榜、月榜切换
- * 小白解释：这里看大家都在看什么，分今天、这周、这月最火的。
- */
+/// 开发者：杰哥 (qq: 2711793818)
+/// 作用：排行榜页面，实现日榜、周榜、月榜切换，按分类排序
+/// 小白解释：这里看大家都在看什么，分今天、这周、这月最火的。
 class RankingPage extends StatefulWidget {
   const RankingPage({super.key});
 
@@ -103,6 +101,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
 
         if (_rankListType == 0) {
           _tabController ??= TabController(length: _tabs.length, vsync: this);
+          _resetTabLoaded();
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _listKeys[0].currentState?.triggerLoad();
           });

@@ -330,9 +330,9 @@ class ProfilePageState extends State<ProfilePage> {
     final primaryColor = Theme.of(context).colorScheme.primary;
     return SimpleDialogOption(
       onPressed: () {
-        Navigator.pop(context);
         themeProvider.setThemeStyle(value);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已切换为$label')));
+        Navigator.pop(context);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
