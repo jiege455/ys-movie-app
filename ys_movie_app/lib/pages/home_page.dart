@@ -1100,6 +1100,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
   List<Map<String, dynamic>> iconAdverts = [];
   List<Map<String, dynamic>> items = []; // 热播
   List<Map<String, dynamic>> typeRecommends = []; // 分类推荐
+  List<Map<String, dynamic>> _historyList = []; // 继续观看历史记录
 
   final PageController _bannerCtrl = PageController();
   int _bannerIndex = 0;
@@ -1174,11 +1175,25 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
       final cachedBanners = (cache['banners'] as List?)?.cast<Map<String, dynamic>>() ?? const <Map<String, dynamic>>[];
       final cachedItems = (cache['items'] as List?)?.cast<Map<String, dynamic>>() ?? const <Map<String, dynamic>>[];
       final cachedTypeRecs = (cache['typeRecommends'] as List?)?.cast<Map<String, dynamic>>() ?? const <Map<String, dynamic>>[];
+      // 读取历史记录缓存
+      final hist = await StoreService.getHistory();
+      final historyItems = hist.map((e) {
+        final parts = e.split('|');
+        if (parts.length < 3) return null;
+        return {
+          'id': parts[0],
+          'title': parts.length > 1 ? parts[1] : '',
+          'poster': parts.length > 2 ? parts[2] : '',
+          'url': parts.length > 3 ? parts[3] : '',
+          'progress': parts.length > 5 ? int.tryParse(parts[5]) ?? 0 : 0,
+        };
+      }).whereType<Map<String, dynamic>>().toList();
       if (!mounted) return;
       setState(() {
         banners = cachedBanners;
         items = cachedItems;
         typeRecommends = cachedTypeRecs;
+        _historyList = historyItems;
         loading = false;
       });
       if (banners.isNotEmpty) _startBannerTimer();
@@ -1190,6 +1205,17 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
   void _finishProgress({required bool success}) {
     _progress = 1.0;
     widget.onLoadChanged?.call(success ? LoadStatus.success : LoadStatus.failure, _progress);
+  }
+
+  /// 格式化播放时长为 HH:MM:SS 或 MM:SS
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
+    if (d.inHours > 0) {
+      return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    }
+    return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
   Future<void> _loadData({bool force = false}) async {
@@ -1442,6 +1468,25 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         print('Type recommend failed: $e');
       }
 
+      // 4. 加载历史记录（继续观看）
+      try {
+        final hist = await StoreService.getHistory();
+        final historyItems = hist.map((e) {
+          final parts = e.split('|');
+          if (parts.length < 3) return null;
+          return {
+            'id': parts[0],
+            'title': parts.length > 1 ? parts[1] : '',
+            'poster': parts.length > 2 ? parts[2] : '',
+            'url': parts.length > 3 ? parts[3] : '',
+            'progress': parts.length > 5 ? int.tryParse(parts[5]) ?? 0 : 0,
+          };
+        }).whereType<Map<String, dynamic>>().toList();
+        if (mounted) {
+          setState(() => _historyList = historyItems);
+        }
+      } catch (_) {}
+
     } catch (e) {
       print('Recommend Load Error: $e');
       ok = false;
@@ -1608,9 +1653,29 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                     ),
                   ),
                 ),
-              ),
-            ),
-          
+                // 轮播图指示器
+                if (banners.length > 1)
+                  Container(
+                    height: 30,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: banners.asMap().entries.map((entry) {
+                        return Container(
+                          width: _bannerIndex == entry.key ? 20 : 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: _bannerIndex == entry.key
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.withAlpha(128),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
           // Home Advert (Below Banner)
           if (homeAdvert != null)
              SliverToBoxAdapter(
@@ -1772,95 +1837,105 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
               ),
             ),
 
-          // 继续观看区域
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '继续观看',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage())),
-                    child: Row(
-                      children: [
-                        Text('更多', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
-                        Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white54 : Colors.black54),
-                      ],
+          // 继续观看区域（仅当有历史记录时显示）
+          if (_historyList.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '继续观看',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ],
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage())),
+                      child: Row(
+                        children: [
+                          Text('更多', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+                          Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white54 : Colors.black54),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 5,
-                itemBuilder: (ctx, i) {
-                  return Container(
-                    width: 200,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1A2A3A) : const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                          child: Container(
-                            width: 80,
-                            height: double.infinity,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.movie, color: Colors.grey),
-                          ),
+          if (_historyList.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _historyList.length.clamp(0, 10),
+                  itemBuilder: (ctx, i) {
+                    final item = _historyList[i];
+                    final progress = (item['progress'] as int? ?? 0);
+                    final progressVal = progress > 0 ? (progress / 3600).clamp(0.0, 1.0) : 0.0;
+                    return GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
+                      child: Container(
+                        width: 200,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1A2A3A) : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '视频标题 ${i + 1}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '观看到第 ${i + 1} 集',
-                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
-                                ),
-                                const SizedBox(height: 8),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: 0.3 + (i * 0.15),
-                                    backgroundColor: isDark ? Colors.white12 : Colors.black12,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                                    minHeight: 4,
-                                  ),
-                                ),
-                              ],
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
+                              child: CachedNetworkImage(
+                                imageUrl: item['poster'] ?? '',
+                                width: 80,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(color: Colors.grey[300], child: const Icon(Icons.movie, color: Colors.grey)),
+                                errorWidget: (_, __, ___) => Container(color: Colors.grey[300], child: const Icon(Icons.movie, color: Colors.grey)),
+                              ),
                             ),
-                          ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      item['title'] ?? '未知视频',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      progress > 0 ? '已观看 ${_formatDuration(Duration(seconds: progress))}' : '继续观看',
+                                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: progressVal,
+                                        backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                        minHeight: 4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
 
           // 分类推荐
           for (var section in typeRecommends) ...[

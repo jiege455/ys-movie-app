@@ -174,11 +174,14 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
   Widget build(BuildContext context) {
     // 键盘弹出时，底部 padding 需要增加
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E2A3A) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: bottomPadding + 24),
       child: Column(
@@ -189,16 +192,16 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
           Center(
             child: Container(
               width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: isDark ? Colors.grey[700] : Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Tab 切换
           TabBar(
             controller: _tabController,
             labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey,
+            unselectedLabelColor: isDark ? Colors.white60 : Colors.grey,
             labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorSize: TabBarIndicatorSize.label,
@@ -292,20 +295,25 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             onPressed: _handleLogin,
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('登录即代表同意', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              GestureDetector(
-                onTap: () => _showAgreement('用户协议', 'agreement_content'),
-                child: Text('《用户协议》', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12)),
-              ),
-              Text('和', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              GestureDetector(
-                onTap: () => _showAgreement('隐私政策', 'privacy_content'),
-                child: Text('《隐私政策》', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12)),
-              ),
-            ],
+          Builder(
+            builder: (ctx) {
+              final dark = Theme.of(ctx).brightness == Brightness.dark;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('登录即代表同意', style: TextStyle(color: dark ? Colors.white60 : Colors.grey[600], fontSize: 12)),
+                  GestureDetector(
+                    onTap: () => _showAgreement('用户协议', 'agreement_content'),
+                    child: Text('《用户协议》', style: TextStyle(color: Theme.of(ctx).colorScheme.primary, fontSize: 12)),
+                  ),
+                  Text('和', style: TextStyle(color: dark ? Colors.white60 : Colors.grey[600], fontSize: 12)),
+                  GestureDetector(
+                    onTap: () => _showAgreement('隐私政策', 'privacy_content'),
+                    child: Text('《隐私政策》', style: TextStyle(color: Theme.of(ctx).colorScheme.primary, fontSize: 12)),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -419,9 +427,10 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     bool isPassword = false,
     Function(String)? onSubmitted,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: isDark ? Colors.white10 : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -429,14 +438,17 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
         controller: controller,
         obscureText: isPassword ? _obscureText : false,
         onSubmitted: onSubmitted,
+        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         decoration: InputDecoration(
           icon: Icon(icon, color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
           border: InputBorder.none,
           labelText: label,
+          labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
           hintText: hint,
+          hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: isDark ? Colors.white60 : Colors.grey),
                   onPressed: () => setState(() => _obscureText = !_obscureText),
                 )
               : null,

@@ -18,6 +18,8 @@ class _SplashPageState extends State<SplashPage> {
   int _countdown = 3;
   Timer? _timer;
   Map<String, dynamic>? _startupAd;
+  String _loadingText = '正在加载...';
+  bool _showError = false;
 
   @override
   void initState() {
@@ -140,31 +142,35 @@ class _SplashPageState extends State<SplashPage> {
 
     // 默认启动页（Logo）
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.movie_filter, size: 80, color: Color(0xFF9C27B0)),
+            Icon(Icons.movie_filter, size: 80, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               '狐狸影视',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF9C27B0),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               _loadingText,
-              style: TextStyle(color: _showError ? Colors.red : Colors.grey),
+              style: TextStyle(color: _showError ? Colors.red : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey)),
             ),
             if (_showError)
               Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: ElevatedButton(
                   onPressed: _goMain,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('直接进入'),
                 ),
               ),

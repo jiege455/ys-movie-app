@@ -16,11 +16,9 @@ import 'vod_list_page.dart';
 import 'history_page.dart';
 import 'feedback_center_page.dart';
 import 'auth_bottom_sheet.dart';
-import 'download_page.dart';
 import 'user_center_pages.dart';
 import 'find_page.dart';
 import 'settings_page.dart';
-import '../services/cache_service.dart';
 
 /**
  * 开发者：杰哥
@@ -336,7 +334,9 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _checkUpdate() async {
+  /// 开发者：杰哥
+  /// 作用：格式化播放时长为 HH:MM:SS 或 MM:SS
+  String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
@@ -585,7 +585,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                       bottom: 0, left: 0, right: 0,
                                                       child: LinearProgressIndicator(
                                                         value: item['progressVal'] as double? ?? 0,
-                                                        backgroundColor: Colors.white30,
+                                                        backgroundColor: isDark ? Colors.white30 : Colors.black12,
                                                         valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                                                         minHeight: 2,
                                                       ),
