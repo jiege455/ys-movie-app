@@ -1002,6 +1002,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // 如果是深色模式，使用 Surface 颜色（深蓝），否则使用 Scaffold 背景色
     final bgColor = isDark ? Theme.of(context).colorScheme.surface : Theme.of(context).scaffoldBackgroundColor;
+    final api = context.read<MacApi>();
     
     // 如果正在加载且没有预填充数据，显示骨架屏或Loading
     if (loading && detail['vod_name'] == null) {
@@ -1034,8 +1035,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                       ? BetterPlayer(controller: _betterPlayerController!)
                       : Container(
                           color: Colors.black,
-                          child: const Center(
-                            child: CircularProgressIndicator(color: Color(0xFF9C27B0)),
+                          child: Center(
+                            child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                           ),
                         ),
                 ),
@@ -1055,7 +1056,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                           child: Row(
                             children: [
                               _buildTabItem('详情', 0, primaryColor, iconColor),
-                              if (_api.isCommentOpen) ...[
+                              if (api.isCommentOpen) ...[
                                 const SizedBox(width: 24),
                                 _buildTabItem('评论', 1, primaryColor, iconColor),
                               ],
@@ -1111,7 +1112,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!_api.isHideDetailPic)
+                                    if (!api.isHideDetailPic)
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(6),
                                         child: CachedNetworkImage(
@@ -1123,7 +1124,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                           errorWidget: (_, __, ___) => Container(color: cardColor, child: Icon(Icons.broken_image, color: iconColor)),
                                         ),
                                       ),
-                                    if (!_api.isHideDetailPic) const SizedBox(width: 12),
+                                    if (!api.isHideDetailPic) const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
