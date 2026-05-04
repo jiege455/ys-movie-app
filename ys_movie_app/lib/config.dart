@@ -7,9 +7,9 @@ class AppConfig {
   // =========================================================
   // 请在这里修改你的服务器地址
   // 注意：必须以 http:// 或 https:// 开头，不要以 / 结尾
-  // 当前使用的后端地址为：http://pay.ddgg888.my/api.php
+  // 当前使用的后端地址为：https://ys.ddgg888.my/api.php
   // =========================================================
-  static const String baseUrl = 'http://pay.ddgg888.my/api.php';
+  static const String baseUrl = 'https://ys.ddgg888.my/api.php';
 
   static const String appName = '狐狸影视';
   static const bool overrideSourceName = false;
