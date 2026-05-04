@@ -40,8 +40,8 @@ class _MainPageState extends State<MainPage> {
   Future<void> _loadRemoteTabs() async {
     try {
       final api = context.read<MacApi>();
-      // 强制刷新配置，确保能立刻获取到后台开启的专题页面
-      final initData = await api.getAppInit(force: true);
+      // 获取缓存中的配置（启动页已刷新过，这里直接用缓存即可）
+      final initData = await api.getAppInit(force: false);
       final raw = initData['app_page_setting'];
       if (raw is! Map) return;
       final dynamic tabListRaw = raw['app_tab_setting_list'] ?? (raw['app_page_setting'] is Map ? (raw['app_page_setting'] as Map)['app_tab_setting_list'] : null);

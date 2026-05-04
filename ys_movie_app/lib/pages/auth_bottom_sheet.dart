@@ -29,14 +29,54 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
   final _regUserCtrl = TextEditingController();
   final _regPwdCtrl = TextEditingController();
   final _regPwd2Ctrl = TextEditingController();
+  final _regVerifyCtrl = TextEditingController();
+  final _regInviteCtrl = TextEditingController();
   
   bool _loading = false;
   bool _obscureText = true;
+  bool _regClosed = false; // 注册是否关闭
+  String _regTip = ''; // 注册关闭提示
+  String _verifyCodeUrl = ''; // 验证码图片URL
+  String _verifyCodeSession = ''; // 验证码session
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _checkRegStatus();
+  }
+
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：检查注册开关状态
+  Future<void> _checkRegStatus() async {
+    try {
+      final api = context.read<MacApi>();
+      final init = await api.getAppInit();
+      final config = api.appConfig;
+      final closed = (int.tryParse('${config['system_reg_status'] ?? 1}') ?? 1) == 0;
+      if (mounted) {
+        setState(() {
+          _regClosed = closed;
+          _regTip = config['system_reg_tip']?.toString() ?? '注册已关闭';
+        });
+      }
+      // 如果需要验证码，加载验证码
+      if (!closed && api.isRegVerify) {
+        _refreshVerifyCode();
+      }
+    } catch (_) {}
+  }
+
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：刷新验证码
+  Future<void> _refreshVerifyCode() async {
+    try {
+      final api = context.read<MacApi>();
+      final url = '${api.rootUrl}index.php/verify/index.html';
+      setState(() {
+        _verifyCodeUrl = '$url?r=${DateTime.now().millisecondsSinceEpoch}';
+      });
+    } catch (_) {}
   }
 
   @override
@@ -47,6 +87,8 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     _regUserCtrl.dispose();
     _regPwdCtrl.dispose();
     _regPwd2Ctrl.dispose();
+    _regVerifyCtrl.dispose();
+    _regInviteCtrl.dispose();
     super.dispose();
   }
 
@@ -78,9 +120,18 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
   }
 
   Future<void> _handleRegister() async {
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：注册前检查开关状态
+    if (_regClosed) {
+      _showToast(_regTip.isNotEmpty ? _regTip : '注册已关闭');
+      return;
+    }
+
     final username = _regUserCtrl.text.trim();
     final password = _regPwdCtrl.text.trim();
     final confirm = _regPwd2Ctrl.text.trim();
+    final verify = _regVerifyCtrl.text.trim();
+    final inviteCode = _regInviteCtrl.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
       _showToast('请输入账号和密码');
@@ -94,7 +145,8 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     setState(() => _loading = true);
     try {
       final api = context.read<MacApi>();
-      final res = await api.register(username, password);
+      // 修复：传入邀请码
+      final res = await api.register(username, password, verifyCode: verify, inviteCode: inviteCode);
       if (res['success'] == true) {
         _showToast('注册成功，正在自动登录...');
         // 自动登录
@@ -105,6 +157,8 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
         }
       } else {
         _showToast('注册失败: ${res['msg']}');
+        // 刷新验证码
+        if (api.isRegVerify) _refreshVerifyCode();
       }
     } catch (e) {
       _showToast('错误: $e');
@@ -286,10 +340,72 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             hint: '再次输入密码',
             isPassword: true,
           ),
+          // 开发者：杰哥网络科技 (qq: 2711793818)
+          // 修复：注册表单增加验证码和邀请码
+          if (_verifyCodeUrl.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _regVerifyCtrl,
+                    label: '验证码',
+                    icon: Icons.verified_outlined,
+                    hint: '请输入验证码',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _refreshVerifyCode,
+                  child: Container(
+                    width: 100,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _verifyCodeUrl.isNotEmpty
+                      ? Image.network(_verifyCodeUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Text('点击刷新')))
+                      : const Center(child: Text('点击刷新')),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _regInviteCtrl,
+            label: '邀请码',
+            icon: Icons.card_giftcard_outlined,
+            hint: '没有可不填',
+          ),
+          if (_regClosed) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.red[400], size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _regTip.isNotEmpty ? _regTip : '注册已关闭',
+                      style: TextStyle(color: Colors.red[600], fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 30),
           _buildButton(
-            text: '立即注册',
-            onPressed: _handleRegister,
+            text: _regClosed ? '注册已关闭' : '立即注册',
+            onPressed: _regClosed ? () {} : _handleRegister,
           ),
         ],
       ),

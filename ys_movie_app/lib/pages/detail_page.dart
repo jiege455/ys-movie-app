@@ -101,9 +101,21 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     }
     
     _playerSettings = PlayerSettings();
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：根据后端配置强制控制弹幕开关
+    _initDanmakuConfig();
     _loadData();
     // 加载广告
     _loadAdverts();
+  }
+
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 作用：根据后端配置初始化弹幕开关
+  void _initDanmakuConfig() {
+    try {
+      final api = context.read<MacApi>();
+      _playerSettings.setDanmakuForceDisabled(!api.isDanmuEnabled);
+    } catch (_) {}
   }
 
   /// 开发者：杰哥
@@ -507,6 +519,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       looping: false,
       fullScreenByDefault: false,
       allowedScreenSleep: false,
+      // betterPlayerGlobalKey: _playerGlobalKey, // 该参数在当前版本不存在
       autoDetectFullscreenDeviceOrientation: true, // 开启自动检测方向 (适配短剧)
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp,
@@ -608,6 +621,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       BetterPlayerDataSourceType.network,
       url,
       // videoFormat: BetterPlayerVideoFormat.hls, // 移除强制HLS
+      // pipKey: 'pip_${url.hashCode}', // 该参数在当前版本不存在
+      // userAgent: 'ys_movie_app/1.0', // 该参数在当前版本不存在
       notificationConfiguration: const BetterPlayerNotificationConfiguration(
         showNotification: true,
         title: "正在播放",

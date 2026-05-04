@@ -2,18 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/api.dart';
 import 'services/theme_provider.dart';
+import 'services/cast/cast_manager.dart';
 import 'pages/home_page.dart';
 import 'pages/detail_page.dart';
 import 'pages/search_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/main_page.dart'; // 引入主页
 
-/**
- * 开发者：杰哥
- * 作用：应用入口，配置全局状态和路由
- * 小白解释：这里就是APP从哪里开始跑，以及页面怎么跳转。
- */
-void main() {
+/// 开发者：杰哥网络科技 (qq: 2711793818)
+/// 作用：应用入口，配置全局状态和路由
+/// 小白解释：这里就是APP从哪里开始跑，以及页面怎么跳转。
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 配置图片内存缓存：防止首页大量图片导致内存溢出
+  PaintingBinding.instance.imageCache.maximumSize = 200;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 << 20;
+
+  // 初始化投屏管理器
+  await CastManager().initialize();
+
   runApp(
     MultiProvider(
       providers: [
@@ -36,9 +44,9 @@ class MyApp extends StatelessWidget {
       title: '狐狸影视',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.pink,
-          primary: Colors.pink,
-          secondary: Colors.pinkAccent,
+          seedColor: const Color(0xFF00BFFF), // 天空蓝
+          primary: const Color(0xFF00BFFF), // 天空蓝主色
+          secondary: const Color(0xFF87CEEB), // 浅天空蓝
           surface: Colors.white,
           background: Colors.white,
         ),
@@ -54,7 +62,7 @@ class MyApp extends StatelessWidget {
         ),
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent, // 移除 M3 的粉色表面色调
+          surfaceTintColor: Colors.transparent, // 移除 M3 的表面色调
         ),
         dialogTheme: const DialogTheme(
           backgroundColor: Colors.white,
@@ -67,32 +75,32 @@ class MyApp extends StatelessWidget {
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.pink, // 统一深色模式也为粉色主题
-          primary: Colors.pink,
-          secondary: Colors.pinkAccent,
+          seedColor: const Color(0xFF00BFFF), // 天空蓝
+          primary: const Color(0xFF00BFFF), // 天空蓝主色
+          secondary: const Color(0xFF87CEEB), // 浅天空蓝
           brightness: Brightness.dark,
-          surface: const Color(0xFF15202B),
+          surface: const Color(0xFF0A1A2A),
         ),
-        scaffoldBackgroundColor: const Color(0xFF0B1724), // 深蓝背景，不再是纯黑
-        cardColor: const Color(0xFF15202B),
-        dialogBackgroundColor: const Color(0xFF15202B),
+        scaffoldBackgroundColor: const Color(0xFF051018), // 深天空蓝背景
+        cardColor: const Color(0xFF0A1A2A),
+        dialogBackgroundColor: const Color(0xFF0A1A2A),
         useMaterial3: true,
         brightness: Brightness.dark,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0B1724),
+          backgroundColor: Color(0xFF051018),
           foregroundColor: Colors.white,
           elevation: 0,
         ),
         bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Color(0xFF15202B),
+          backgroundColor: Color(0xFF0A1A2A),
           surfaceTintColor: Colors.transparent,
         ),
         dialogTheme: const DialogTheme(
-          backgroundColor: Color(0xFF15202B),
+          backgroundColor: Color(0xFF0A1A2A),
           surfaceTintColor: Colors.transparent,
         ),
         popupMenuTheme: const PopupMenuThemeData(
-          color: Color(0xFF15202B),
+          color: Color(0xFF0A1A2A),
           surfaceTintColor: Colors.transparent,
         ),
       ),

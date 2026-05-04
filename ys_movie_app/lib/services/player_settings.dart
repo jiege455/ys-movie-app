@@ -4,7 +4,9 @@ import 'store.dart';
 class PlayerSettings extends ChangeNotifier {
   // 弹幕设置
   bool _danmakuEnabled = true;
-  bool get danmakuEnabled => _danmakuEnabled;
+  bool _danmakuForceDisabled = false; // 后端强制关闭
+  bool get danmakuEnabled => !_danmakuForceDisabled && _danmakuEnabled;
+  bool get danmakuUserEnabled => _danmakuEnabled; // 用户原始设置
 
   // 新增：弹幕显示区域 (0.25 ~ 1.0)
   double _danmakuArea = 0.5;
@@ -72,6 +74,15 @@ class PlayerSettings extends ChangeNotifier {
     if (_danmakuEnabled != value) {
       _danmakuEnabled = value;
       StoreService.setDanmakuEnabled(value);
+      notifyListeners();
+    }
+  }
+
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 作用：后端强制控制弹幕开关（当后端关闭弹幕时，用户无法开启）
+  void setDanmakuForceDisabled(bool disabled) {
+    if (_danmakuForceDisabled != disabled) {
+      _danmakuForceDisabled = disabled;
       notifyListeners();
     }
   }

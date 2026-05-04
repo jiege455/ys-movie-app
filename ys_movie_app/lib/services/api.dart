@@ -79,9 +79,9 @@ class MacApi {
 
   void setup() {
     _dio = Dio(BaseOptions(
-      baseUrl: _rootUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
+      baseUrl: rootUrl,
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
       responseType: ResponseType.json,
       validateStatus: (status) {
         return status != null && status < 500;
@@ -142,7 +142,7 @@ class MacApi {
   }
 
   /// 获取网站根路径（用于非API接口，如用户中心）
-  String get _rootUrl {
+  String get rootUrl {
     String root;
     final base = AppConfig.baseUrl;
     if (base.contains('/api.php')) {
@@ -168,7 +168,7 @@ class MacApi {
     // 作用：当域名变更时，自动清空旧的初始化缓存，避免分类读取到旧数据
     // 解释：你换了后台地址，老的缓存会被清掉，重新拉最新分类。
     try {
-      final baseRoot = _rootUrl; // 例如 http://pay.ddgg888.my/
+      final baseRoot = rootUrl; // 例如 http://pay.ddgg888.my/
       final lastBase = prefs.getString('app_init_base') ?? '';
       if (lastBase.trim() != baseRoot.trim()) {
         await prefs.remove('app_init_json');
@@ -229,7 +229,7 @@ class MacApi {
 
     // 2) 自定义 app_api.php
     try {
-      final resp = await _dio.get('${_rootUrl}app_api.php', queryParameters: {
+      final resp = await _dio.get('${rootUrl}app_api.php', queryParameters: {
         'ac': 'list',
         'pg': 1,
         'pagesize': 1,
@@ -258,18 +258,24 @@ class MacApi {
   // ================= 用户相关 =================
 
   /// 注册
-  Future<Map<String, dynamic>> register(String username, String password) async {
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 修复：支持验证码和邀请码传入
+  Future<Map<String, dynamic>> register(String username, String password, {String verifyCode = '', String inviteCode = ''}) async {
     await init();
     try {
       // 0. 优先尝试 JgApp 插件注册接口
       try {
+        final data = {
+          'user_name': username,
+          'password': password,
+          'invite_code': inviteCode,
+        };
+        if (verifyCode.isNotEmpty) {
+          data['verify'] = verifyCode;
+        }
         final resp = await _dio.post(
           'jgappapi.index/appRegister',
-          data: {
-            'user_name': username,
-            'password': password,
-            'invite_code': '', // 暂留空
-          },
+          data: data,
           options: Options(
             contentType: Headers.formUrlEncodedContentType,
             headers: _headers,
@@ -283,14 +289,20 @@ class MacApi {
       } catch (_) {}
 
       // 1. 其次尝试 app_api.php (用户自定义插件接口)
-      // 这个文件需要用户上传到网站根目录
-      final customApiUrl = '${_rootUrl}app_api.php';
+      final customApiUrl = '${rootUrl}app_api.php';
       try {
-        final resp = await _dio.post(customApiUrl, queryParameters: {'ac': 'register'}, data: {
+        final data = {
           'user_name': username,
           'user_pwd': password,
           'user_pwd2': password,
-        });
+        };
+        if (verifyCode.isNotEmpty) {
+          data['verify'] = verifyCode;
+        }
+        if (inviteCode.isNotEmpty) {
+          data['invite_code'] = inviteCode;
+        }
+        final resp = await _dio.post(customApiUrl, queryParameters: {'ac': 'register'}, data: data);
         if (resp.statusCode == 200 && resp.data is Map) {
            if (resp.data['code'] == 1) {
              return {'success': true, 'info': resp.data['msg'] ?? '注册成功'};
@@ -298,32 +310,32 @@ class MacApi {
              return {'success': false, 'msg': resp.data['msg']};
            }
         }
-      } catch (_) {
-        // app_api.php 不存在或请求失败，降级到默认逻辑
-      }
+      } catch (_) {}
 
       // 2. 降级：尝试标准 MacCMS 路径: /index.php/user/reg
-      // ... (保留原有逻辑)
-      final url = '${_rootUrl}/index.php/user/reg';
-      final resp = await _dio.post(url, data: {
+      final url = '${rootUrl}/index.php/user/reg';
+      final data = {
         'user_name': username,
         'user_pwd': password,
         'user_pwd2': password,
-        'verify': '', // 可能需要验证码
-      }, options: Options(
-        contentType: Headers.formUrlEncodedContentType, // 表单提交
+        'verify': verifyCode,
+      };
+      if (inviteCode.isNotEmpty) {
+        data['invite_code'] = inviteCode;
+      }
+      final resp = await _dio.post(url, data: data, options: Options(
+        contentType: Headers.formUrlEncodedContentType,
         headers: {
-          'X-Requested-With': 'XMLHttpRequest', // 伪装 AJAX
+          'X-Requested-With': 'XMLHttpRequest',
         }
       ));
       
-      final data = resp.data;
-      if (data is Map && data['code'] == 1) {
-        return {'success': true, 'info': data['msg'] ?? '注册成功'};
-      } else if (data is Map) {
-        return {'success': false, 'msg': data['msg'] ?? '注册失败'};
+      final respData = resp.data;
+      if (respData is Map && respData['code'] == 1) {
+        return {'success': true, 'info': respData['msg'] ?? '注册成功'};
+      } else if (respData is Map) {
+        return {'success': false, 'msg': respData['msg'] ?? '注册失败'};
       } else {
-        // 如果返回 HTML，可能是 200 OK 但内容是页面
         return {'success': false, 'msg': '服务器返回非JSON格式，可能未开启API注册'};
       }
     } catch (e) {
@@ -439,7 +451,7 @@ class MacApi {
     }
     
     // 1. 尝试 app_api.php（兼容旧版自定义接口）
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.post(customApiUrl, queryParameters: {'ac': 'login'}, data: {
         'user_name': username,
@@ -458,7 +470,7 @@ class MacApi {
     } catch (_) {}
 
     // 2. 降级：尝试标准路径
-    final url = '${_rootUrl}index.php/user/login';
+    final url = '${rootUrl}index.php/user/login';
     try {
       final resp = await _dio.post(url, data: {
         'user_name': username,
@@ -887,6 +899,19 @@ class MacApi {
   String get aboutUsAvatar => appConfig['system_config_about_us_avatar_url']?.toString() ?? '';
   String get aboutUsContent => appConfig['system_config_about_us_content']?.toString() ?? '';
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 新增：系统配置开关统一读取
+  bool get isRegOpen => (int.tryParse('${appConfig['system_reg_status'] ?? 1}') ?? 1) == 1;
+  bool get isRegVerify => (int.tryParse('${appConfig['system_reg_verify'] ?? 0}') ?? 0) == 1;
+  bool get isRegWarter => (int.tryParse('${appConfig['system_reg_warter'] ?? 0}') ?? 0) == 1;
+  int get regNum => int.tryParse('${appConfig['system_reg_num'] ?? 0}') ?? 0;
+  bool get isVpnDetect => (int.tryParse('${appConfig['system_vpn_detect'] ?? 0}') ?? 0) == 1;
+  int get trySee => int.tryParse('${appConfig['system_trysee'] ?? 0}') ?? 0;
+  bool get isGbookOpen => (int.tryParse('${appConfig['system_gbook_status'] ?? 1}') ?? 1) == 1;
+  bool get isCommentAudit => (int.tryParse('${appConfig['system_comment_audit'] ?? 0}') ?? 0) == 1;
+  String get hotSearch => appConfig['system_hot_search']?.toString() ?? '';
+  int get cacheTime => int.tryParse('${appConfig['cache_time'] ?? 60}') ?? 60;
+
   bool containsFilterWord(String text) {
     if (text.isEmpty) return false;
     for (final word in filterWords) {
@@ -1169,7 +1194,7 @@ class MacApi {
     } catch (_) {}
 
     // 2. 尝试 app_api.php (旧版插件)
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.get(customApiUrl, queryParameters: {'ac': 'init'}, options: Options(headers: _headers));
       if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
@@ -1557,7 +1582,7 @@ class MacApi {
       } catch (_) {}
 
       // 1. 尝试 app_api.php (自定义接口通常支持更好)
-      final customApiUrl = '${_rootUrl}app_api.php';
+      final customApiUrl = '${rootUrl}app_api.php';
       try {
         final resp = await _dio.get(customApiUrl, queryParameters: {
           'ac': 'list',
@@ -1693,7 +1718,7 @@ class MacApi {
     } catch (_) {}
 
     // 1. 尝试 app_api.php (支持 Xunsearch)
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
        final resp = await _dio.get(customApiUrl, queryParameters: {
          'ac': 'search',
@@ -1837,7 +1862,7 @@ class MacApi {
     } catch (_) {}
 
     // 2. 尝试 app_api.php (明文接口，可能包含播放源名称)
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.get(customApiUrl, queryParameters: {
         'ac': 'detail',
@@ -2025,12 +2050,12 @@ class MacApi {
     int limit = 20,
   }) async {
     await init();
-    // 优先检测一次接口状态（缓存5分钟），提升响应速度
-    await detectInterfaces();
     // 构建缓存键
     final cacheKey = '$typeId-$year-$area-$lang-$clazz-$orderby-$page';
     final cached = _categoryCache.get(cacheKey);
     if (cached != null) return cached;
+
+    await detectInterfaces();
 
     // 1. 尝试 JgApp 插件接口 (jgappapi.index/typeFilterVodList)
     // 支持高级筛选：class, area, lang, year, sort
@@ -2108,7 +2133,7 @@ class MacApi {
     } catch (_) {}
 
     // 2. 优先使用 app_api.php 的高级筛选接口
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
        if (_customApiOk == false) { throw Exception('custom disabled'); }
        final params = {
@@ -2213,7 +2238,7 @@ class MacApi {
        }
     } catch (_) {}
 
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.get(customApiUrl, queryParameters: {
         'ac': 'get_comments',
@@ -2269,7 +2294,7 @@ class MacApi {
     } catch (_) {}
 
     // 2. 降级：app_api.php
-    final customApiUrl = '${_rootUrl}app_api.php';
+    final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.post(customApiUrl, queryParameters: {'ac': 'add_comment'}, data: {
         'rid': vodId,

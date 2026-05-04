@@ -7,11 +7,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:better_player/better_player.dart';
-import 'package:better_player/src/video_player/video_player.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:screen_brightness/screen_brightness.dart';
-import '../services/dlna_service.dart';
+import '../services/cast/cast_manager.dart';
+import '../widgets/cast_dialog.dart';
+import '../widgets/cast_controls.dart';
 import '../services/player_settings.dart';
 
 class CustomPlayerControls extends StatefulWidget {
@@ -78,6 +79,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   bool _isLongPressing = false;
   double _preLongPressSpeed = 1.0;
 
+  // 投屏状态
+  final CastManager _castManager = CastManager();
+  bool _isCasting = false;
+  VoidCallback? _castStatusListener;
+
   // 定时关闭
   Timer? _sleepTimer;
   int _sleepMinutes = 0; // 0=关闭
@@ -101,6 +107,18 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     _timeTimer = Timer.periodic(const Duration(seconds: 1), (timer) => _updateTime());
     _initBattery();
     _initVolumeBrightness();
+    _initCastManager();
+  }
+
+  void _initCastManager() {
+    _castStatusListener = () {
+      if (mounted) {
+        setState(() {
+          _isCasting = _castManager.isCasting;
+        });
+      }
+    };
+    _castManager.castStatus.addListener(_castStatusListener!);
   }
 
   void _updateTime() {
@@ -190,12 +208,20 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   void _toggleVisibility() {
     setState(() => _controlsVisible = !_controlsVisible);
     widget.onControlsVisibilityChanged?.call(_controlsVisible);
-    if (_controlsVisible) _startHideTimer();
-    else _hideTimer?.cancel();
+    if (_controlsVisible) {
+      _startHideTimer();
+    } else {
+      _hideTimer?.cancel();
+    }
   }
 
   @override
   void dispose() {
+    // 移除投屏状态监听器，防止内存泄漏
+    if (_castStatusListener != null) {
+      _castManager.castStatus.removeListener(_castStatusListener!);
+      _castStatusListener = null;
+    }
     _dispose();
     super.dispose();
   }
@@ -777,64 +803,21 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
 
   // 投屏 Dialog
   void _showCastDialog() {
-    final dlna = DlnaService();
-    dlna.startSearch();
-    
+    final url = _controller?.betterPlayerDataSource?.url ?? '';
+    if (url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('视频地址为空，无法投屏')),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1F1F1F),
-        title: const Text('选择投屏设备', style: TextStyle(color: Colors.white)),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ValueListenableBuilder(
-            valueListenable: dlna.devices,
-            builder: (ctx, devices, _) {
-              if (devices.isEmpty) {
-                return const Center(child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('正在搜索设备...', style: TextStyle(color: Colors.white70)),
-                  ],
-                ));
-              }
-              return ListView.builder(
-                itemCount: devices.length,
-                itemBuilder: (ctx, i) {
-                  final dev = devices[i];
-                  return ListTile(
-                    leading: const Icon(Icons.tv, color: Colors.white),
-                    title: Text(dev.friendlyName, style: const TextStyle(color: Colors.white)),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      try {
-                        await dlna.connect(dev);
-                        final url = _controller?.betterPlayerDataSource?.url ?? '';
-                        await dlna.cast(url, widget.title);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('正在投屏到: ${dev.friendlyName}')));
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('投屏失败: $e')));
-                      }
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-            },
-            child: const Text('取消'),
-          ),
-        ],
+      builder: (ctx) => CastDialog(
+        videoUrl: url,
+        title: widget.title,
       ),
-    ).then((_) => dlna.stopSearch());
+    );
   }
 
   @override
@@ -938,8 +921,20 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 bottom: 0, left: 0, right: 0,
                 child: _buildBottomBar(),
               ),
-              
-            // 4. 加载中
+
+            // 4. 投屏控制条（投屏状态下显示在顶部）
+            if (_isCasting)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 65,
+                left: 16, right: 16,
+                child: CastControls(
+                  onStopCast: () {
+                    setState(() => _isCasting = false);
+                  },
+                ),
+              ),
+
+            // 5. 加载中
             if (_latestValue!.isBuffering)
                const Center(
                  child: SizedBox(
@@ -952,7 +947,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                  ),
                ),
                
-            // 5. 长按倍速提示
+            // 6. 长按倍速提示
             if (_isLongPressing)
               Center(
                 child: Container(
@@ -972,7 +967,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 ),
               ),
 
-            // 6. 亮度/音量 提示
+            // 7. 亮度/音量 提示
             if (_isSlidingBrightness || _isSlidingVolume)
               Center(
                 child: Container(
@@ -1078,12 +1073,23 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     try {
                        bool? isPipSupported = await _controller!.isPictureInPictureSupported();
                        if (isPipSupported == true) {
-                         _controller!.enablePictureInPicture(_controller!.betterPlayerGlobalKey!);
+                         final pipKey = _controller!.betterPlayerGlobalKey;
+                         if (pipKey != null) {
+                           _controller!.enablePictureInPicture(pipKey);
+                         } else {
+                           if (mounted) {
+                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
+                           }
+                         }
                        } else {
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
+                         if (mounted) {
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
+                         }
                        }
                     } catch (e) {
-                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
+                       if (mounted) {
+                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
+                       }
                     }
                  }
               }), 
@@ -1235,18 +1241,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     alignment: Alignment.center,
                     children: [
                       // 缓冲进度条
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6), // 稍微调整以对齐
-                        child: LayoutBuilder(
-                          builder: (ctx, constraints) {
-                            return LinearProgressIndicator(
-                              value: _calculateBufferedPercent(),
-                              minHeight: 2,
-                              backgroundColor: Colors.white12,
-                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white38),
-                            );
-                          }
-                        ),
+                      LayoutBuilder(
+                        builder: (ctx, constraints) {
+                          return LinearProgressIndicator(
+                            value: _calculateBufferedPercent(),
+                            minHeight: 2,
+                            backgroundColor: Colors.white12,
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white38),
+                          );
+                        }
                       ),
                       // 播放进度条
                       SliderTheme(
@@ -1301,9 +1304,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     child: InkWell(
                       borderRadius: BorderRadius.circular(16),
                       onTap: () {
-                        // 切换开关状态，但不弹窗，弹窗由输入框触发
+                        // 开发者：杰哥网络科技 (qq: 2711793818)
+                        // 修复：如果后端强制关闭弹幕，不允许用户开启
                         final settings = PlayerSettings();
-                        settings.setDanmakuEnabled(!settings.danmakuEnabled);
+                        if (!settings.danmakuUserEnabled && settings.danmakuEnabled == false) {
+                          // 后端强制关闭，不允许开启
+                          return;
+                        }
+                        settings.setDanmakuEnabled(!settings.danmakuUserEnabled);
                         setState(() {});
                       },
                       child: Container(
@@ -1313,7 +1321,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                            borderRadius: BorderRadius.circular(16),
                            color: PlayerSettings().danmakuEnabled ? const Color(0xFF4CAF50).withOpacity(0.2) : Colors.transparent,
                         ),
-                        child: Text('弹', style: TextStyle(color: PlayerSettings().danmakuEnabled ? const Color(0xFF4CAF50) : Colors.white, fontSize: 12)),
+                        child: Text('弹', style: TextStyle(
+                          color: PlayerSettings().danmakuEnabled 
+                            ? const Color(0xFF4CAF50) 
+                            : (PlayerSettings().danmakuUserEnabled == false && PlayerSettings().danmakuEnabled == false)
+                              ? Colors.red
+                              : Colors.white, 
+                          fontSize: 12,
+                        )),
                       ),
                     ),
                   ),

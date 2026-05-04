@@ -45,9 +45,18 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
   void _onTabChanged() {
     if (_tabController == null || _tabController!.indexIsChanging) return;
     final idx = _tabController!.index;
-    if (!_tabLoaded[idx]) {
+    if (idx >= 0 && idx < _tabLoaded.length && !_tabLoaded[idx]) {
       _tabLoaded[idx] = true;
       _listKeys[idx].currentState?.triggerLoad();
+    }
+  }
+
+  void _resetTabLoaded() {
+    for (int i = 0; i < _tabLoaded.length; i++) {
+      _tabLoaded[i] = i == 0;
+    }
+    for (final key in _listKeys) {
+      key.currentState?.reset();
     }
   }
 
@@ -276,19 +285,25 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   @override
   void didUpdateWidget(covariant _RankingList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.typeId != widget.typeId || oldWidget.orderBy != widget.orderBy) {
+    if ((oldWidget.typeId != widget.typeId || oldWidget.orderBy != widget.orderBy) && mounted) {
       setState(() {
         items = [];
         loading = true;
+        _initialized = false;
       });
       _loadData();
     }
   }
 
   void triggerLoad() {
-    if (_initialized) return;
+    if (_initialized || _isLoading) return;
     _initialized = true;
     _loadData();
+  }
+
+  void reset() {
+    _initialized = false;
+    items = [];
   }
 
   Future<void> _loadData() async {
@@ -347,9 +362,12 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                  setState(() => loading = true);
                  _loadData();
               },
-              icon: const Icon(Icons.refresh),
-              label: const Text('点我刷新'),
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              label: const Text('点我刷新', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),

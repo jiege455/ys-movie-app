@@ -241,11 +241,16 @@ class ProfilePageState extends State<ProfilePage> {
     if (isLoggedIn) {
       try {
         final api = context.read<MacApi>();
-        cloudFavs = await api.getFavs();
-        cloudHist = await api.getHistory();
-        
-        // 获取完整的用户信息（包括积分、会员状态等）
-        final mineInfo = await api.getMineInfo();
+        final futures = [
+          api.getFavs().catchError((_) => <Map<String, dynamic>>[]),
+          api.getHistory().catchError((_) => <Map<String, dynamic>>[]),
+          api.getMineInfo().catchError((_) => null),
+        ];
+        final results = await Future.wait(futures);
+        cloudFavs = results[0] as List<Map<String, dynamic>>;
+        cloudHist = results[1] as List<Map<String, dynamic>>;
+        final mineInfo = results[2] as Map<String, dynamic>?;
+
         if (mineInfo != null) {
           userInfo = {
             'name': mineInfo['user_name'] ?? '用户',
@@ -254,19 +259,16 @@ class ProfilePageState extends State<ProfilePage> {
             'is_vip': mineInfo['is_vip'] ?? false,
             'user_portrait': mineInfo['user_portrait'],
           };
-          // 更新未读消息数量
           if (mounted) {
             setState(() {
               _noticeCount = mineInfo['user_notice_unread_count'] ?? 0;
             });
           }
         } else {
-          // 降级：只获取用户名
           final name = await api.getUserName();
           userInfo = {'name': name, 'group': '普通会员', 'points': 0, 'is_vip': false};
         }
       } catch (e) {
-        print('加载云端数据失败: $e');
         // 降级：只获取用户名
         try {
           final api = context.read<MacApi>();
@@ -291,35 +293,58 @@ class ProfilePageState extends State<ProfilePage> {
 
   Future<void> _switchTheme() async {
     final themeProvider = context.read<ThemeProvider>();
+    final currentTheme = themeProvider.themeStyle;
     await showDialog(
       context: context,
       builder: (_) => SimpleDialog(
         title: const Text('选择主题'),
-        backgroundColor: Theme.of(context).cardColor, // 修复：使用卡片颜色作为背景，适配深色模式
+        backgroundColor: Theme.of(context).cardColor,
         children: [
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              themeProvider.setThemeStyle('light');
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已切换为粉白')));
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('粉白'),
-            ),
+          _buildThemeOption(
+            context: context,
+            label: '粉白',
+            value: 'light',
+            currentValue: currentTheme,
+            themeProvider: themeProvider,
           ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(context);
-              themeProvider.setThemeStyle('blue_black');
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已切换为蓝黑')));
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('蓝黑'),
-            ),
+          _buildThemeOption(
+            context: context,
+            label: '蓝黑',
+            value: 'blue_black',
+            currentValue: currentTheme,
+            themeProvider: themeProvider,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption({
+    required BuildContext context,
+    required String label,
+    required String value,
+    required String currentValue,
+    required ThemeProvider themeProvider,
+  }) {
+    final isSelected = currentValue == value;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    return SimpleDialogOption(
+      onPressed: () {
+        Navigator.pop(context);
+        themeProvider.setThemeStyle(value);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已切换为$label')));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Expanded(child: Text(label)),
+            if (isSelected)
+              Icon(Icons.check_circle, color: primaryColor, size: 20)
+            else
+              Icon(Icons.radio_button_unchecked, color: Colors.grey.withOpacity(0.5), size: 20),
+          ],
+        ),
       ),
     );
   }
