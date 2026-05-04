@@ -98,7 +98,7 @@ class _VodListPageState extends State<VodListPage> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9C27B0), foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white),
               child: const Text('删除'),
             ),
           ],
@@ -230,7 +230,7 @@ class _VodListPageState extends State<VodListPage> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                    color: isDark ? Colors.white10 : const Color(0xFFF3E5F5),
+                    color: isDark ? Colors.white10 : Theme.of(context).colorScheme.primary.withOpacity(0.05),
                     child: Text(
                       '存储路径：$rootPath',
                       maxLines: 2,
@@ -275,11 +275,11 @@ class _VodListPageState extends State<VodListPage> {
                           height: 100,
                           decoration: BoxDecoration(
                             color: selected
-                                ? (isDark ? const Color(0xFF9C27B0).withOpacity(0.2) : const Color(0xFFF3E5F5))
+                                ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
                                 : (isDark ? Theme.of(context).cardColor : Colors.white),
                             borderRadius: BorderRadius.circular(8),
                             border: selected
-                                ? Border.all(color: const Color(0xFF9C27B0), width: 1)
+                                ? Border.all(color: Theme.of(context).colorScheme.primary, width: 1)
                                 : null,
                             boxShadow: [
                               BoxShadow(
@@ -295,7 +295,7 @@ class _VodListPageState extends State<VodListPage> {
                                   padding: const EdgeInsets.only(left: 10, right: 6),
                                   child: Icon(
                                     selected ? Icons.check_circle : (_selectMode ? Icons.radio_button_unchecked : (_isFavPage ? Icons.favorite : Icons.download_done)),
-                                    color: selected ? const Color(0xFF9C27B0) : (isDark ? Colors.white38 : Colors.black38),
+                                    color: selected ? Theme.of(context).colorScheme.primary : (isDark ? Colors.white38 : Colors.black38),
                                   ),
                                 ),
                               ClipRRect(
@@ -339,7 +339,7 @@ class _VodListPageState extends State<VodListPage> {
                                   ),
                                 ),
                               ),
-                              const Icon(Icons.play_circle_outline, color: Colors.red, size: 30),
+                              Icon(Icons.play_circle_outline, color: Theme.of(context).colorScheme.primary, size: 30),
                               const SizedBox(width: 16),
                             ],
                           ),

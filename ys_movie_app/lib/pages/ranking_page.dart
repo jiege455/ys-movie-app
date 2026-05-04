@@ -282,6 +282,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
               ],
             ],
           ),
+          ),
         ],
       ),
     );

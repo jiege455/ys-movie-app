@@ -1608,9 +1608,29 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                     ),
                   ),
                 ),
-              ),
-            ),
-          
+                // 轮播图指示器
+                if (banners.length > 1)
+                  Container(
+                    height: 30,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: banners.asMap().entries.map((entry) {
+                        return Container(
+                          width: _bannerIndex == entry.key ? 20 : 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: _bannerIndex == entry.key
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.withAlpha(128),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
           // Home Advert (Below Banner)
           if (homeAdvert != null)
              SliverToBoxAdapter(

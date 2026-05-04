@@ -93,7 +93,12 @@ class _VipPageState extends State<VipPage> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFE1BEE7), Color(0xFF9C27B0)]),
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                          Theme.of(context).colorScheme.primary,
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -104,7 +109,7 @@ class _VipPageState extends State<VipPage> {
                           alignment: Alignment.center,
                           child: Text(
                             (_user['user_name'] ?? 'U').substring(0, 1).toUpperCase(),
-                            style: const TextStyle(fontSize: 30, color: Colors.purple),
+                            style: TextStyle(fontSize: 30, color: Theme.of(context).colorScheme.primary),
                           ),
                         ),
                         const SizedBox(width: 16),
