@@ -4,9 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/api.dart';
 import '../services/theme_provider.dart';
-import '../services/store.dart';
 import '../services/cache_service.dart';
-import 'auth_bottom_sheet.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback? onLogout;
@@ -164,7 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.movie_filter, size: 64, color: Color(0xFF9C27B0)),
+            Icon(Icons.movie_filter, size: 64, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
             const Text('狐狸影视', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             if (!hideVer) ...[
@@ -213,9 +211,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _getThemeName(String style) {
     switch (style) {
-      case 'light': return '粉白';
-      case 'blue_black': return '蓝黑';
-      default: return '蓝黑';
+      case 'light': return '天空蓝';
+      case 'dark': return '暗夜蓝';
+      default: return '暗夜蓝';
     }
   }
 
@@ -265,13 +263,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 20),
               
-              // 粉白主题选项
+              // 天空蓝主题选项
               _buildThemeOption(
                 context: ctx,
-                title: '粉白',
+                title: '天空蓝',
                 subtitle: '明亮清新',
                 icon: Icons.wb_sunny,
-                iconColor: Colors.pink,
+                iconColor: const Color(0xFF00BFFF),
                 bgColor: Colors.white,
                 textColor: Colors.black87,
                 isSelected: themeProvider.themeStyle == 'light',
@@ -282,18 +280,18 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 12),
               
-              // 蓝黑主题选项
+              // 暗夜蓝主题选项
               _buildThemeOption(
                 context: ctx,
-                title: '蓝黑',
+                title: '暗夜蓝',
                 subtitle: '深邃护眼',
                 icon: Icons.nights_stay,
-                iconColor: Colors.blue,
-                bgColor: const Color(0xFF0B1724),
+                iconColor: const Color(0xFF00BFFF),
+                bgColor: const Color(0xFF051018),
                 textColor: Colors.white,
-                isSelected: themeProvider.themeStyle == 'blue_black',
+                isSelected: themeProvider.themeStyle == 'dark',
                 onTap: () {
-                  themeProvider.setThemeStyle('blue_black');
+                  themeProvider.setThemeStyle('dark');
                   Navigator.pop(ctx);
                 },
               ),
