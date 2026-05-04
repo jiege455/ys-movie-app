@@ -1,12 +1,15 @@
 <?php
 /**
  * 狐狸影视APP专用后端接口 (集成 Xunsearch)
+ * 开发者：杰哥网络科技 (qq: 2711793818)
  * 
  * 功能：
  * 1. APP初始化 (init): 获取轮播图、热搜词、推荐列表
  * 2. 视频搜索 (search): 优先使用 Xunsearch，失败降级为数据库搜索
  * 3. 索引管理 (buildIndex/update): 兼容第三方插件的 Xunsearch 索引重建与同步
- * 4. 用户/视频基础接口: 代理 MacCMS 内部逻辑
+ * 4. 用户注册/登录 (register/login): APP用户认证接口
+ * 5. 视频详情 (detail): 获取单个视频的播放列表和详细信息
+ * 6. 评论/消息: 评论发布与消息管理
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -155,7 +158,161 @@ if ($ac == 'init') {
     exit;
 }
 
-// [接口 1.5] 高级筛选列表 (list)
+// [接口 1.5] 用户注册 (register)
+// 开发者：杰哥网络科技 (qq: 2711793818)
+if ($ac == 'register') {
+    $userName = get_request_param('user_name');
+    $userPwd = get_request_param('user_pwd');
+    $userPwd2 = get_request_param('user_pwd2', $userPwd);
+    $verifyCode = get_request_param('verify');
+    $inviteCode = get_request_param('invite_code');
+    
+    if (empty($userName) || empty($userPwd)) {
+        echo json_encode(['code' => 0, 'msg' => '用户名或密码不能为空']);
+        exit;
+    }
+    
+    if ($userPwd !== $userPwd2) {
+        echo json_encode(['code' => 0, 'msg' => '两次密码不一致']);
+        exit;
+    }
+    
+    if (strlen($userPwd) < 6) {
+        echo json_encode(['code' => 0, 'msg' => '密码长度至少6位']);
+        exit;
+    }
+    
+    $userModel = model('User');
+    $check = $userModel->checkData(['user_name' => $userName, 'user_pwd' => $userPwd]);
+    
+    if ($check['code'] == 1) {
+        $res = $userModel->saveData([
+            'user_name' => $userName,
+            'user_pwd' => $userPwd,
+            'user_status' => 1,
+        ]);
+        
+        if ($res['code'] == 1) {
+            echo json_encode(['code' => 1, 'msg' => '注册成功']);
+        } else {
+            echo json_encode(['code' => 0, 'msg' => $res['msg'] ?? '注册失败']);
+        }
+    } else {
+        echo json_encode(['code' => 0, 'msg' => $check['msg'] ?? '用户名已存在或不符合要求']);
+    }
+    exit;
+}
+
+// [接口 1.6] 用户登录 (login)
+// 开发者：杰哥网络科技 (qq: 2711793818)
+if ($ac == 'login') {
+    $userName = get_request_param('user_name');
+    $userPwd = get_request_param('user_pwd');
+    
+    if (empty($userName) || empty($userPwd)) {
+        echo json_encode(['code' => 0, 'msg' => '用户名或密码不能为空']);
+        exit;
+    }
+    
+    $user = \think\Db::name('user')
+        ->where('user_name', $userName)
+        ->where('user_pwd', md5($userPwd))
+        ->find();
+    
+    if ($user) {
+        if ($user['user_status'] != 1) {
+            echo json_encode(['code' => 0, 'msg' => '账号已被禁用']);
+            exit;
+        }
+        
+        $maxAge = 86400 * 30;
+        setcookie('user_id', $user['user_id'], time() + $maxAge, '/');
+        setcookie('user_name', $user['user_name'], time() + $maxAge, '/');
+        setcookie('user_check', md5($user['user_pwd'] . $user['user_id']), time() + $maxAge, '/');
+        
+        echo json_encode([
+            'code' => 1,
+            'msg' => '登录成功',
+            'info' => [
+                'user_id' => $user['user_id'],
+                'user_name' => $user['user_name'],
+                'group_id' => $user['group_id'],
+            ],
+        ]);
+    } else {
+        echo json_encode(['code' => 0, 'msg' => '用户名或密码错误']);
+    }
+    exit;
+}
+
+// [接口 1.7] 视频详情 (detail)
+// 开发者：杰哥网络科技 (qq: 2711793818)
+if ($ac == 'detail') {
+    $vodId = get_request_param('ids');
+    
+    if (empty($vodId)) {
+        echo json_encode(['code' => 0, 'msg' => '参数错误：缺少视频ID']);
+        exit;
+    }
+    
+    $vod = \think\Db::name('vod')
+        ->where('vod_id', $vodId)
+        ->where('vod_status', 1)
+        ->find();
+    
+    if (!$vod) {
+        echo json_encode(['code' => 0, 'msg' => '视频不存在或已下架']);
+        exit;
+    }
+    
+    $vod['vod_pic'] = mac_url_img($vod['vod_pic']);
+    $vod['vod_pic_slide'] = mac_url_img($vod['vod_pic_slide']);
+    
+    $playList = [];
+    if (!empty($vod['vod_play_url'])) {
+        $arr = mac_play_list($vod['vod_play_url'], $vod['vod_play_from']);
+        foreach ($arr as $playerCode => $eps) {
+            $urls = [];
+            foreach ($eps['urls'] as $ep) {
+                $urls[] = [
+                    'name' => $ep['name'] ?? '正片',
+                    'url' => $ep['url'] ?? '',
+                ];
+            }
+            $playList[] = [
+                'show' => $eps['show'] ?? '播放源',
+                'urls' => $urls,
+            ];
+        }
+    }
+    
+    echo json_encode([
+        'code' => 1,
+        'msg' => 'success',
+        'list' => [[
+            'vod_id' => $vod['vod_id'],
+            'vod_name' => $vod['vod_name'],
+            'vod_pic' => $vod['vod_pic'],
+            'vod_pic_slide' => $vod['vod_pic_slide'],
+            'vod_year' => $vod['vod_year'],
+            'vod_area' => $vod['vod_area'],
+            'vod_class' => $vod['vod_class'],
+            'vod_actor' => $vod['vod_actor'],
+            'vod_director' => $vod['vod_director'],
+            'vod_content' => $vod['vod_content'],
+            'vod_blurb' => $vod['vod_blurb'],
+            'vod_remarks' => $vod['vod_remarks'],
+            'vod_score' => $vod['vod_score'],
+            'vod_hits' => $vod['vod_hits'],
+            'type_id' => $vod['type_id'],
+            'type_name' => $vod['type_name'] ?? '',
+            'vod_play_list' => $playList,
+        ]],
+    ]);
+    exit;
+}
+
+// [接口 2] 高级筛选列表 (list)
 if ($ac == 'list') {
     $type_id = get_request_param('t');
     $class = get_request_param('class');

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  String _themeStyle = 'blue_black'; // 仅保留 light(粉白)、blue_black(蓝黑)，默认蓝黑
+  String _themeStyle = 'dark'; // 默认暗夜蓝（天空蓝暗色模式）
 
   String get themeStyle => _themeStyle;
 

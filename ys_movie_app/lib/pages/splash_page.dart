@@ -32,7 +32,7 @@ class _SplashPageState extends State<SplashPage> {
        // 无网络，直接跳转到离线缓存页面
        if (mounted) {
          // 先跳转到 Main，并传递参数让其打开 DownloadPage
-         Navigator.of(context).pushReplacementNamed('/main', arguments: {'initialRoute': '/download'});
+         Navigator.of(context).pushReplacementNamed('/', arguments: {'initialRoute': '/download'});
        }
        return;
     }
@@ -77,7 +77,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void _goMain() {
-    Navigator.of(context).pushReplacementNamed('/main', arguments: {'fromSplash': true});
+    Navigator.of(context).pushReplacementNamed('/', arguments: {'fromSplash': true});
   }
 
   void _onAdTap() {

@@ -131,17 +131,24 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
     final tabCtrl = _tabController;
     final primaryColor = Theme.of(context).colorScheme.primary;
     // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：统一使用 scaffoldBackgroundColor，与首页/我的页面保持一致
+    // 修复：使用天空蓝主题渐变背景 + 装饰图案
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: bgColor,
-      body: Container(
-        // 修复：移除渐变背景，使用纯色与首页/我的页面保持一致
-        color: bgColor,
-        child: SafeArea(
-          child: Column(
-            children: [
+      body: Stack(
+        children: [
+          // 装饰图案层
+          Positioned.fill(
+            child: _DecorativeBackground(
+              isDark: isDark,
+              primaryColor: primaryColor,
+            ),
+          ),
+          // 内容层
+          SafeArea(
+            child: Column(
+              children: [
               // 顶部标题（移除搜索框）
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -245,9 +252,9 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -448,10 +455,10 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                                 return Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF3E5F5),
+                                    color: Theme.of(context).colorScheme.primary.withAlpha(25),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Text(name, style: const TextStyle(fontSize: 10, color: Color(0xFF6A1B9A))),
+                                  child: Text(name, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary)),
                                 );
                               }).toList(),
                             ),
@@ -478,5 +485,104 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         .where((e) => e.trim().isNotEmpty)
         .toList();
     return parts.take(4).toList();
+  }
+}
+
+/// 装饰背景组件：天空蓝主题渐变 + 几何装饰图案
+class _DecorativeBackground extends StatelessWidget {
+  final bool isDark;
+  final Color primaryColor;
+
+  const _DecorativeBackground({
+    required this.isDark,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  const Color(0xFF051018),
+                  primaryColor.withAlpha(30),
+                  const Color(0xFF051018),
+                ]
+              : [
+                  Colors.white,
+                  primaryColor.withAlpha(25),
+                  Colors.white,
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: CustomPaint(
+        painter: _DecorativePainter(
+          isDark: isDark,
+          primaryColor: primaryColor,
+        ),
+      ),
+    );
+  }
+}
+
+/// 装饰图案绘制器
+class _DecorativePainter extends CustomPainter {
+  final bool isDark;
+  final Color primaryColor;
+
+  _DecorativePainter({
+    required this.isDark,
+    required this.primaryColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = primaryColor.withAlpha(isDark ? 15 : 20)
+      ..style = PaintingStyle.fill;
+
+    // 左上角大圆
+    canvas.drawCircle(
+      Offset(-size.width * 0.1, -size.height * 0.05),
+      size.width * 0.35,
+      paint,
+    );
+
+    // 右下角小圆
+    canvas.drawCircle(
+      Offset(size.width * 1.05, size.height * 0.75),
+      size.width * 0.25,
+      paint,
+    );
+
+    // 中间偏右小圆
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.3),
+      size.width * 0.12,
+      paint,
+    );
+
+    // 细线装饰
+    final linePaint = Paint()
+      ..color = primaryColor.withAlpha(isDark ? 10 : 12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (int i = 0; i < 4; i++) {
+      final y = size.height * (0.15 + i * 0.25);
+      canvas.drawLine(
+        Offset(size.width * 0.7, y),
+        Offset(size.width * 0.95, y),
+        linePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DecorativePainter oldDelegate) {
+    return oldDelegate.primaryColor != primaryColor || oldDelegate.isDark != isDark;
   }
 }

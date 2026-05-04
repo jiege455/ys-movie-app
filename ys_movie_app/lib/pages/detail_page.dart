@@ -30,7 +30,6 @@ import '../widgets/custom_player_controls.dart';
 import 'auth_bottom_sheet.dart';
 import 'download_page.dart';
 import 'feedback_center_page.dart';
-import 'login_page.dart';
 
 class DetailPage extends StatefulWidget {
   final String vodId;

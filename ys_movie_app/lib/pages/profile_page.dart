@@ -302,15 +302,15 @@ class ProfilePageState extends State<ProfilePage> {
         children: [
           _buildThemeOption(
             context: context,
-            label: '粉白',
+            label: '🌤️ 天空蓝',
             value: 'light',
             currentValue: currentTheme,
             themeProvider: themeProvider,
           ),
           _buildThemeOption(
             context: context,
-            label: '蓝黑',
-            value: 'blue_black',
+            label: '🌙 暗夜蓝',
+            value: 'dark',
             currentValue: currentTheme,
             themeProvider: themeProvider,
           ),
@@ -375,6 +375,7 @@ class ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     
     // 整理历史数据列表：优先云端历史（若有），否则使用本地
     final historyList = (isLoggedIn && cloudHist.isNotEmpty)
@@ -432,8 +433,8 @@ class ProfilePageState extends State<ProfilePage> {
                   : BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDark 
-                            ? [const Color(0xFF1565C0).withOpacity(0.5), const Color(0xFF0B1724)]
-                            : [Theme.of(context).colorScheme.primary.withOpacity(0.2), Theme.of(context).colorScheme.primary.withOpacity(0.05), Colors.white],
+                            ? [primaryColor.withAlpha(60), const Color(0xFF051018)]
+                            : [primaryColor.withAlpha(35), Colors.white],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -779,7 +780,7 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildGridIcon(IconData icon, String label, {VoidCallback? onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -788,9 +789,9 @@ class ProfilePageState extends State<ProfilePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 28, color: isDark ? Colors.white70 : Colors.black87),
+            Icon(icon, size: 28, color: primaryColor),
             const SizedBox(height: 8),
-            Text(label, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : Colors.black54), textAlign: TextAlign.center),
+            Text(label, style: TextStyle(fontSize: 12, color: primaryColor.withAlpha(180)), textAlign: TextAlign.center),
           ],
         ),
       ),
