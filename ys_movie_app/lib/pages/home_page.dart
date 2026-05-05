@@ -1263,7 +1263,9 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
       // 如果后台没有配置推荐数据，使用兜底逻辑获取最新视频
       if (firstItems.isEmpty) {
         try {
+          print('Home Page: Trying fallback getFiltered(orderby: time)...');
           final fallbackList = await api.getFiltered(orderby: 'time', limit: 12);
+          print('Home Page: Fallback returned ${fallbackList.length} items');
           if (fallbackList.isNotEmpty) {
             firstItems = fallbackList.map((v) => {
               'id': '${v['id']}',
@@ -1274,7 +1276,20 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
               'overview': v['overview'] ?? '',
             }).toList();
           }
-        } catch (_) {}
+        } catch (e) {
+          print('Home Page: Fallback failed: $e');
+        }
+      }
+      
+      // 最终兜底：如果所有方式都失败，尝试直接请求标准接口
+      if (firstItems.isEmpty) {
+        try {
+          print('Home Page: Trying final fallback...');
+          final status = await api.getInterfaceStatus();
+          print('Home Page: API Status - plugin: ${status['plugin']}, custom: ${status['custom']}, standard: ${status['standard']}');
+        } catch (e) {
+          print('Home Page: Failed to get interface status: $e');
+        }
       }
       
       if (firstItems.isNotEmpty) {
