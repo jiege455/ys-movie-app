@@ -7,6 +7,11 @@ allprojects {
         maven { url = uri("https://maven.aliyun.com/repository/public") }
         maven { url = uri("https://maven.aliyun.com/repository/releases") }
     }
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.media:media:1.4.3")
+        }
+    }
 }
 
 val newBuildDir: Directory =
