@@ -255,7 +255,13 @@ class _VodListPageState extends State<VodListPage> {
                         final rawId = id;
                         final vodId = rawId.contains('_') ? rawId.split('_').first : rawId;
                         if (vodId.isEmpty) return;
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+                        final localUrl = _isCachePage ? (item['url'] ?? '').toString() : '';
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(
+                          vodId: vodId,
+                          localPlayUrl: localUrl.isNotEmpty ? localUrl : null,
+                          initialTitle: (item['title'] ?? '').toString(),
+                          initialPoster: (item['poster'] ?? '').toString(),
+                        )));
                       }
 
                       return GestureDetector(

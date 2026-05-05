@@ -9,6 +9,7 @@
 // 2. 移除本地收藏，仅使用云端收藏
 // 3. 修复下载逻辑
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:better_player/better_player.dart';
@@ -1976,28 +1977,28 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     String url = ep['url'] ?? '';
     final name = ep['name'] ?? '';
     if (url.isEmpty) return;
-    
-    // 如果需要解析
+
     final parseApi = ep['parse_api'] ?? '';
     if (parseApi.isNotEmpty) {
       try {
         final api = context.read<MacApi>();
         url = await api.resolvePlayUrl(url, parseApi: parseApi);
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('解析下载地址失败: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('解析下载地址失败: $e')));
+        }
         return;
       }
     }
 
-    // 构造唯一ID
     final taskId = '${widget.vodId}_$index';
-    
+
     final title = detail['vod_name'] ?? '';
     final poster = detail['vod_pic'] ?? '';
     final fullTitle = '$title - $name';
     final ts = DateTime.now().millisecondsSinceEpoch;
-    
-    // 1. 初始化任务状态
+
     await StoreService.upsertDownload({
       'id': taskId,
       'title': fullTitle,
@@ -2006,83 +2007,83 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       'savePath': '',
       'progress': 0.0,
       'status': 'downloading',
-      'speed': '0KB/s',
+      'speed': '准备下载...',
       'ts': ts,
     });
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('已加入下载队列: $name'),
         action: SnackBarAction(
           label: '查看缓存',
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const DownloadPage()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const DownloadPage()));
           },
         ),
       ));
-      Navigator.pop(context); // 关闭弹窗
+      Navigator.pop(context);
     }
 
-    // 2. 启动下载 (不 await，让其后台运行)
     try {
-      M3u8DownloaderService().download(
-        url: url,
-        fileName: '${widget.vodId}_$index', // 使用ID作为文件名，避免特殊字符问题
-        onProgress: (progress, statusText) {
-          // 更新进度
-          StoreService.upsertDownload({
-            'id': taskId,
-            'title': fullTitle,
-            'poster': poster,
-            'url': url,
-            'savePath': '', // 还没下载完
-            'progress': progress,
-            'status': 'downloading',
-            'speed': statusText, // 复用 speed 字段显示状态文本
-            'ts': ts,
+      M3u8DownloaderService()
+          .download(
+            url: url,
+            fileName: '${widget.vodId}_$index',
+            taskId: taskId,
+            onProgress: (progress, statusText) {
+              StoreService.upsertDownload({
+                'id': taskId,
+                'title': fullTitle,
+                'poster': poster,
+                'url': url,
+                'savePath': '',
+                'progress': progress,
+                'status': 'downloading',
+                'speed': statusText,
+                'ts': ts,
+              });
+            },
+          )
+          .then((savePath) {
+            if (savePath.isEmpty) return;
+            StoreService.upsertDownload({
+              'id': taskId,
+              'title': fullTitle,
+              'poster': poster,
+              'url': url,
+              'savePath': savePath,
+              'progress': 1.0,
+              'status': 'done',
+              'speed': '已完成',
+              'ts': ts,
+            });
+            StoreService.addCache({
+              'id': taskId,
+              'title': fullTitle,
+              'poster': poster,
+              'url': savePath,
+            });
+          })
+          .catchError((e) {
+            if (e is DioException &&
+                e.type == DioExceptionType.cancel) {
+              return;
+            }
+            StoreService.upsertDownload({
+              'id': taskId,
+              'title': fullTitle,
+              'poster': poster,
+              'url': url,
+              'savePath': '',
+              'progress': 0.0,
+              'status': 'failed',
+              'speed': '下载失败',
+              'ts': ts,
+            });
           });
-        },
-      ).then((savePath) {
-        // 开发者：杰哥
-        // 修复：如果 savePath 为空，说明被取消或失败，不应标记为完成
-        if (savePath.isEmpty) return;
-  
-        // 下载完成
-        StoreService.upsertDownload({
-          'id': taskId,
-          'title': fullTitle,
-          'poster': poster,
-          'url': url,
-          'savePath': savePath,
-          'progress': 1.0,
-          'status': 'done',
-          'speed': '已完成',
-          'ts': ts,
-        });
-        // 写入本地缓存记录
-        StoreService.addCache({
-          'id': taskId, 
-          'title': fullTitle,
-          'poster': poster,
-          'url': savePath,
-        });
-      }).catchError((e) {
-        // 下载失败
-        StoreService.upsertDownload({
-          'id': taskId,
-          'title': fullTitle,
-          'poster': poster,
-          'url': url,
-          'savePath': '',
-          'progress': 0.0,
-          'status': 'failed',
-          'speed': '失败: $e',
-          'ts': ts,
-        });
-      });
     } catch (e) {
-       // 防止同步错误
-       print('Start download error: $e');
+      print('Start download error: $e');
     }
   }
 }
