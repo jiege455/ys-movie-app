@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.ys_movie_app"
-    compileSdk = 35
+    compileSdk = 33
     ndkVersion = "27.0.12077973"
 
     compileOptions {
