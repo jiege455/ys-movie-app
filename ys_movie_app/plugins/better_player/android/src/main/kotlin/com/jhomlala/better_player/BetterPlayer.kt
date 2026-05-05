@@ -21,7 +21,7 @@ import io.flutter.view.TextureRegistry.SurfaceTextureEntry
 import io.flutter.plugin.common.MethodChannel
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import androidx.media.session.MediaSessionCompat
+import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.drm.DrmSessionManager
 import androidx.work.WorkManager
 import androidx.work.WorkInfo
@@ -38,9 +38,9 @@ import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.MediaDescriptionAdapter
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.BitmapCallback
 import androidx.work.OneTimeWorkRequest
-import androidx.media.session.PlaybackStateCompat
-import androidx.media.MediaMetadataCompat
-import androidx.media.MediaDescriptionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.MediaDescriptionCompat
 import android.util.Rational
 import android.util.Log
 import android.view.Surface
@@ -53,7 +53,7 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import io.flutter.plugin.common.EventChannel.EventSink
-import androidx.media.session.MediaButtonReceiver
+import android.support.v4.media.session.MediaButtonReceiver
 import androidx.work.Data
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes

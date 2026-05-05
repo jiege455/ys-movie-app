@@ -2,10 +2,10 @@ package com.jhomlala.better_player
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.media.MediaBrowserServiceCompat
-import androidx.media.MediaBrowserCompat
-import androidx.media.session.MediaSessionCompat
-import androidx.media.session.PlaybackStateCompat
+import android.support.v4.media.MediaBrowserServiceCompat
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 
 class BetterPlayerService : MediaBrowserServiceCompat() {
     private var mediaSession: MediaSessionCompat? = null
