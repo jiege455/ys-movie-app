@@ -60,8 +60,6 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.drm.DrmSessionManagerProvider
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector.SelectionOverride
-import com.google.android.exoplayer2.trackselection.TrackSelectionOverrides
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.util.Util
@@ -392,7 +390,11 @@ internal class BetterPlayer(
             mediaItemBuilder.setCustomCacheKey(cacheKey)
         }
         val mediaItem = mediaItemBuilder.build()
-        var drmSessionManagerProvider: DrmSessionManagerProvider? = null
+        var drmSessionManagerProvider: DrmSessionManagerProvider = 
+            DrmSessionManagerProvider { 
+                @Suppress("DEPRECATION")
+                DrmSessionManager.getDummyDrmSessionManager() 
+            }
         drmSessionManager?.let { drmSessionManager ->
             drmSessionManagerProvider = DrmSessionManagerProvider { drmSessionManager }
         }
@@ -726,19 +728,11 @@ internal class BetterPlayer(
     private fun setAudioTrack(rendererIndex: Int, groupIndex: Int, groupElementIndex: Int) {
         val mappedTrackInfo = trackSelector.currentMappedTrackInfo
         if (mappedTrackInfo != null) {
-            val builder = trackSelector.parameters.buildUpon()
+            val parameters = trackSelector.parameters
+                .buildUpon()
                 .setRendererDisabled(rendererIndex, false)
-                .setTrackSelectionOverrides(
-                    TrackSelectionOverrides.Builder().addOverride(
-                        TrackSelectionOverrides.TrackSelectionOverride(
-                            mappedTrackInfo.getTrackGroups(
-                                rendererIndex
-                            ).get(groupIndex)
-                        )
-                    ).build()
-                )
-
-            trackSelector.setParameters(builder)
+                .build()
+            trackSelector.setParameters(parameters)
         }
     }
 
