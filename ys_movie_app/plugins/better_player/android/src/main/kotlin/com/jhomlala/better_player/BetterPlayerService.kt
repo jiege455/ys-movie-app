@@ -2,10 +2,10 @@ package com.jhomlala.better_player
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaBrowserServiceCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
+import androidx.media.MediaBrowserServiceCompat
+import androidx.media.MediaBrowserCompat
+import androidx.media.session.MediaSessionCompat
+import androidx.media.session.PlaybackStateCompat
 
 class BetterPlayerService : MediaBrowserServiceCompat() {
     private var mediaSession: MediaSessionCompat? = null
@@ -45,8 +45,8 @@ class BetterPlayerService : MediaBrowserServiceCompat() {
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
-    ): BrowserRoot? {
-        return BrowserRoot("root", null)
+    ): MediaBrowserServiceCompat.BrowserRoot? {
+        return MediaBrowserServiceCompat.BrowserRoot("root", null)
     }
 
     override fun onLoadChildren(
