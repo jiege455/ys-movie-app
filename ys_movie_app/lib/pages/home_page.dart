@@ -1554,7 +1554,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
       return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
     }
 
-    if (!loading && items.isEmpty && banners.isEmpty && homeAdvert == null && iconAdverts.isEmpty) {
+    if (!loading && items.isEmpty && banners.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1562,6 +1562,11 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
             const Icon(Icons.error_outline, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             const Text('暂无推荐数据', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            Text(
+              '请检查网络连接或后台API配置',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadData,
