@@ -1260,9 +1260,25 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         } catch (_) {}
       }
       
-      // 杰哥：用户要求只显示后台配置等级的视频，不进行任何兜底
+      // 如果后台没有配置推荐数据，使用兜底逻辑获取最新视频
+      if (firstItems.isEmpty) {
+        try {
+          final fallbackList = await api.getFiltered(orderby: 'time', limit: 12);
+          if (fallbackList.isNotEmpty) {
+            firstItems = fallbackList.map((v) => {
+              'id': '${v['id']}',
+              'title': v['title'] ?? '',
+              'poster': v['poster'] ?? '',
+              'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
+              'year': '${v['year'] ?? ''}',
+              'overview': v['overview'] ?? '',
+            }).toList();
+          }
+        } catch (_) {}
+      }
+      
       if (firstItems.isNotEmpty) {
-        // 修复“影子数据”：直接替换，确保没有脏数据
+        // 修复"影子数据"：直接替换，确保没有脏数据
         if (mounted) {
            setState(() {
              items = List.from(firstItems); // 创建副本
@@ -1380,33 +1396,20 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         print("Init Data Error: $e");
       }
       
-      // 开发者：杰哥
-      // 修复：仅使用自定义广告作为 Banner，移除所有兜底逻辑 (level 9/1)
-      // 用户要求：如果自定义广告为空，则不显示轮播图
-      /*
-      if (banners.isEmpty) {
-         try {
-           // 1. 优先尝试 Level 9 (轮播/置顶)
-           var bannerList = await api.getRecommended(level: 9, limit: 5);
-           
-           // 2. 如果 Level 9 没有数据，尝试 Level 1 (普通推荐) 作为强力兜底
-           if (bannerList.isEmpty) {
-              bannerList = await api.getRecommended(level: 1, limit: 5);
-           }
-
-           if (bannerList.isNotEmpty) {
-              final fallbackBanners = bannerList.map((v) => {
-                 'id': v['id'],
-                 'title': v['title'],
-                 'poster': v['poster'],
-                 'url': '',
-                 'type': 'banner',
-              }).toList();
-              if (mounted) setState(() => banners = fallbackBanners);
-           }
-         } catch (_) {}
+      // 如果后台没有配置广告，使用热门视频作为轮播图兜底
+      if (banners.isEmpty && items.isNotEmpty) {
+        try {
+          final bannerItems = items.take(5).toList();
+          final fallbackBanners = bannerItems.map((v) => {
+            'id': v['id'],
+            'title': v['title'],
+            'poster': v['poster'],
+            'url': '',
+            'type': 'banner',
+          }).toList();
+          if (mounted) setState(() => banners = fallbackBanners);
+        } catch (_) {}
       }
-      */
 
       if (banners.isNotEmpty) _startBannerTimer();
 

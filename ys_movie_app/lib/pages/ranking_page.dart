@@ -155,41 +155,6 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   ],
                 ),
               ),
-              // 分类标签栏
-              if (_typeList.isNotEmpty)
-                Container(
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _typeList.length,
-                    itemBuilder: (ctx, i) {
-                      final type = _typeList[i];
-                      final id = int.tryParse('${type['type_id'] ?? 0}') ?? 0;
-                      final name = (type['type_name'] ?? '').toString();
-                      final isSelected = _selectedTypeId == id;
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedTypeId = id),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? primaryColor.withAlpha(30) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? primaryColor : (isDark ? Colors.white60 : Colors.black54),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
               if (_loadingSetting)
                 const Expanded(
                   child: Center(child: CircularProgressIndicator()),
@@ -415,15 +380,10 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         itemCount: items.length,
         itemBuilder: (ctx, i) {
           final item = items[i];
-          final rank = i + 1;
-          final isTop3 = rank <= 3;
-          final rankColor = isTop3
-              ? (rank == 1 ? Colors.orange : (rank == 2 ? Colors.grey[400]! : Colors.brown[400]!))
-              : Colors.grey[600]!;
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
             child: Container(
-              margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+              margin: const EdgeInsets.only(bottom: 12),
               height: 120,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
@@ -431,20 +391,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
               ),
               child: Row(
                 children: [
-                  // 排名编号
-                  Container(
-                    width: 40,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$rank',
-                      style: TextStyle(
-                        fontSize: isTop3 ? 24 : 18,
-                        fontWeight: FontWeight.bold,
-                        color: rankColor,
-                      ),
-                    ),
-                  ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(

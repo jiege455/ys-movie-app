@@ -164,17 +164,29 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     return '$baseUrl$cleanUrl';
   }
 
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 作用：安全释放播放器资源，防止崩溃和内存泄漏
   @override
   void dispose() {
-    try {
-      _betterPlayerController?.dispose();
-    } catch (_) {}
+    _safeDisposePlayer();
     _playerSettings.dispose();
     _episodeIndexNotifier.dispose();
     _sourceIndexNotifier.dispose();
     WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _safeDisposePlayer() {
+    try {
+      if (_betterPlayerController != null) {
+        _betterPlayerController!.pause();
+      }
+    } catch (_) {}
+    try {
+      _betterPlayerController?.dispose(forceDispose: true);
+    } catch (_) {}
+    _betterPlayerController = null;
   }
 
   @override
@@ -519,7 +531,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       fullScreenByDefault: false,
       allowedScreenSleep: false,
       // betterPlayerGlobalKey: _playerGlobalKey, // 该参数在当前版本不存在
-      autoDetectFullscreenDeviceOrientation: true, // 开启自动检测方向 (适配短剧)
+      autoDetectFullscreenDeviceOrientation: false, // 开发者：杰哥网络科技 - 关闭自动检测，防止起播崩溃
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp,
       ],
@@ -645,33 +657,25 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       ),
     );
 
-    // 如果控制器已存在，复用它以避免全屏黑屏
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：安全的控制器复用逻辑，先完全释放再重建，避免状态冲突导致崩溃
     if (_betterPlayerController != null) {
       try {
-        _betterPlayerController!.pause();
-        _betterPlayerController!.setupDataSource(dataSource);
-        _betterPlayerController!.setBetterPlayerControlsConfiguration(
-          betterPlayerConfiguration.controlsConfiguration
-        );
-        if (startPosition > Duration.zero) {
-          _betterPlayerController!.seekTo(startPosition);
-        }
+        _safeDisposePlayer();
       } catch (e) {
         debugPrint("Controller Reuse Error: $e");
-        // 如果复用失败，回退到重新创建
-        try { _betterPlayerController?.dispose(); } catch (_) {}
-        _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
-        _betterPlayerController!.setupDataSource(dataSource);
-        _addControllerListeners();
       }
-    } else {
-      _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
-      _betterPlayerController!.setupDataSource(dataSource);
-      _addControllerListeners();
-      
-      if (startPosition > Duration.zero) {
+    }
+
+    _retryCount = 0;
+    _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
+    _betterPlayerController!.setupDataSource(dataSource);
+    _addControllerListeners();
+    
+    if (startPosition > Duration.zero) {
+      try {
         _betterPlayerController!.seekTo(startPosition);
-      }
+      } catch (_) {}
     }
     
     if (mounted) setState(() {});
@@ -724,7 +728,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   void _onVideoProgress() {
     if (!mounted || _betterPlayerController == null) return;
     final val = _betterPlayerController!.videoPlayerController?.value;
-    if (val == null) return;
+    if (val == null || !val.initialized) return;
     
     if (val.isPlaying && val.position.inSeconds % 5 == 0) { // 每5秒保存一次
        _saveHistory();
@@ -746,7 +750,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     // Check if disposed
     try {
       final val = _betterPlayerController!.videoPlayerController?.value;
-      if (val == null) return;
+      if (val == null || !val.initialized) return;
       
       final pos = val.position.inSeconds;
       StoreService.addHistory({
@@ -1032,7 +1036,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                 AspectRatio(
                   aspectRatio: 16 / 9,
                   child: _betterPlayerController != null
-                      ? BetterPlayer(controller: _betterPlayerController!)
+                      ? BetterPlayer(
+                          key: ValueKey('player_${_currentSourceIndex}_$_currentEpisodeIndex'),
+                          controller: _betterPlayerController!,
+                        )
                       : Container(
                           color: Colors.black,
                           child: Center(
