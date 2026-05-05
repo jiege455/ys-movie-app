@@ -158,23 +158,19 @@ class _VideoProgressBarState
     }
   }
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：避免 relative >= 1 时重复调用 seekTo，并精确使用毫秒计算位置
   void seekToRelativePosition(Offset globalPosition) async {
     final RenderObject? renderObject = context.findRenderObject();
     if (renderObject != null) {
       final box = renderObject as RenderBox;
       final Offset tapPos = box.globalToLocal(globalPosition);
-      final double relative = tapPos.dx / box.size.width;
-      if (relative > 0) {
-        final Duration position = controller!.value.duration! * relative;
-        lastSeek = position;
-        await betterPlayerController!.seekTo(position);
-        onFinishedLastSeek();
-        if (relative >= 1) {
-          lastSeek = controller!.value.duration;
-          await betterPlayerController!.seekTo(controller!.value.duration!);
-          onFinishedLastSeek();
-        }
-      }
+      final double relative = (tapPos.dx / box.size.width).clamp(0.0, 1.0);
+      final int targetMs = (controller!.value.duration!.inMilliseconds * relative).round();
+      final Duration position = Duration(milliseconds: targetMs);
+      lastSeek = position;
+      await betterPlayerController!.seekTo(position);
+      onFinishedLastSeek();
     }
   }
 

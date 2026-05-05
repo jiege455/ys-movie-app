@@ -89,6 +89,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   int _sleepMinutes = 0; // 0=关闭
   String _sleepTimeLeft = '';
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 水平拖拽快进快退 - 记录起始状态
+  Duration? _dragStartPosition;
+  double? _dragStartX;
+
   @override
   BetterPlayerControlsConfiguration get betterPlayerControlsConfiguration =>
       _controller?.betterPlayerConfiguration.controlsConfiguration ??
@@ -883,17 +888,24 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
           _isSlidingVolume = false;
         });
       },
-      // 水平滑动快进快退
+      // 开发者：杰哥网络科技 (qq: 2711793818)
+      // 修复：水平滑动快进快退 - 基于滑动比例映射到视频时长，而非像素直接当秒数
+      onHorizontalDragStart: (details) {
+        if (_isLocked) return;
+        _dragStartPosition = _controller!.videoPlayerController!.value.position;
+        _dragStartX = details.globalPosition.dx;
+      },
       onHorizontalDragUpdate: (details) {
-         if (_isLocked) return;
-         final current = _controller!.videoPlayerController!.value.position;
-         final total = _controller!.videoPlayerController!.value.duration;
-         if (total != null) {
-            final seekTo = current + Duration(seconds: details.primaryDelta!.toInt());
-            if (seekTo >= Duration.zero && seekTo <= total) {
-               _controller!.seekTo(seekTo);
-            }
-         }
+        if (_isLocked) return;
+        final total = _controller!.videoPlayerController!.value.duration;
+        if (total == null || _dragStartPosition == null || _dragStartX == null) return;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final deltaX = details.globalPosition.dx - _dragStartX!;
+        final seekDeltaMs = (deltaX / screenWidth * total.inMilliseconds).round();
+        final seekTo = _dragStartPosition! + Duration(milliseconds: seekDeltaMs);
+        if (seekTo >= Duration.zero && seekTo <= total) {
+          _controller!.seekTo(seekTo);
+        }
       },
       child: Container(
         color: Colors.transparent,
@@ -1210,6 +1222,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     final position = _latestValue!.position;
     final isFullScreen = _controller?.isFullScreen == true;
 
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：使用毫秒级精度计算进度比例，避免inSeconds截断导致进度条不准确
+    final double sliderValue = duration.inMilliseconds > 0
+        ? (position.inMilliseconds / duration.inMilliseconds)
+        : 0.0;
+
+    // 根据总时长决定时间格式：≥1小时显示 HH:MM:SS，否则显示 MM:SS
+    final bool showHours = duration.inHours > 0;
+
     return Container(
       padding: EdgeInsets.fromLTRB(20, 10, 20, isFullScreen ? 20 : 5),
       decoration: BoxDecoration(
@@ -1235,7 +1256,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                    const SizedBox(width: 8),
                 ],
                 
-                Text(_formatDuration(position), style: const TextStyle(color: Colors.white, fontSize: 12)),
+                Text(_formatDuration(position, forceShowHours: showHours), style: const TextStyle(color: Colors.white, fontSize: 12)),
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
@@ -1251,22 +1272,24 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                           );
                         }
                       ),
-                      // 播放进度条
+                      // 开发者：杰哥网络科技 (qq: 2711793818)
+                      // 修复：使用0-1归一化值替代inSeconds，避免截断误差导致进度不准
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: const Color(0xFF4CAF50), // 进度条改为绿色
-                          inactiveTrackColor: Colors.transparent, // 设为透明，显示底下的缓冲条
+                          activeTrackColor: const Color(0xFF4CAF50),
+                          inactiveTrackColor: Colors.transparent,
                           thumbColor: Colors.white,
                           trackHeight: 2,
                           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                           overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                         ),
                         child: Slider(
-                          value: position.inSeconds.toDouble().clamp(0, duration.inSeconds.toDouble()),
-                          min: 0,
-                          max: duration.inSeconds.toDouble(),
+                          value: sliderValue.clamp(0.0, 1.0),
+                          min: 0.0,
+                          max: 1.0,
                           onChanged: (v) {
-                            _controller?.seekTo(Duration(seconds: v.toInt()));
+                            final seekMs = (v * duration.inMilliseconds).round();
+                            _controller?.seekTo(Duration(milliseconds: seekMs));
                             cancelAndRestartTimer();
                           },
                         ),
@@ -1388,11 +1411,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     );
   }
 
-  String _formatDuration(Duration d) {
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 统一格式化时间，根据总时长决定是否强制显示小时位，保证格式一致
+  String _formatDuration(Duration d, {bool forceShowHours = false}) {
     final h = d.inHours;
-    final m = d.inMinutes % 60;
-    final s = d.inSeconds % 60;
-    if (h > 0) {
+    final m = d.inMinutes.remainder(60).abs();
+    final s = d.inSeconds.remainder(60).abs();
+    if (h > 0 || forceShowHours) {
       return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
     }
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';

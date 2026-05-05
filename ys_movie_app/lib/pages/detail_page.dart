@@ -667,10 +667,12 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       }
     }
 
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：await setupDataSource 确保视频初始化完成后再 seek，避免恢复进度失败
     _retryCount = 0;
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
-    _betterPlayerController!.setupDataSource(dataSource);
     _addControllerListeners();
+    await _betterPlayerController!.setupDataSource(dataSource);
     
     if (startPosition > Duration.zero) {
       try {
