@@ -633,7 +633,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {isLoading && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-20">
           <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
             <p className="text-sm">视频加载中...</p>
           </div>
         </div>
@@ -643,14 +643,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
           <div className="text-white text-center px-4">
-            <svg className="w-16 h-16 mx-auto mb-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 mx-auto mb-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-lg mb-2">视频加载失败</p>
-            <p className="text-sky-400/60 text-sm mb-4">请检查网络连接或稍后重试</p>
+            <p className="text-cyan-400/60 text-sm mb-4">请检查网络连接或稍后重试</p>
             <button
               onClick={handleRetry}
-              className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>
@@ -664,10 +664,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           <select
             value={currentQuality}
             onChange={(e) => handleQualityChange(e.target.value)}
-            className="bg-black/70 text-white px-3 py-1 rounded text-sm border border-sky-500/30 focus:outline-none focus:border-sky-400 backdrop-blur-sm cursor-pointer"
+            className="bg-black/70 text-white px-3 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 backdrop-blur-sm cursor-pointer"
           >
             {qualities.map((q) => (
-              <option key={q} value={q} className="bg-[#0f172a]">
+              <option key={q} value={q} className="glass-light">
                 {q === 'auto' ? '自动' : q}
               </option>
             ))}
@@ -684,14 +684,14 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           <select
             value={playbackRate}
             onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
-            className="bg-black/70 text-white px-2 py-1 rounded text-sm border border-sky-500/30 focus:outline-none focus:border-sky-400 backdrop-blur-sm cursor-pointer"
+            className="bg-black/70 text-white px-2 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 backdrop-blur-sm cursor-pointer"
           >
-            <option value={0.5} className="bg-[#0f172a]">0.5x</option>
-            <option value={0.75} className="bg-[#0f172a]">0.75x</option>
-            <option value={1} className="bg-[#0f172a]">1x</option>
-            <option value={1.25} className="bg-[#0f172a]">1.25x</option>
-            <option value={1.5} className="bg-[#0f172a]">1.5x</option>
-            <option value={2} className="bg-[#0f172a]">2x</option>
+            <option value={0.5} className="glass-light">0.5x</option>
+            <option value={0.75} className="glass-light">0.75x</option>
+            <option value={1} className="glass-light">1x</option>
+            <option value={1.25} className="glass-light">1.25x</option>
+            <option value={1.5} className="glass-light">1.5x</option>
+            <option value={2} className="glass-light">2x</option>
           </select>
         </div>
       )}
@@ -700,7 +700,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {isPiPSupported && !hasError && (
         <button
           onClick={togglePictureInPicture}
-          className={`absolute top-4 z-30 bg-black/70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors ${isInPiP ? 'bg-sky-500' : ''}`}
+          className={`absolute top-4 z-30 bg-black/70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors ${isInPiP ? 'bg-cyan-500' : ''}`}
           title={isInPiP ? '退出画中画' : '画中画'}
           style={{ right: qualities.length > 1 ? '100px' : '16px' }}
         >

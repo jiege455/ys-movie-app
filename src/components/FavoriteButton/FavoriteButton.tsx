@@ -77,8 +77,8 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ vodId, className
       disabled={loading || checking}
       className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors text-sm ${
         favorited
-          ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-          : 'bg-[#0f172a]/80 hover:bg-sky-500/10 text-sky-400/60 hover:text-sky-400 border border-sky-500/20'
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+          : 'glass-light hover:bg-cyan-500/10 text-cyan-400/60 hover:text-cyan-400 border border-cyan-500/20'
       } ${className}`}
     >
       <svg

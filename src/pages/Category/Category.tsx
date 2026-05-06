@@ -47,28 +47,28 @@ export const Category: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-14 bg-[#0a0e1a]">
+    <div className="min-h-screen pb-14 ">
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 glass border-b border-sky-500/20 px-4 py-3 flex items-center">
+      <div className="sticky top-0 z-10 glass border-b border-cyan-500/20 px-4 py-3 flex items-center">
         <button
           onClick={() => navigate(-1)}
-          className="mr-3 text-sky-300 hover:text-sky-100"
+          className="mr-3 text-cyan-300 hover:text-cyan-100"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-bold truncate text-sky-100">{categoryName}</h1>
+        <h1 className="text-lg font-bold truncate text-cyan-100">{categoryName}</h1>
       </div>
 
       {/* 视频列表 */}
       <main className="px-4 py-4">
         {error && (
-          <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4 mb-4">
-            <p className="text-sky-400 text-center">{error}</p>
+          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4 mb-4">
+            <p className="text-cyan-400 text-center">{error}</p>
             <button
               onClick={() => id && loadMovies(id)}
-              className="mt-2 w-full bg-sky-500 hover:bg-sky-400 text-white py-2 rounded-lg transition-colors"
+              className="mt-2 w-full bg-cyan-500 hover:bg-cyan-400 text-white py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>
@@ -77,7 +77,7 @@ export const Category: React.FC = () => {
 
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-400"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400"></div>
           </div>
         ) : (
           <>
@@ -98,7 +98,7 @@ export const Category: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-sky-400/60">暂无该分类数据</p>
+                <p className="text-cyan-400/60">暂无该分类数据</p>
               </div>
             )}
           </>

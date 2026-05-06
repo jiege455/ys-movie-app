@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/store.dart';
 import '../services/api.dart';
 import '../services/theme_provider.dart';
+import '../theme/app_theme.dart';
 import 'detail_page.dart';
 import 'vod_list_page.dart';
 import 'history_page.dart';
@@ -396,23 +397,29 @@ class ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       // backgroundColor: const Color(0xFFF5F5F5), // Removed hardcoded color
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 顶部头部
-            Container(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: 30, left: 24, right: 24),
-              decoration: _hideMineBg
-                  ? BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor)
-                  : BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark 
-                            ? [primaryColor.withAlpha(60), Theme.of(context).scaffoldBackgroundColor]
-                            : [primaryColor.withAlpha(35), Colors.white],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
+      body: Stack(
+        children: [
+          // 纹理背景
+          if (isDark)
+            const TexturedBackground(child: SizedBox.expand()),
+          
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // 顶部头部
+                Container(
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: 30, left: 24, right: 24),
+                  decoration: _hideMineBg
+                      ? BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor)
+                      : BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isDark 
+                                ? [primaryColor.withAlpha(60), Theme.of(context).scaffoldBackgroundColor]
+                                : [primaryColor.withAlpha(35), Colors.white],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
               child: Column(
                 children: [
                   // 顶部用户信息区域（包含设置按钮）

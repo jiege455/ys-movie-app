@@ -74,10 +74,10 @@ export const MovieDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0e1a]">
+      <div className="min-h-screen flex items-center justify-center ">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400 mx-auto mb-4"></div>
-          <p className="text-sky-300">加载中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-cyan-300">加载中...</p>
         </div>
       </div>
     )
@@ -85,19 +85,19 @@ export const MovieDetail: React.FC = () => {
 
   if (error || !movieData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0e1a]">
+      <div className="min-h-screen flex items-center justify-center ">
         <div className="text-center">
-          <p className="text-sky-300 mb-4">{error || '电影信息不存在'}</p>
+          <p className="text-cyan-300 mb-4">{error || '电影信息不存在'}</p>
           <button
             onClick={handleBackClick}
-            className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg transition-colors mr-2"
+            className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors mr-2"
           >
             返回
           </button>
           {error && (
             <button
               onClick={() => id && loadMovieData(id)}
-              className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>
@@ -108,25 +108,25 @@ export const MovieDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-[#0a0e1a]">
+    <div className="min-h-screen pb-20 ">
       {/* 顶部导航 */}
-      <div className="sticky top-0 z-10 glass border-b border-sky-500/20 px-4 py-3 flex items-center">
+      <div className="sticky top-0 z-10 glass border-b border-cyan-500/20 px-4 py-3 flex items-center">
         <button
           onClick={handleBackClick}
-          className="mr-3 text-sky-300 hover:text-sky-100"
+          className="mr-3 text-cyan-300 hover:text-cyan-100"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-bold truncate text-sky-100">{movieData.title}</h1>
+        <h1 className="text-lg font-bold truncate text-cyan-100">{movieData.title}</h1>
       </div>
 
       <div className="px-4 py-4">
         {/* 海报与基本信息 */}
         <div className="flex gap-4 mb-6">
           <div className="w-32 flex-shrink-0">
-            <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg bg-[#1e293b]">
+            <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg glass-light">
               <img
                 src={movieData.poster_path || 'https://via.placeholder.com/300x450?text=No+Image'}
                 alt={movieData.title}
@@ -140,17 +140,17 @@ export const MovieDetail: React.FC = () => {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold mb-2 text-sky-100">{movieData.title}</h2>
+            <h2 className="text-xl font-bold mb-2 text-cyan-100">{movieData.title}</h2>
 
             {movieData.vote_average > 0 && (
               <div className="flex items-center mb-2">
-                <span className="text-sky-400 mr-1">★</span>
-                <span className="text-sm text-sky-300">{movieData.vote_average.toFixed(1)}</span>
+                <span className="text-cyan-400 mr-1">★</span>
+                <span className="text-sm text-cyan-300">{movieData.vote_average.toFixed(1)}</span>
               </div>
             )}
 
             {movieData.release_date && (
-              <p className="text-sm text-sky-400/60 mb-1">
+              <p className="text-sm text-cyan-400/60 mb-1">
                 上映: {movieData.release_date}
               </p>
             )}
@@ -159,7 +159,7 @@ export const MovieDetail: React.FC = () => {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={() => handlePlayClick(0)}
-                className="flex-1 bg-sky-500 hover:bg-sky-400 text-white py-2 rounded-lg transition-colors font-medium text-sm"
+                className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-white py-2 rounded-lg transition-colors font-medium text-sm"
               >
                 立即播放
               </button>
@@ -171,8 +171,8 @@ export const MovieDetail: React.FC = () => {
         {/* 剧情简介 */}
         {movieData.overview && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-sky-400">剧情简介</h3>
-            <p className="text-sm text-sky-300 leading-relaxed">
+            <h3 className="text-lg font-semibold mb-2 text-cyan-400">剧情简介</h3>
+            <p className="text-sm text-cyan-300 leading-relaxed">
               {movieData.overview}
             </p>
           </div>
@@ -181,13 +181,13 @@ export const MovieDetail: React.FC = () => {
         {/* 播放列表 */}
         {episodes.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-sky-400">选集播放</h3>
+            <h3 className="text-lg font-semibold mb-3 text-cyan-400">选集播放</h3>
             <div className="grid grid-cols-4 gap-2">
               {episodes.map((episode, index) => (
                 <button
                   key={index}
                   onClick={() => handlePlayClick(index)}
-                  className="bg-[#0f172a]/80 hover:bg-sky-500/20 hover:text-sky-400 py-2 rounded-lg text-sm transition-colors text-sky-300 border border-sky-500/20"
+                  className="glass-light hover:bg-cyan-500/20 hover:text-cyan-400 py-2 rounded-lg text-sm transition-colors text-cyan-300 border border-cyan-500/20"
                 >
                   {episode.name || `第${index + 1}集`}
                 </button>
@@ -197,7 +197,7 @@ export const MovieDetail: React.FC = () => {
         )}
 
         {/* 评论区 */}
-        <div className="border-t border-sky-500/20 pt-6">
+        <div className="border-t border-cyan-500/20 pt-6">
           <CommentSection vodId={movieData.id} />
         </div>
       </div>

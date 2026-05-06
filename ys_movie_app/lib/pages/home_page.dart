@@ -17,6 +17,7 @@ import 'dart:async';
 import '../services/api.dart';
 import '../services/store.dart';
 import '../config.dart';
+import '../theme/app_theme.dart';
 import 'search_page.dart';
 import 'detail_page.dart';
 import 'history_page.dart';
@@ -1033,6 +1034,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       // backgroundColor: Colors.white, // 移除硬编码，使用主题色
       body: Stack(
         children: [
+          // 纹理背景
+          if (isDark)
+            const TexturedBackground(child: SizedBox.expand()),
+          
           // 背景渐变
           Container(
             height: 320,

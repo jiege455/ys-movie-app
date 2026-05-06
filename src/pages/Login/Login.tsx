@@ -70,26 +70,26 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-[#0a0e1a]">
+    <div className="min-h-screen flex items-center justify-center px-4 ">
       <div className="w-full max-w-md rounded-xl glass-card p-8">
-        <h1 className="text-2xl font-bold text-center mb-6 text-sky-400">
+        <h1 className="text-2xl font-bold text-center mb-6 text-cyan-400">
           {isRegister ? '注册账号' : '用户登录'}
         </h1>
 
         {error && (
-          <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-3 mb-4">
-            <p className="text-sky-400 text-sm text-center">{error}</p>
+          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3 mb-4">
+            <p className="text-cyan-400 text-sm text-center">{error}</p>
           </div>
         )}
 
         <form onSubmit={isRegister ? handleRegister : handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-sky-300">用户名</label>
+            <label className="block text-sm font-medium mb-1 text-cyan-300">用户名</label>
             <input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-[#0f172a]/80 text-sky-100 placeholder-sky-400/50 border-sky-500/20"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none glass-light text-cyan-100 placeholder-cyan-400/50 border-cyan-500/20"
               placeholder="请输入用户名"
               required
               minLength={3}
@@ -98,12 +98,12 @@ export const Login: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-sky-300">密码</label>
+            <label className="block text-sm font-medium mb-1 text-cyan-300">密码</label>
             <input
               type="password"
               value={userPwd}
               onChange={(e) => setUserPwd(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-[#0f172a]/80 text-sky-100 placeholder-sky-400/50 border-sky-500/20"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none glass-light text-cyan-100 placeholder-cyan-400/50 border-cyan-500/20"
               placeholder="请输入密码"
               required
               minLength={6}
@@ -112,12 +112,12 @@ export const Login: React.FC = () => {
 
           {isRegister && (
             <div>
-              <label className="block text-sm font-medium mb-1 text-sky-300">确认密码</label>
+              <label className="block text-sm font-medium mb-1 text-cyan-300">确认密码</label>
               <input
                 type="password"
                 value={userPwd2}
                 onChange={(e) => setUserPwd2(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-[#0f172a]/80 text-sky-100 placeholder-sky-400/50 border-sky-500/20"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none glass-light text-cyan-100 placeholder-cyan-400/50 border-cyan-500/20"
                 placeholder="请再次输入密码"
                 required
                 minLength={6}
@@ -128,7 +128,7 @@ export const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-sky-500 hover:bg-sky-400 disabled:bg-slate-700 text-white py-2 rounded-lg transition-colors font-medium"
+            className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-700 text-white py-2 rounded-lg transition-colors font-medium"
           >
             {loading ? '处理中...' : isRegister ? '注册' : '登录'}
           </button>
@@ -142,7 +142,7 @@ export const Login: React.FC = () => {
               setUserPwd('')
               setUserPwd2('')
             }}
-            className="text-sky-400 hover:text-sky-300 text-sm"
+            className="text-cyan-400 hover:text-cyan-300 text-sm"
           >
             {isRegister ? '已有账号？去登录' : '没有账号？去注册'}
           </button>
@@ -151,7 +151,7 @@ export const Login: React.FC = () => {
         <div className="mt-4 text-center">
           <button
             onClick={() => navigate(-1)}
-            className="text-sky-400/60 hover:text-sky-400 text-sm"
+            className="text-cyan-400/60 hover:text-cyan-400 text-sm"
           >
             返回上一页
           </button>
