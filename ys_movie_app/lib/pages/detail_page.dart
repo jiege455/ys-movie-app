@@ -56,6 +56,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   
   // 播放器相关
   BetterPlayerController? _betterPlayerController;
+  final GlobalKey _playerGlobalKey = GlobalKey(); // 画中画功能必需的 GlobalKey
   int _currentSourceIndex = 0;
   int _currentEpisodeIndex = 0;
   List<Map<String, dynamic>> _sources = [];
@@ -672,6 +673,9 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     // 修复：await setupDataSource 确保视频初始化完成后再 seek，避免恢复进度失败
     _retryCount = 0;
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：设置 GlobalKey，画中画功能必需
+    _betterPlayerController!.setBetterPlayerGlobalKey(_playerGlobalKey);
     _addControllerListeners();
     await _betterPlayerController!.setupDataSource(dataSource);
     
@@ -1040,7 +1044,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   aspectRatio: 16 / 9,
                   child: _betterPlayerController != null
                       ? BetterPlayer(
-                          key: ValueKey('player_${_currentSourceIndex}_$_currentEpisodeIndex'),
+                          key: _playerGlobalKey, // 画中画功能必需的 GlobalKey
                           controller: _betterPlayerController!,
                         )
                       : Container(
