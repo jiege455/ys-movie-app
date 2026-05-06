@@ -88,8 +88,8 @@ export const Player: React.FC = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-white">加载中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400 mx-auto mb-4"></div>
+          <p className="text-sky-300">加载中...</p>
         </div>
       </div>
     )
@@ -99,10 +99,10 @@ export const Player: React.FC = () => {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">{error || '视频信息不存在'}</p>
+          <p className="text-sky-400/60 mb-4">{error || '视频信息不存在'}</p>
           <button
             onClick={handleBackClick}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg transition-colors"
           >
             返回
           </button>
@@ -112,20 +112,20 @@ export const Player: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#0a0e1a]">
       {/* 顶部导航 */}
-      <div className="flex items-center px-4 py-3 bg-black">
+      <div className="flex items-center px-4 py-3 bg-[#0a0e1a]">
         <button
           onClick={handleBackClick}
-          className="mr-3 text-white hover:text-gray-300"
+          className="mr-3 text-sky-300 hover:text-sky-100"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-white text-lg font-bold truncate">{movieData.title}</h1>
-          <p className="text-gray-400 text-sm">{getCurrentEpisodeName()}</p>
+          <h1 className="text-sky-100 text-lg font-bold truncate">{movieData.title}</h1>
+          <p className="text-sky-400/60 text-sm">{getCurrentEpisodeName()}</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export const Player: React.FC = () => {
       {/* 选集列表 */}
       {episodes.length > 1 && (
         <div className="px-4 py-4">
-          <h3 className="text-white text-lg font-semibold mb-3">选集</h3>
+          <h3 className="text-sky-400 text-lg font-semibold mb-3">选集</h3>
           <div className="grid grid-cols-4 gap-2">
             {episodes.map((episode, index) => (
               <button
@@ -148,8 +148,8 @@ export const Player: React.FC = () => {
                 onClick={() => handleEpisodeChange(index)}
                 className={`py-2 rounded-lg text-sm transition-colors ${
                   index === currentEpisode
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-sky-500 text-white'
+                    : 'bg-[#0f172a] text-sky-300 hover:bg-sky-500/20 border border-sky-500/20'
                 }`}
               >
                 {episode.name || `第${index + 1}集`}
@@ -160,10 +160,10 @@ export const Player: React.FC = () => {
       )}
 
       {/* 电影信息 */}
-      <div className="px-4 py-4 border-t border-gray-800">
-        <h2 className="text-white text-xl font-bold mb-2">{movieData.title}</h2>
+      <div className="px-4 py-4 border-t border-sky-500/20">
+        <h2 className="text-sky-100 text-xl font-bold mb-2">{movieData.title}</h2>
         {movieData.overview && (
-          <p className="text-gray-400 text-sm leading-relaxed">{movieData.overview}</p>
+          <p className="text-sky-300/70 text-sm leading-relaxed">{movieData.overview}</p>
         )}
       </div>
     </div>
