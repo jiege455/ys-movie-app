@@ -391,6 +391,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         } catch (_) {}
       }
 
+      // 开发者：杰哥
+      // 修复：当 API 返回的分类列表为空时，使用静态分类兜底
+      // 解释：避免首页空白，确保至少有基本分类显示
+      if (finalTypeList.isEmpty && AppConfig.useStaticCategories) {
+        finalTypeList = AppConfig.staticCategories
+            .map((e) => {
+                  'type_id': e['type_id'],
+                  'type_name': e['type_name'],
+                })
+            .toList();
+        print('Home Tabs: Using static categories as fallback');
+      }
+
       // 3. 构建 Tabs
       // 额外兜底：如果后台已开启专题但 app_tab_setting_list 未返回“专题”，则主动补充
       try {
