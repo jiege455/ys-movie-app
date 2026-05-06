@@ -1357,18 +1357,37 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 拖动预览时间气泡
-        if (_isDragging) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              _formatDuration(displayPosition, forceShowHours: showHours),
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-            ),
+        // 拖动预览时间气泡 - 跟随 thumb 位置
+        if (_isDragging && _draggingValue != null) ...[
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final thumbX = constraints.maxWidth * _draggingValue!;
+              return Stack(
+                children: [
+                  Positioned(
+                    left: thumbX - 30,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _formatDuration(displayPosition, forceShowHours: showHours),
+                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 4),
         ],
@@ -1379,19 +1398,20 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
               const SizedBox(width: 8),
             ],
             
-            // 当前时间 - 拖动时显示预览时间
+            // 当前时间 - 拖动时显示预览时间，有气泡时隐藏避免重复
             SizedBox(
               width: showHours ? 64 : 44,
-              child: Text(
-                _formatDuration(displayPosition, forceShowHours: showHours),
-                style: TextStyle(
-                  color: _isDragging ? const Color(0xFF4CAF50) : Colors.white,
-                  fontSize: 12,
-                  fontWeight: _isDragging ? FontWeight.bold : FontWeight.normal,
-                  fontFeatures: const [FontFeature.tabularFigures()], // 等宽数字，防止抖动
-                ),
-                textAlign: TextAlign.right,
-              ),
+              child: _isDragging
+                  ? const SizedBox.shrink() // 拖动时有气泡显示，隐藏左侧时间
+                  : Text(
+                      _formatDuration(displayPosition, forceShowHours: showHours),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFeatures: [FontFeature.tabularFigures()], // 等宽数字，防止抖动
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
             ),
             const SizedBox(width: 8),
             
@@ -1457,16 +1477,23 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                             height: barHeight,
                             width: constraints.maxWidth * displayProgress,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50),
+                              color: _isDragging ? const Color(0xFF66BB6A) : const Color(0xFF4CAF50),
                               borderRadius: BorderRadius.circular(barHeight / 2),
+                              boxShadow: _isDragging ? [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.5),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ] : null,
                             ),
                           ),
                           // Thumb 指示器
                           Positioned(
-                            left: (constraints.maxWidth * displayProgress) - thumbRadius,
+                            left: (constraints.maxWidth * displayProgress) - (_isDragging ? thumbRadius * 1.3 : thumbRadius),
                             child: Container(
-                              width: thumbRadius * 2,
-                              height: thumbRadius * 2,
+                              width: (_isDragging ? thumbRadius * 1.3 : thumbRadius) * 2,
+                              height: (_isDragging ? thumbRadius * 1.3 : thumbRadius) * 2,
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
@@ -1476,6 +1503,12 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
+                                  if (_isDragging)
+                                    BoxShadow(
+                                      color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
                                 ],
                               ),
                             ),
@@ -1489,18 +1522,20 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
             ),
             const SizedBox(width: 8),
             
-            // 总时长
+            // 总时长 - 拖动时隐藏，保持界面简洁
             SizedBox(
               width: showHours ? 64 : 44,
-              child: Text(
-                _formatDuration(duration, forceShowHours: showHours),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontFeatures: [FontFeature.tabularFigures()], // 等宽数字
-                ),
-                textAlign: TextAlign.left,
-              ),
+              child: _isDragging
+                  ? const SizedBox.shrink()
+                  : Text(
+                      _formatDuration(duration, forceShowHours: showHours),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontFeatures: [FontFeature.tabularFigures()], // 等宽数字
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
             ),
             
             if (!isFullScreen) ...[
@@ -1559,7 +1594,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       _isDragging = true;
       _draggingValue = value;
     });
+    // 拖动时取消自动隐藏定时器
     _hideTimer?.cancel();
+    _hideTimer = null;
   }
 
   void _onSeekUpdate(double value) {
