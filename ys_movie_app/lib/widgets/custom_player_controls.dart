@@ -828,6 +828,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   @override
   Widget build(BuildContext context) {
     if (_latestValue == null) return const SizedBox.shrink();
+
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：PiP模式下隐藏所有Flutter控制UI，避免按钮幻影和无法点击问题
+    // 系统PiP窗口自带原生控制，不需要Flutter层叠加控制栏
+    final bool isPipMode = _latestValue?.isPip ?? false;
+    if (isPipMode) {
+      return const SizedBox.shrink();
+    }
+
     final size = MediaQuery.of(context).size;
 
     return GestureDetector(

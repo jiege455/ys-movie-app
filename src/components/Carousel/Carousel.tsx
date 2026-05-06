@@ -125,7 +125,7 @@ export const Carousel: React.FC<CarouselProps> = ({
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-sky-400' : 'bg-white/50'
+                  index === currentIndex ? 'bg-sky-400' : 'bg-sky-400/30'
                 }`}
               />
             ))}

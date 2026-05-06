@@ -91,8 +91,8 @@ export const Home: React.FC = () => {
       <main className="px-4 pb-20">
         {/* 错误提示 */}
         {error && (
-          <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-4">
-            <p className="text-red-400 text-center">{error}</p>
+          <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4 mb-4">
+            <p className="text-sky-400 text-center">{error}</p>
             <button
               onClick={loadMovies}
               className="mt-2 w-full bg-sky-500 hover:bg-sky-400 text-white py-2 rounded-lg transition-colors"
