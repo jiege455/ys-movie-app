@@ -4,23 +4,16 @@ import { Carousel } from '../../components/Carousel/Carousel'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getHotMovies, getBannerMovies } from '../../api'
 import { useMovieStore } from '../../store/movieStore'
-import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 首页页面
  * 负责加载轮播与电影列表，支持搜索与分类跳转
  */
-/**
- * 首页组件
- * 展示热门电影轮播图和电影列表
- * 支持电影搜索和分类浏览
- */
 export const Home: React.FC = () => {
   const navigate = useNavigate()
   const { movies, setMovies, loading, setLoading } = useMovieStore()
-  const { isDark } = useTheme()
-  // 首页轮播数据类型
+
   type BannerMovie = {
     id: string
     title: string
@@ -35,25 +28,16 @@ export const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  /**
-   * 组件挂载时加载数据
-   */
   useEffect(() => {
     loadMovies()
   }, [])
 
-  /**
-   * 加载电影数据
-   */
   const loadMovies = async () => {
     try {
       setLoading(true)
       setError(null)
-      // 先加载轮播数据（优先后端banner）
       const banners = await getBannerMovies()
       setHotMovies(banners)
-
-      // 再加载列表数据（热门）
       const movieData = await getHotMovies(1)
       setMovies(movieData)
     } catch (err) {
@@ -64,10 +48,6 @@ export const Home: React.FC = () => {
     }
   }
 
-  /**
-   * 处理电影卡片点击事件
-   * @param movieId 电影ID
-   */
   const handleMovieClick = (movieId: string, vodLink?: string) => {
     if (vodLink && /^https?:\/\//i.test(vodLink)) {
       window.open(vodLink, '_blank')
@@ -76,10 +56,6 @@ export const Home: React.FC = () => {
     navigate(`/movie/${movieId}`)
   }
 
-  /**
-   * 处理搜索提交
-   * @param e 表单事件
-   */
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -87,25 +63,21 @@ export const Home: React.FC = () => {
     }
   }
 
-  /**
-   * 处理分类导航
-   * @param category 分类名称
-   */
   const handleCategoryClick = (category: string) => {
     navigate(`/category/${category}`)
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+    <div className="min-h-screen bg-white">
       {/* 顶部搜索（移动端样式） */}
-      <div className={`px-4 pt-4 pb-2 sticky top-0 z-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+      <div className="px-4 pt-4 pb-2 sticky top-0 z-10 bg-white">
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
             type="text"
             placeholder="搜影视、演员..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none ${isDark ? 'bg-gray-800 text-white placeholder-gray-400' : 'bg-gray-100'}`}
+            className="w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none bg-gray-100"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +105,7 @@ export const Home: React.FC = () => {
         {/* 轮播图区域 */}
         {hotMovies.length > 0 && (
           <section className="mb-12">
-            <h2 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>热门推荐</h2>
+            <h2 className="text-3xl font-bold mb-6 text-gray-800">热门推荐</h2>
             <Carousel
               movies={hotMovies}
               onMovieClick={handleMovieClick}
@@ -146,15 +118,15 @@ export const Home: React.FC = () => {
         {/* 视频列表 */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>热播精选</h2>
-            <button 
+            <h2 className="text-xl font-bold text-gray-800">热播精选</h2>
+            <button
               onClick={() => handleCategoryClick('movie')}
               className="text-red-600 hover:text-red-700 text-sm"
             >
               查看更多 →
             </button>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
@@ -175,17 +147,17 @@ export const Home: React.FC = () => {
               ))}
             </div>
           )}
-          
+
           {!loading && movies.length === 0 && (
             <div className="text-center py-12">
-              <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>暂无电影数据</p>
+              <p className="text-lg text-gray-500">暂无电影数据</p>
             </div>
           )}
         </section>
 
         {/* 分类导航（简洁移动样式） */}
         <section className="mt-8">
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>分类浏览</h2>
+          <h2 className="text-xl font-bold mb-4 text-gray-800">分类浏览</h2>
           <div className="grid grid-cols-4 gap-3">
             {[
               { name: '动作', icon: '🔥', category: 'action' },
@@ -200,10 +172,10 @@ export const Home: React.FC = () => {
               <button
                 key={genre.category}
                 onClick={() => handleCategoryClick(genre.category)}
-                className={`rounded-lg p-3 text-center ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}
+                className="rounded-lg p-3 text-center bg-gray-100"
               >
                 <div className="text-xl mb-1">{genre.icon}</div>
-                <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{genre.name}</div>
+                <div className="text-sm text-gray-800">{genre.name}</div>
               </button>
             ))}
           </div>

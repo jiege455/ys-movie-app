@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getAppPageSetting, AppPageSetting } from '../../api'
-import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
- * 作用：底部TabBar导航，仿主流视频App，包含 首页/发现/分类/我的
- * 说明：使用 NavLink 高亮当前标签；移动端优先的样式
+ * 底部TabBar导航，仿主流视频App，包含 首页/发现/分类/我的
+ * 使用 NavLink 高亮当前标签；移动端优先的样式
  */
 export const TabBar: React.FC = () => {
-  const { isDark } = useTheme()
-
   const itemCls = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-red-600' : isDark ? 'text-gray-400' : 'text-gray-600'}`
+    `flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-red-600' : 'text-gray-600'}`
 
   /**
    * 通过插件页面设置动态控制标签名称与显示
@@ -34,7 +31,7 @@ export const TabBar: React.FC = () => {
   const topicName = pageSetting?.app_tab_topic_name || '专题'
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t shadow ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t shadow bg-white border-gray-200">
       <div className="flex">
         <NavLink to="/" className={itemCls}>
           <span className="text-sm">首页</span>

@@ -633,7 +633,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {isLoading && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-20">
           <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
             <p className="text-sm">视频加载中...</p>
           </div>
         </div>

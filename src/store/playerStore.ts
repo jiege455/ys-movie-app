@@ -12,12 +12,14 @@ interface PlayerState {
   duration: number
   volume: number
   isFullscreen: boolean
+  currentEpisode: number
 
   setIsPlaying: (playing: boolean) => void
   setCurrentTime: (time: number) => void
   setDuration: (duration: number) => void
   setVolume: (volume: number) => void
   setIsFullscreen: (fullscreen: boolean) => void
+  setCurrentEpisode: (episode: number) => void
 
   togglePlay: () => void
   toggleFullscreen: () => void
@@ -29,12 +31,14 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   duration: 0,
   volume: 1,
   isFullscreen: false,
+  currentEpisode: 0,
 
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (currentTime) => set({ currentTime }),
   setDuration: (duration) => set({ duration }),
   setVolume: (volume) => set({ volume }),
   setIsFullscreen: (isFullscreen) => set({ isFullscreen }),
+  setCurrentEpisode: (currentEpisode) => set({ currentEpisode }),
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   toggleFullscreen: () => set((state) => ({ isFullscreen: !state.isFullscreen }))

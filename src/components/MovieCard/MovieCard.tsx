@@ -1,6 +1,5 @@
 import React from 'react'
 import { getImageUrl } from '../../api'
-import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -28,8 +27,6 @@ export const MovieCard: React.FC<MovieProps> = ({
   overview,
   onClick
 }) => {
-  const { isDark } = useTheme()
-
   const handleClick = () => {
     if (onClick) {
       onClick(id)
@@ -50,7 +47,7 @@ export const MovieCard: React.FC<MovieProps> = ({
 
   return (
     <div
-      className={`rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden group ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+      className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden group bg-white"
       onClick={handleClick}
     >
       <div className="aspect-[2/3] relative overflow-hidden">
@@ -81,15 +78,15 @@ export const MovieCard: React.FC<MovieProps> = ({
       </div>
 
       <div className="p-4">
-        <h3 className={`font-bold text-lg mb-2 line-clamp-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+        <h3 className="font-bold text-lg mb-2 line-clamp-2 text-gray-800">
           {title}
         </h3>
 
-        <p className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        <p className="text-sm mb-2 text-gray-600">
           {formatDate(release_date)}
         </p>
 
-        <p className={`text-sm line-clamp-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+        <p className="text-sm line-clamp-3 text-gray-700">
           {overview || '暂无简介'}
         </p>
       </div>

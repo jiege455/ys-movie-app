@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { getComments, addComment, checkLoggedIn } from '../../api'
-import { useTheme } from '../../contexts/ThemeContext'
 import type { Comment } from '../../api'
 
 /**
@@ -14,7 +13,6 @@ interface CommentSectionProps {
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
-  const { isDark } = useTheme()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
@@ -52,8 +50,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
   }
 
   return (
-    <div className={`rounded-lg shadow-sm p-4 mt-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-      <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>评论 ({comments.length})</h3>
+    <div className="rounded-lg shadow-sm p-4 mt-4 bg-white">
+      <h3 className="text-lg font-bold mb-4 text-gray-800">评论 ({comments.length})</h3>
 
       {/* 评论输入框 */}
       {checkLoggedIn() ? (
@@ -62,16 +60,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="写下你的评论..."
-            className={`w-full px-3 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none ${
-              isDark
-                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                : 'border-gray-300'
-            }`}
+            className="w-full px-3 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none border-gray-300"
             rows={3}
             maxLength={200}
           />
           <div className="flex justify-between items-center mt-2">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{newComment.length}/200</span>
+            <span className="text-sm text-gray-400">{newComment.length}/200</span>
             <button
               type="submit"
               disabled={submitting || !newComment.trim()}
@@ -82,8 +76,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
           </div>
         </form>
       ) : (
-        <div className={`rounded-lg p-4 mb-4 text-center ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>登录后才能发表评论</p>
+        <div className="rounded-lg p-4 mb-4 text-center bg-gray-50">
+          <p className="text-sm text-gray-500">登录后才能发表评论</p>
         </div>
       )}
 
@@ -95,15 +89,15 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
       ) : (
         <div className="space-y-3">
           {comments.length === 0 ? (
-            <p className={`text-center py-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>暂无评论，快来抢沙发吧</p>
+            <p className="text-center py-4 text-sm text-gray-500">暂无评论，快来抢沙发吧</p>
           ) : (
             comments.map((comment) => (
-              <div key={comment.id} className={`border-b pb-3 last:border-0 ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+              <div key={comment.id} className="border-b pb-3 last:border-0 border-gray-100">
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`font-medium text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{comment.userName}</span>
-                  <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{comment.time}</span>
+                  <span className="font-medium text-sm text-gray-800">{comment.userName}</span>
+                  <span className="text-xs text-gray-400">{comment.time}</span>
                 </div>
-                <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{comment.content}</p>
+                <p className="text-sm text-gray-600">{comment.content}</p>
               </div>
             ))
           )}
