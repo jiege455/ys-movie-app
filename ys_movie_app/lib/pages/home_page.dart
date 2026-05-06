@@ -468,6 +468,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           return;
         }
 
+        if (AppConfig.useStaticCategories) {
+          print('Home Tabs: All retries exhausted, using static categories');
+          final staticList = AppConfig.staticCategories
+              .map((e) => {
+                    'type_id': e['type_id'],
+                    'type_name': e['type_name'],
+                  })
+              .toList();
+          final fallbackTabs = <String>['推荐'];
+          final fallbackIds = <String, dynamic>{'推荐': 0};
+          for (final t in staticList) {
+            final id = t['type_id'];
+            final name = (t['type_name'] ?? '').toString().trim();
+            if (id == 0 || name.isEmpty || name == '推荐' || fallbackTabs.contains(name)) continue;
+            fallbackTabs.add(name);
+            fallbackIds[name] = id;
+          }
+          final oldCtrl = _tabCtrl;
+          oldCtrl.removeListener(_onTabChanged);
+          final newCtrl = TabController(length: fallbackTabs.length, vsync: this);
+          newCtrl.addListener(_onTabChanged);
+          _safeSetState(() {
+            _tabs = fallbackTabs;
+            _tabIds = fallbackIds;
+            _tabCtrl = newCtrl;
+            _menuStatus = LoadStatus.success;
+          });
+          StoreService.setHomeTabsCache(_tabs, _tabIds);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            oldCtrl.dispose();
+            _preloadAllTabs();
+          });
+          return;
+        }
+
         _safeSetState(() {
           _menuStatus = LoadStatus.failure;
         });
@@ -518,6 +553,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) return;
         _loadTabsFromServer(retryCount: retryCount + 1);
+        return;
+      }
+
+      if (AppConfig.useStaticCategories) {
+        print('Home Tabs: Exception exhausted, using static categories');
+        final staticList = AppConfig.staticCategories
+            .map((e) => {
+                  'type_id': e['type_id'],
+                  'type_name': e['type_name'],
+                })
+            .toList();
+        final fallbackTabs = <String>['推荐'];
+        final fallbackIds = <String, dynamic>{'推荐': 0};
+        for (final t in staticList) {
+          final id = t['type_id'];
+          final name = (t['type_name'] ?? '').toString().trim();
+          if (id == 0 || name.isEmpty || name == '推荐' || fallbackTabs.contains(name)) continue;
+          fallbackTabs.add(name);
+          fallbackIds[name] = id;
+        }
+        final oldCtrl = _tabCtrl;
+        oldCtrl.removeListener(_onTabChanged);
+        final newCtrl = TabController(length: fallbackTabs.length, vsync: this);
+        newCtrl.addListener(_onTabChanged);
+        _safeSetState(() {
+          _tabs = fallbackTabs;
+          _tabIds = fallbackIds;
+          _tabCtrl = newCtrl;
+          _menuStatus = LoadStatus.success;
+        });
+        StoreService.setHomeTabsCache(_tabs, _tabIds);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          oldCtrl.dispose();
+          _preloadAllTabs();
+        });
         return;
       }
 

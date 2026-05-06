@@ -608,6 +608,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                            title: Text('${speed}x', style: const TextStyle(color: Colors.white), textAlign: TextAlign.center),
                            onTap: () {
                               _betterPlayerController?.setSpeed(speed);
+                              _playerSettings.setSpeed(speed);
+                              setState(() {});
                               Navigator.pop(ctx);
                            },
                            trailing: _betterPlayerController?.videoPlayerController?.value.speed == speed ? const Icon(Icons.check, color: Colors.blue) : null,
@@ -688,6 +690,12 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     _betterPlayerController!.setBetterPlayerGlobalKey(_playerGlobalKey);
     _addControllerListeners();
     await _betterPlayerController!.setupDataSource(dataSource);
+    
+    if (_playerSettings.speed != 1.0) {
+      try {
+        await _betterPlayerController!.setSpeed(_playerSettings.speed);
+      } catch (_) {}
+    }
     
     if (startPosition > Duration.zero) {
       try {

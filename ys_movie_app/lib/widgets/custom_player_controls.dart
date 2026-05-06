@@ -380,7 +380,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 isSelected: isSelected,
                 onTap: () {
                   _controller?.setSpeed(speed);
-                  // 强制更新一下状态，确保UI刷新
+                  PlayerSettings().setSpeed(speed);
                   setState(() {});
                   Navigator.of(context).pop();
                 },
