@@ -631,7 +631,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
     >
       {/* 加载遮罩 */}
       {isLoading && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
             <p className="text-sm">视频加载中...</p>
@@ -641,7 +641,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
 
       {/* 错误提示 */}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
           <div className="text-white text-center px-4">
             <svg className="w-16 h-16 mx-auto mb-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -664,7 +664,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           <select
             value={currentQuality}
             onChange={(e) => handleQualityChange(e.target.value)}
-            className="bg-black/70 text-white px-3 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 backdrop-blur-sm cursor-pointer"
+            className="glass-light text-white px-3 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 cursor-pointer"
           >
             {qualities.map((q) => (
               <option key={q} value={q} className="glass-light">
@@ -684,7 +684,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           <select
             value={playbackRate}
             onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
-            className="bg-black/70 text-white px-2 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 backdrop-blur-sm cursor-pointer"
+            className="glass-light text-white px-2 py-1 rounded text-sm border border-cyan-500/30 focus:outline-none focus:border-cyan-400 cursor-pointer"
           >
             <option value={0.5} className="glass-light">0.5x</option>
             <option value={0.75} className="glass-light">0.75x</option>
@@ -700,7 +700,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {isPiPSupported && !hasError && (
         <button
           onClick={togglePictureInPicture}
-          className={`absolute top-4 z-30 bg-black/70 text-white p-2 rounded backdrop-blur-sm hover:bg-opacity-90 transition-colors ${isInPiP ? 'bg-cyan-500' : ''}`}
+          className={`absolute top-4 z-30 glass-light text-white p-2 rounded hover:bg-cyan-500/30 transition-colors ${isInPiP ? 'bg-cyan-500' : ''}`}
           title={isInPiP ? '退出画中画' : '画中画'}
           style={{ right: qualities.length > 1 ? '100px' : '16px' }}
         >
@@ -712,7 +712,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
 
       {/* 画中画桌面窗口提示 */}
       {isInPiP && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 bg-black bg-opacity-80 text-white px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 glass text-white px-4 py-2 rounded-lg text-sm">
           画中画模式 - 按 ESC 或点击视频退出
         </div>
       )}

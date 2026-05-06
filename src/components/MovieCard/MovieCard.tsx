@@ -66,7 +66,7 @@ export const MovieCard: React.FC<MovieProps> = ({
           {formatRating(vote_average)}
         </div>
 
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="bg-cyan-500/80 rounded-full p-3 backdrop-blur-sm">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">

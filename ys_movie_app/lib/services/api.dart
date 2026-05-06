@@ -1571,14 +1571,14 @@ class MacApi {
   Future<List<Map<String, dynamic>>> _fetchStandardList({int? typeId, int page = 1, int limit = 20, String by = 'time'}) async {
     try {
       final params = <String, dynamic>{
-        'ac': 'detail', // 使用 detail 获取更全信息
+        'ac': 'list', // 使用 list 获取视频列表（detail 是获取详情）
         'pg': page,
         'pagesize': limit,
         'at': 'json',
         'by': by,
       };
       if (typeId != null) params['t'] = typeId;
-      
+
       final resp = await _dio.get('provide/vod/', queryParameters: params);
       final list = (resp.data?['list'] as List?) ?? [];
       return list.map((v) {

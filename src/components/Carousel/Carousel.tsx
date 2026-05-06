@@ -103,7 +103,7 @@ export const Carousel: React.FC<CarouselProps> = ({
         <>
           <button
             onClick={goToPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-cyan-500/50 transition-colors backdrop-blur-sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass text-white flex items-center justify-center hover:bg-cyan-500/50 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -111,7 +111,7 @@ export const Carousel: React.FC<CarouselProps> = ({
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-cyan-500/50 transition-colors backdrop-blur-sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass text-white flex items-center justify-center hover:bg-cyan-500/50 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -1497,7 +1497,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                           // 播放进度
                           Container(
                             height: barHeight,
-                            width: constraints.maxWidth * displayProgress,
+                            width: constraints.maxWidth * (_isDragging && _draggingValue != null ? _draggingValue! : displayProgress),
                             decoration: BoxDecoration(
                               color: _isDragging ? const Color(0xFF66BB6A) : const Color(0xFF4CAF50),
                               borderRadius: BorderRadius.circular(barHeight / 2),
@@ -1512,7 +1512,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                           ),
                           // Thumb 指示器
                           Positioned(
-                            left: (constraints.maxWidth * displayProgress) - (_isDragging ? thumbRadius * 1.3 : thumbRadius),
+                            left: (constraints.maxWidth * (_isDragging && _draggingValue != null ? _draggingValue! : displayProgress)) - (_isDragging ? thumbRadius * 1.3 : thumbRadius),
                             child: Container(
                               width: (_isDragging ? thumbRadius * 1.3 : thumbRadius) * 2,
                               height: (_isDragging ? thumbRadius * 1.3 : thumbRadius) * 2,

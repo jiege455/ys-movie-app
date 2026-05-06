@@ -384,7 +384,7 @@ if ($ac == 'list') {
         ->where($where)
         ->order($order)
         ->page($page, $limit)
-        ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_actor')
+        ->field('vod_id, type_id, type_id_1, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_actor')
         ->select();
 
     foreach ($list as &$v) {

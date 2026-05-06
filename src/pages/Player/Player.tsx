@@ -86,7 +86,7 @@ export const Player: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen glass flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
           <p className="text-cyan-300">加载中...</p>
@@ -97,7 +97,7 @@ export const Player: React.FC = () => {
 
   if (error || !movieData) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen glass flex items-center justify-center">
         <div className="text-center">
           <p className="text-cyan-400/60 mb-4">{error || '视频信息不存在'}</p>
           <button
@@ -112,9 +112,9 @@ export const Player: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {/* 顶部导航 */}
-      <div className="flex items-center px-4 py-3 ">
+      <div className="flex items-center px-4 py-3 glass border-b border-cyan-500/20">
         <button
           onClick={handleBackClick}
           className="mr-3 text-cyan-300 hover:text-cyan-100"

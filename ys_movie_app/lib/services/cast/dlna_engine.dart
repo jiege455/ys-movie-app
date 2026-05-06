@@ -105,8 +105,6 @@ class DlnaEngine extends BaseCastEngine {
         port: uri?.port,
         protocol: CastProtocol.dlna,
         descriptionUrl: info.URLBase,
-        manufacturer: info.manufacturer,
-        modelName: info.modelName,
       );
 
       _deviceInstances[entry.key] = device;
