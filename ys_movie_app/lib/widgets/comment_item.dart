@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CommentItem extends StatelessWidget {
@@ -26,8 +27,8 @@ class CommentItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
-    final subTextColor = theme.textTheme.bodySmall?.color ?? Colors.grey;
+    final textColor = theme.textTheme.bodyLarge?.color ?? AppColors.slate900;
+    final subTextColor = theme.textTheme.bodySmall?.color ?? AppColors.slate400;
     final cardColor = theme.cardColor;
 
     // 广告样式
@@ -53,7 +54,7 @@ class CommentItem extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: AppColors.slate900.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -63,12 +64,12 @@ class CommentItem extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: const BoxDecoration(
-              color: Colors.black54,
+              color: AppColors.slate600,
               borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(12), topRight: Radius.circular(12)),
             ),
             child: const Text('广告',
-                style: TextStyle(color: Colors.white, fontSize: 10)),
+                style: TextStyle(color: AppColors.primaryLight, fontSize: 10)),
           ),
         ),
       );
@@ -80,7 +81,7 @@ class CommentItem extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-                color: isDark ? Colors.white10 : Colors.black12, width: 0.5)),
+                color: isDark ? AppColors.slate700.withOpacity(0.1) : AppColors.slate200, width: 0.5)),
         ),
         child: Stack(
           children: [
@@ -92,9 +93,9 @@ class CommentItem extends StatelessWidget {
                   // 头像
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+                    backgroundColor: isDark ? AppColors.slate700.withOpacity(0.1) : AppColors.slate200,
                     backgroundImage: (avatarUrl.isNotEmpty) ? CachedNetworkImageProvider(avatarUrl) : null,
-                    child: (avatarUrl.isNotEmpty) ? null : const Icon(Icons.person, color: Colors.grey, size: 24),
+                    child: (avatarUrl.isNotEmpty) ? null : const Icon(Icons.person, color: AppColors.slate400, size: 24),
                   ),
                   const SizedBox(width: 12),
                   // 内容
@@ -111,7 +112,7 @@ class CommentItem extends StatelessWidget {
                                 child: Text(
                                   userName,
                                   style: const TextStyle(
-                                    color: Color(0xFFFF9900), // 橙色名字保留
+                                    color: AppColors.warning, // 橙色名字保留
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -120,7 +121,7 @@ class CommentItem extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.check_circle, color: Color(0xFF00C853), size: 14),
+                              const Icon(Icons.check_circle, color: AppColors.success, size: 14),
                             ],
                           ),
                         ),
@@ -146,13 +147,13 @@ class CommentItem extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: AppColors.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.red.withOpacity(0.5), width: 0.5),
+                  border: Border.all(color: AppColors.error.withOpacity(0.5), width: 0.5),
                 ),
                 child: const Text(
                   '置顶',
-                  style: TextStyle(fontSize: 10, color: Colors.red),
+                  style: TextStyle(fontSize: 10, color: AppColors.error),
                 ),
               ),
             ),
@@ -167,7 +168,7 @@ class CommentItem extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
             bottom: BorderSide(
-                color: isDark ? Colors.white10 : Colors.black12, width: 0.5)),
+                color: isDark ? AppColors.slate700.withOpacity(0.1) : AppColors.slate200, width: 0.5)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,12 +176,12 @@ class CommentItem extends StatelessWidget {
           // 头像
           CircleAvatar(
             radius: 20,
-            backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+            backgroundColor: isDark ? AppColors.slate700.withOpacity(0.1) : AppColors.slate200,
             backgroundImage:
                 (avatarUrl.isNotEmpty) ? CachedNetworkImageProvider(avatarUrl) : null,
             child: (avatarUrl.isNotEmpty)
                 ? null
-                : const Icon(Icons.person, color: Colors.grey, size: 24),
+                : const Icon(Icons.person, color: AppColors.slate400, size: 24),
           ),
           const SizedBox(width: 12),
           // 内容

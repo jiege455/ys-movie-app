@@ -3,6 +3,7 @@
 /// 说明：支持多协议设备搜索、连接状态显示、错误提示
 
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../services/cast/cast_manager.dart';
 import '../services/cast/models.dart';
 
@@ -107,19 +108,19 @@ class _CastDialogState extends State<CastDialog> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       title: Row(
         children: [
-          const Icon(Icons.cast_connected, color: Colors.white),
+          const Icon(Icons.cast_connected, color: AppColors.primaryLight),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
               '选择投屏设备',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: AppColors.primaryLight, fontSize: 18),
             ),
           ),
           if (_castManager.castStatus.value == CastStatus.searching)
             const SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.slate300),
             ),
         ],
       ),
@@ -134,17 +135,17 @@ class _CastDialogState extends State<CastDialog> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.2),
+                  color: AppColors.error.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                    const Icon(Icons.error_outline, color: AppColors.error, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: const TextStyle(color: AppColors.error, fontSize: 13),
                       ),
                     ),
                   ],
@@ -161,11 +162,11 @@ class _CastDialogState extends State<CastDialog> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(color: Colors.white70),
+                          CircularProgressIndicator(color: AppColors.slate300),
                           SizedBox(height: 16),
                           Text(
                             '正在搜索设备...',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: AppColors.slate300),
                           ),
                         ],
                       ),
@@ -177,11 +178,11 @@ class _CastDialogState extends State<CastDialog> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.tv_off, color: Colors.white38, size: 48),
+                          const Icon(Icons.tv_off, color: AppColors.slate500, size: 48),
                           const SizedBox(height: 16),
                           const Text(
                             '未找到投屏设备',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: AppColors.slate300),
                           ),
                           const SizedBox(height: 8),
                           TextButton(
@@ -220,7 +221,7 @@ class _CastDialogState extends State<CastDialog> {
     final protocolColor = _getProtocolColor(device.protocol);
 
     return Card(
-      color: Colors.white.withOpacity(0.05),
+      color: AppColors.slate50.withOpacity(0.05),
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
@@ -235,19 +236,19 @@ class _CastDialogState extends State<CastDialog> {
         ),
         title: Text(
           device.name,
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+          style: const TextStyle(color: AppColors.primaryLight, fontSize: 15),
         ),
         subtitle: Text(
           '${device.protocol.displayName} ${device.manufacturer != null ? '· ${device.manufacturer}' : ''}',
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+          style: const TextStyle(color: AppColors.slate500, fontSize: 12),
         ),
         trailing: _isConnecting
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4CAF50)),
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.success),
               )
-            : const Icon(Icons.chevron_right, color: Colors.white54),
+            : const Icon(Icons.chevron_right, color: AppColors.slate500),
         onTap: _isConnecting ? null : () => _connectAndCast(device),
       ),
     );
@@ -271,15 +272,15 @@ class _CastDialogState extends State<CastDialog> {
   Color _getProtocolColor(CastProtocol protocol) {
     switch (protocol) {
       case CastProtocol.dlna:
-        return Colors.blue;
+        return AppColors.primary;
       case CastProtocol.airplay:
-        return Colors.purple;
+        return AppColors.primaryDark;
       case CastProtocol.chromecast:
-        return Colors.orange;
+        return AppColors.warning;
       case CastProtocol.miracast:
-        return Colors.teal;
+        return AppColors.primaryAccent;
       case CastProtocol.system:
-        return Colors.grey;
+        return AppColors.slate400;
     }
   }
 }

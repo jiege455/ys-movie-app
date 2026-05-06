@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api.dart';
@@ -50,7 +51,7 @@ class _WeekPageState extends State<WeekPage> with SingleTickerProviderStateMixin
               controller: _tabCtrl,
               isScrollable: true,
               tabAlignment: TabAlignment.center,
-              labelColor: Colors.white,
+              labelColor: AppColors.primaryLight,
               unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               indicatorSize: TabBarIndicatorSize.label,
               indicator: BoxDecoration(
@@ -124,9 +125,9 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 48, color: Colors.grey),
+            const Icon(Icons.calendar_today_outlined, size: 48, color: AppColors.slate400),
             const SizedBox(height: 12),
-            const Text('暂无排期数据', style: TextStyle(color: Colors.grey)),
+            const Text('暂无排期数据', style: TextStyle(color: AppColors.slate400)),
             const SizedBox(height: 12),
             ElevatedButton(onPressed: _load, child: const Text('刷新')),
           ],
@@ -171,8 +172,8 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
                         CachedNetworkImage(
                           imageUrl: poster,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
-                          errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.broken_image)),
+                          placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                          errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                         ),
                         if (remarks.isNotEmpty)
                           Positioned(
@@ -181,14 +182,14 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [Colors.transparent, Colors.black87],
+                                  colors: [Colors.transparent, AppColors.slate900],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                 ),
                               ),
                               child: Text(
                                 remarks,
-                                style: const TextStyle(color: Colors.white, fontSize: 10),
+                                style: const TextStyle(color: AppColors.primaryLight, fontSize: 10),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.right,

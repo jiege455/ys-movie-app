@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -111,7 +112,7 @@ class _SplashPageState extends State<SplashPage> {
                 child: CachedNetworkImage(
                   imageUrl: _startupAd!['pic'],
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(color: Colors.white),
+                  placeholder: (context, url) => Container(color: AppColors.slate50),
                   errorWidget: (context, url, error) => const SizedBox(),
                 ),
               ),
@@ -125,12 +126,12 @@ class _SplashPageState extends State<SplashPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black45,
+                    color: AppColors.slate900.withOpacity(0.45),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '跳过 $_countdown',
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: const TextStyle(color: AppColors.primaryLight, fontSize: 14),
                   ),
                 ),
               ),
@@ -160,7 +161,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 10),
             Text(
               _loadingText,
-              style: TextStyle(color: _showError ? Colors.red : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.grey)),
+              style: TextStyle(color: _showError ? AppColors.error : (Theme.of(context).brightness == Brightness.dark ? AppColors.slate400 : AppColors.slate400)),
             ),
             if (_showError)
               Padding(
@@ -169,7 +170,7 @@ class _SplashPageState extends State<SplashPage> {
                   onPressed: _goMain,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.primaryLight,
                   ),
                   child: const Text('直接进入'),
                 ),

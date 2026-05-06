@@ -6,6 +6,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:better_player/better_player.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
@@ -237,7 +238,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black54,
+      barrierColor: AppColors.slate900.withOpacity(0.54),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (ctx, anim1, anim2) => Align(
         alignment: Alignment.centerRight,
@@ -272,14 +273,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white12 : Colors.transparent, // 选中背景
+          color: isSelected ? AppColors.slate700.withOpacity(0.12) : Colors.transparent, // 选中背景
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? const Color(0xFF4CAF50) : Colors.white70, // 选中绿色
+            color: isSelected ? const AppColors.success : AppColors.slate300, // 选中绿色
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 16,
           ),
@@ -442,8 +443,8 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 children: [
                   Text('选集 ($total)', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   TextButton.icon(
-                    icon: Icon(isAscending ? Icons.arrow_downward : Icons.arrow_upward, color: Colors.white70, size: 16),
-                    label: Text(isAscending ? '正序' : '倒序', style: const TextStyle(color: Colors.white70)),
+                    icon: Icon(isAscending ? Icons.arrow_downward : Icons.arrow_upward, color: AppColors.slate300, size: 16),
+                    label: Text(isAscending ? '正序' : '倒序', style: const TextStyle(color: AppColors.slate300)),
                     onPressed: () {
                       setStateSheet(() => isAscending = !isAscending);
                     },
@@ -470,9 +471,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                         onSelected: (v) {
                           if (v) setStateSheet(() => currentPage = p);
                         },
-                        selectedColor: const Color(0xFF4CAF50),
-                        backgroundColor: Colors.white10,
-                        labelStyle: TextStyle(color: isSel ? Colors.white : Colors.white70, fontSize: 12),
+                        selectedColor: const AppColors.success,
+                        backgroundColor: AppColors.slate700.withOpacity(0.1),
+                        labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.slate300, fontSize: 12),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -514,13 +515,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF4CAF50) : Colors.white12, // 选中绿色背景
+                        color: isSelected ? const AppColors.success : AppColors.slate700.withOpacity(0.12), // 选中绿色背景
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         ep['name'] ?? '${originalIndex + 1}',
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
+                          color: isSelected ? Colors.white : AppColors.slate300,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           fontSize: 12,
                         ),
@@ -565,7 +566,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('弹幕字号', style: TextStyle(color: Colors.white70)),
+                const Text('弹幕字号', style: TextStyle(color: AppColors.slate300)),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -579,17 +580,17 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 
                 Row(
                   children: [
-                    const Text('显示区域', style: TextStyle(color: Colors.white70)),
+                    const Text('显示区域', style: TextStyle(color: AppColors.slate300)),
                     const Spacer(),
                     Text('${(settings.danmakuArea * 100).toInt()}%', style: const TextStyle(color: Colors.white)),
                   ],
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF4CAF50),
-                    inactiveTrackColor: Colors.white24,
+                    activeTrackColor: const AppColors.success,
+                    inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
                     thumbColor: Colors.white,
-                    overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
+                    overlayColor: const AppColors.success.withOpacity(0.2),
                   ),
                   child: Slider(
                     value: settings.danmakuArea,
@@ -605,17 +606,17 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Text('透明度', style: TextStyle(color: Colors.white70)),
+                    const Text('透明度', style: TextStyle(color: AppColors.slate300)),
                     const Spacer(),
                     Text('${(settings.danmakuOpacity * 100).toInt()}%', style: const TextStyle(color: Colors.white)),
                   ],
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF4CAF50),
-                    inactiveTrackColor: Colors.white24,
+                    activeTrackColor: const AppColors.success,
+                    inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
                     thumbColor: Colors.white,
-                    overlayColor: const Color(0xFF4CAF50).withOpacity(0.2),
+                    overlayColor: const AppColors.success.withOpacity(0.2),
                   ),
                   child: Slider(
                     value: settings.danmakuOpacity,
@@ -658,14 +659,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
-          color: isSel ? Colors.white12 : Colors.transparent,
+          color: isSel ? AppColors.slate700.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          border: isSel ? Border.all(color: const Color(0xFF4CAF50)) : null,
+          border: isSel ? Border.all(color: const AppColors.success) : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSel ? const Color(0xFF4CAF50) : Colors.white70,
+            color: isSel ? const AppColors.success : AppColors.slate300,
             fontSize: displaySize,
             fontWeight: FontWeight.bold,
           ),
@@ -739,11 +740,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                       value: settings.enableSkip,
                       onChanged: (v) => setStateInner(() => settings.setEnableSkip(v)),
                       activeColor: Colors.white,
-                      activeTrackColor: const Color(0xFF4CAF50),
+                      activeTrackColor: const AppColors.success,
                     ),
                   ],
                 ),
-                const Text('配置将在下次观看时生效', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                const Text('配置将在下次观看时生效', style: TextStyle(color: AppColors.slate500, fontSize: 12)),
               ],
             ),
           ),
@@ -773,7 +774,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   }
 
   Widget _buildSkipSlider(StateSetter setStateInner, String label, int value, Function(int) onChanged) {
-    const greenColor = Color(0xFF4CAF50);
+    const greenColor = AppColors.success;
     return Column(
       children: [
         Row(
@@ -787,7 +788,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
              activeTrackColor: greenColor,
-             inactiveTrackColor: Colors.white24,
+             inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
              thumbColor: Colors.white,
              trackHeight: 4,
              overlayColor: greenColor.withOpacity(0.2),
@@ -976,7 +977,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: AppColors.slate900.withOpacity(0.54),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Row(
@@ -997,7 +998,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: AppColors.slate900.withOpacity(0.54),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -1011,7 +1012,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                         const SizedBox(height: 16),
                         LinearProgressIndicator(
                           value: _isSlidingBrightness ? _brightness : _volume,
-                          backgroundColor: Colors.white24,
+                          backgroundColor: AppColors.slate700.withOpacity(0.24),
                           valueColor: const AlwaysStoppedAnimation(Colors.white),
                         ),
                       ],
@@ -1034,12 +1035,12 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.black54,
+          color: AppColors.slate900.withOpacity(0.54),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Icon(
           _isLocked ? Icons.lock : Icons.lock_open,
-          color: _isLocked ? Colors.redAccent : Colors.white,
+          color: _isLocked ? AppColors.error : Colors.white,
           size: 24,
         ),
       ),
@@ -1056,7 +1057,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-             isFullScreen ? Colors.black.withOpacity(0.7) : Colors.black54, 
+             isFullScreen ? AppColors.slate900.withOpacity(0.7) : AppColors.slate900.withOpacity(0.54), 
              Colors.transparent
           ],
         ),
@@ -1267,7 +1268,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            isFullScreen ? Colors.black.withOpacity(0.85) : Colors.black54,
+            isFullScreen ? AppColors.slate900.withOpacity(0.85) : AppColors.slate900.withOpacity(0.54),
             Colors.transparent
           ],
         ),
@@ -1316,15 +1317,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                           border: Border.all(color: PlayerSettings().danmakuEnabled ? const Color(0xFF4CAF50) : Colors.white54),
+                           border: Border.all(color: PlayerSettings().danmakuEnabled ? const AppColors.success : AppColors.slate500),
                            borderRadius: BorderRadius.circular(16),
-                           color: PlayerSettings().danmakuEnabled ? const Color(0xFF4CAF50).withOpacity(0.2) : Colors.transparent,
+                           color: PlayerSettings().danmakuEnabled ? const AppColors.success.withOpacity(0.2) : Colors.transparent,
                         ),
                         child: Text('弹', style: TextStyle(
                           color: PlayerSettings().danmakuEnabled 
-                            ? const Color(0xFF4CAF50) 
+                            ? const AppColors.success 
                             : (PlayerSettings().danmakuUserEnabled == false && PlayerSettings().danmakuEnabled == false)
-                              ? Colors.red
+                              ? AppColors.error
                               : Colors.white, 
                           fontSize: 12,
                         )),
@@ -1345,11 +1346,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                         margin: const EdgeInsets.symmetric(horizontal: 12),
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white12,
+                          color: AppColors.slate700.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         alignment: Alignment.centerLeft,
-                        child: const Text('此刻你在想什么...', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        child: const Text('此刻你在想什么...', style: TextStyle(color: AppColors.slate500, fontSize: 12)),
                       ),
                     ),
                   ),
@@ -1394,11 +1395,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black87,
+                        color: AppColors.slate900,
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: AppColors.slate900.withOpacity(0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -1484,7 +1485,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                             height: barHeight,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.white24,
+                              color: AppColors.slate700.withOpacity(0.24),
                               borderRadius: BorderRadius.circular(barHeight / 2),
                             ),
                           ),
@@ -1493,7 +1494,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                             height: barHeight,
                             width: constraints.maxWidth * _calculateBufferedPercent(),
                             decoration: BoxDecoration(
-                              color: Colors.white38,
+                              color: AppColors.slate500.withOpacity(0.38),
                               borderRadius: BorderRadius.circular(barHeight / 2),
                             ),
                           ),
@@ -1502,11 +1503,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                             height: barHeight,
                             width: constraints.maxWidth * (_isDragging && _draggingValue != null ? _draggingValue! : displayProgress),
                             decoration: BoxDecoration(
-                              color: _isDragging ? const Color(0xFF66BB6A) : const Color(0xFF4CAF50),
+                              color: _isDragging ? const AppColors.success : const AppColors.success,
                               borderRadius: BorderRadius.circular(barHeight / 2),
                               boxShadow: _isDragging ? [
                                 BoxShadow(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.5),
+                                  color: const AppColors.success.withOpacity(0.5),
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
@@ -1524,13 +1525,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: AppColors.slate900.withOpacity(0.3),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
                                   if (_isDragging)
                                     BoxShadow(
-                                      color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                      color: const AppColors.success.withOpacity(0.4),
                                       blurRadius: 8,
                                       spreadRadius: 2,
                                     ),
@@ -1555,7 +1556,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                   : Text(
                       _formatDuration(duration, forceShowHours: showHours),
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: AppColors.slate300,
                         fontSize: 11,
                         fontFeatures: [FontFeature.tabularFigures()], // 等宽数字
                       ),

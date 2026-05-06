@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 import '../services/m3u8_downloader_service.dart';
 import '../services/store.dart';
@@ -144,7 +145,7 @@ class _DownloadPageState extends State<DownloadPage> {
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white),
+                  foregroundColor: AppColors.primaryLight),
               child: const Text('清空'),
             ),
           ],
@@ -236,15 +237,15 @@ class _DownloadPageState extends State<DownloadPage> {
   Color _statusColor(String status) {
     switch (status) {
       case 'downloading':
-        return Colors.blue;
+        return AppColors.primary;
       case 'failed':
-        return Colors.red;
+        return AppColors.error;
       case 'cancelled':
-        return Colors.orange;
+        return AppColors.warning;
       case 'done':
-        return Colors.green;
+        return AppColors.success;
       default:
-        return Colors.grey;
+        return AppColors.slate400;
     }
   }
 
@@ -273,7 +274,7 @@ class _DownloadPageState extends State<DownloadPage> {
           : _tasks.isEmpty
               ? const Center(
                   child: Text('暂无下载任务',
-                      style: TextStyle(color: Colors.grey)))
+                      style: TextStyle(color: AppColors.slate400)))
               : RefreshIndicator(
                   onRefresh: _load,
                   color: primaryColor,
@@ -448,7 +449,7 @@ class _DownloadPageState extends State<DownloadPage> {
                                 IconButton(
                                   tooltip: '取消下载',
                                   icon: Icon(Icons.cancel,
-                                      color: Colors.red[400]),
+                                      color: AppColors.error),
                                   onPressed: () => _cancelOne(t),
                                 )
                               else

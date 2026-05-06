@@ -1,6 +1,4 @@
-// by：杰哥 
-// qq： 2711793818
-// 修复历史记录刷新问题
+/// 开发者：杰哥网络科技 (qq: 2711793818)
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,9 +19,8 @@ import 'user_center_pages.dart';
 import 'find_page.dart';
 import 'settings_page.dart';
 
-/**
- * 开发者：杰哥
- * 作用：我的页面，个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
+/// 开发者：杰哥网络科技 (qq: 2711793818)
+/// 作用：我的页面，个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
  * 小白解释：个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
  */
 class ProfilePage extends StatefulWidget {
@@ -328,7 +325,7 @@ class ProfilePageState extends State<ProfilePage> {
             if (isSelected)
               Icon(Icons.check_circle, color: primaryColor, size: 20)
             else
-              Icon(Icons.radio_button_unchecked, color: Colors.grey.withOpacity(0.5), size: 20),
+              Icon(Icons.radio_button_unchecked, color: AppColors.slate400.withOpacity(0.5), size: 20),
           ],
         ),
       ),
@@ -396,7 +393,6 @@ class ProfilePageState extends State<ProfilePage> {
     }).toList();
 
     return Scaffold(
-      // backgroundColor: const Color(0xFFF5F5F5), // Removed hardcoded color
       body: Stack(
         children: [
           // 纹理背景
@@ -415,7 +411,7 @@ class ProfilePageState extends State<ProfilePage> {
                           gradient: LinearGradient(
                             colors: isDark 
                                 ? [primaryColor.withAlpha(60), Theme.of(context).scaffoldBackgroundColor]
-                                : [primaryColor.withAlpha(35), Colors.white],
+                                : [primaryColor.withAlpha(35), AppColors.slate50],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -434,8 +430,8 @@ class ProfilePageState extends State<ProfilePage> {
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [BoxShadow(color: Colors.black.withAlpha((255 * 0.1).round()), blurRadius: 10)],
+                            border: Border.all(color: AppColors.primaryLight, width: 2),
+                            boxShadow: [BoxShadow(color: AppColors.slate900.withAlpha((255 * 0.1).round()), blurRadius: 10)],
                             image: isLoggedIn && userInfo?['user_portrait'] != null
                                 ? DecorationImage(
                                     image: CachedNetworkImageProvider(userInfo!['user_portrait']),
@@ -583,8 +579,8 @@ class ProfilePageState extends State<ProfilePage> {
                                                   CachedNetworkImage(
                                                     imageUrl: item['poster'],
                                                     fit: BoxFit.cover,
-                                                    placeholder: (_, __) => Container(color: Colors.grey[200]),
-                                                    errorWidget: (_, __, ___) => Container(color: Colors.grey[200], child: const Icon(Icons.broken_image)),
+                                                    placeholder: (_, __) => Container(color: AppColors.slate200),
+                                                    errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
                                                   ),
                                                   // 进度条
                                                   if ((item['progressVal'] as double? ?? 0) > 0)

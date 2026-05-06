@@ -518,6 +518,10 @@ internal class BetterPlayer(
         exoPlayer?.playWhenReady = false
     }
 
+    fun isPlaying(): Boolean {
+        return exoPlayer?.playWhenReady == true
+    }
+
     fun setLooping(value: Boolean) {
         exoPlayer?.repeatMode = if (value) Player.REPEAT_MODE_ALL else Player.REPEAT_MODE_OFF
     }

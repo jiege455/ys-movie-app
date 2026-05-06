@@ -4,9 +4,15 @@
 package com.jhomlala.better_player
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -41,6 +47,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    private var currentPipPlayer: BetterPlayer? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -78,20 +85,134 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         flutterState = null
     }
 
+    private var pipBroadcastReceiver: BroadcastReceiver? = null
+
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
+        registerPipBroadcastReceiver()
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
+        unregisterPipBroadcastReceiver()
         activity = null
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
+        registerPipBroadcastReceiver()
     }
 
     override fun onDetachedFromActivity() {
+        unregisterPipBroadcastReceiver()
         activity = null
+    }
+
+    /// 开发者：杰哥网络科技
+    /// 注册PiP广播接收器，处理播放/暂停/关闭按钮点击
+    private fun registerPipBroadcastReceiver() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || activity == null) return
+        val appContext = flutterState?.applicationContext ?: return
+        val packageName = appContext.packageName
+
+        pipBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    "${packageName}.ACTION_PIP_PLAY_PAUSE" -> {
+                        currentPipPlayer?.let { player ->
+                            if (player.isPlaying()) {
+                                player.pause()
+                            } else {
+                                player.play()
+                            }
+                            // 更新PiP按钮状态
+                            updatePipActions(player)
+                        }
+                    }
+                    "${packageName}.ACTION_PIP_CLOSE" -> {
+                        currentPipPlayer?.let { player ->
+                            disablePictureInPicture(player)
+                        }
+                    }
+                }
+            }
+        }
+
+        val filter = IntentFilter().apply {
+            addAction("${packageName}.ACTION_PIP_PLAY_PAUSE")
+            addAction("${packageName}.ACTION_PIP_CLOSE")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            appContext.registerReceiver(pipBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            appContext.registerReceiver(pipBroadcastReceiver, filter)
+        }
+    }
+
+    private fun unregisterPipBroadcastReceiver() {
+        pipBroadcastReceiver?.let {
+            try {
+                flutterState?.applicationContext?.unregisterReceiver(it)
+            } catch (e: Exception) {
+                Log.w(TAG, "Unregister pip broadcast receiver failed", e)
+            }
+        }
+        pipBroadcastReceiver = null
+    }
+
+    /// 更新PiP窗口中的控制按钮状态（播放/暂停图标切换）
+    private fun updatePipActions(player: BetterPlayer) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null) {
+            val appContext = flutterState!!.applicationContext
+            val packageName = appContext.packageName
+            val actions = ArrayList<RemoteAction>()
+
+            val playPauseIntent = Intent("${packageName}.ACTION_PIP_PLAY_PAUSE")
+            val playPausePendingIntent = PendingIntent.getBroadcast(
+                appContext,
+                1,
+                playPauseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val playPauseIconId = if (player.isPlaying()) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+            val playPauseAction = RemoteAction(
+                Icon.createWithResource(appContext, playPauseIconId),
+                if (player.isPlaying()) "暂停" else "播放",
+                if (player.isPlaying()) "暂停视频" else "播放视频",
+                playPausePendingIntent
+            )
+            actions.add(playPauseAction)
+
+            val closeIntent = Intent("${packageName}.ACTION_PIP_CLOSE")
+            val closePendingIntent = PendingIntent.getBroadcast(
+                appContext,
+                2,
+                closeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val closeAction = RemoteAction(
+                Icon.createWithResource(appContext, android.R.drawable.ic_menu_close_clear_cancel),
+                "关闭",
+                "关闭画中画",
+                closePendingIntent
+            )
+            actions.add(closeAction)
+
+            val builder = PictureInPictureParams.Builder()
+            val aspectRatio = player.getAspectRatio()
+            if (aspectRatio != null) {
+                val ratioValue = aspectRatio.toFloat()
+                val clampedRatio = when {
+                    ratioValue > 16f/9f -> Rational(16, 9)
+                    ratioValue < 4f/3f -> Rational(4, 3)
+                    else -> aspectRatio
+                }
+                builder.setAspectRatio(clampedRatio)
+            } else {
+                builder.setAspectRatio(Rational(16, 9))
+            }
+            builder.setActions(actions)
+            activity!!.setPictureInPictureParams(builder.build())
+        }
     }
 
     private fun disposeAllPlayers() {
@@ -426,6 +547,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     private fun enablePictureInPicture(player: BetterPlayer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            currentPipPlayer = player
             player.setupMediaSession(flutterState!!.applicationContext)
             val builder = PictureInPictureParams.Builder()
             // 开发者：杰哥网络科技
@@ -444,6 +566,51 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 // 默认16:9
                 builder.setAspectRatio(Rational(16, 9))
             }
+
+            // 开发者：杰哥网络科技
+            // 修复：添加PiP控制按钮（播放/暂停/关闭），使用RemoteAction确保可点击
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val actions = ArrayList<RemoteAction>()
+                val appContext = flutterState!!.applicationContext
+                val packageName = appContext.packageName
+
+                // 播放/暂停按钮
+                val playPauseIntent = Intent("${packageName}.ACTION_PIP_PLAY_PAUSE")
+                val playPausePendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    1,
+                    playPauseIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                // 使用系统默认的播放/暂停图标资源
+                val playPauseIconId = if (player.isPlaying()) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                val playPauseAction = RemoteAction(
+                    Icon.createWithResource(appContext, playPauseIconId),
+                    if (player.isPlaying()) "暂停" else "播放",
+                    if (player.isPlaying()) "暂停视频" else "播放视频",
+                    playPausePendingIntent
+                )
+                actions.add(playPauseAction)
+
+                // 关闭PiP按钮
+                val closeIntent = Intent("${packageName}.ACTION_PIP_CLOSE")
+                val closePendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    2,
+                    closeIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val closeAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_menu_close_clear_cancel),
+                    "关闭",
+                    "关闭画中画",
+                    closePendingIntent
+                )
+                actions.add(closeAction)
+
+                builder.setActions(actions)
+            }
+
             activity!!.enterPictureInPictureMode(builder.build())
             startPictureInPictureListenerTimer(player)
             player.onPictureInPictureStatusChanged(true)

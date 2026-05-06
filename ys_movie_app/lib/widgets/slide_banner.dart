@@ -6,6 +6,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class SlideBanner extends StatefulWidget {
   final List<String> images;
@@ -40,9 +41,9 @@ class _SlideBannerState extends State<SlideBanner> {
                 imageUrl: url,
                 fit: BoxFit.cover,
                 width: double.infinity,
-                placeholder: (_, __) => Container(color: Colors.grey[800]),
+                placeholder: (_, __) => Container(color: AppColors.darkElevated),
                 errorWidget: (_, __, ___) =>
-                    Container(color: Colors.grey[800], child: const Icon(Icons.broken_image, color: Colors.white54)),
+                    Container(color: AppColors.darkElevated, child: const Icon(Icons.broken_image, color: AppColors.slate500)),
               ),
             );
           }).toList(),
@@ -67,8 +68,8 @@ class _SlideBannerState extends State<SlideBanner> {
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   decoration: BoxDecoration(
                     color: _current == entry.key
-                        ? Colors.white
-                        : Colors.white54,
+                        ? AppColors.primaryLight
+                        : AppColors.slate500,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
 
@@ -137,12 +138,12 @@ class _FindPageState extends State<FindPage> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: scheme.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.primaryLight,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   elevation: 4,
                 ),
                 child: _submitting
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primaryLight, strokeWidth: 2))
                     : const Text('提交求片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),

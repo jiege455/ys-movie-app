@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
 
@@ -201,7 +202,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
           TabBar(
             controller: _tabController,
             labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: isDark ? Colors.white60 : Colors.grey,
+            unselectedLabelColor: isDark ? AppColors.slate400 : AppColors.slate400,
             labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorSize: TabBarIndicatorSize.label,
@@ -391,18 +392,18 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red[50],
+                color: AppColors.error.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red[200]!),
+                border: Border.all(color: AppColors.error.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.red[400], size: 18),
+                  Icon(Icons.info_outline, color: AppColors.error.withOpacity(0.7), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _regTip.isNotEmpty ? _regTip : '注册已关闭',
-                      style: TextStyle(color: Colors.red[600], fontSize: 13),
+                      style: TextStyle(color: AppColors.error, fontSize: 13),
                     ),
                   ),
                 ],
@@ -448,7 +449,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
           hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: isDark ? Colors.white60 : Colors.grey),
+                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: isDark ? AppColors.slate400 : AppColors.slate400),
                   onPressed: () => setState(() => _obscureText = !_obscureText),
                 )
               : null,
@@ -465,13 +466,13 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
         onPressed: _loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.primaryLight,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           elevation: 4,
           shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
         ),
         child: _loading
-            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primaryLight, strokeWidth: 2))
             : Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );

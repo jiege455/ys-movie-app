@@ -1,7 +1,7 @@
 /// 文件名：home_page.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2025-12-16
-/// 作用：首页（顶部分类菜单 + 推荐/分类列表）
+/// 作用：首页（顶部分类菜单 + Banner + 热门推荐 + 继续观看 + 内容网格）
 /// 解释：你打开 App 第一眼看到的页面，顶部能切分类，下面是内容。
 /// 开发者：杰哥网络科技 (qq: 2711793818)
 
@@ -19,6 +19,7 @@ import 'package:shimmer/shimmer.dart';
 import '../pages/detail_page.dart';
 import '../pages/search_page.dart';
 import '../services/api.dart';
+import '../services/store.dart';
 import '../services/theme_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/constants.dart';
@@ -48,7 +49,7 @@ class _HomePageState extends State<HomePage>
   // ── 加载状态 ──
   bool _isLoadingTabs = true;
   bool _isLoadingContent = false;
-  int _loadingIndex = -1; // 当前正在加载的分类索引
+  int _loadingIndex = -1;
 
   // ── 下拉刷新 ──
   final Map<int, GlobalKey<RefreshIndicatorState>> _refreshKeys = {};
@@ -61,6 +62,12 @@ class _HomePageState extends State<HomePage>
 
   // ── 通知栏 ──
   List<dynamic> _announcements = [];
+
+  // ── 热门推荐 ──
+  List<dynamic> _hotRecommendList = [];
+
+  // ── 继续观看 ──
+  List<Map<String, dynamic>> _continueWatchingList = [];
 
   // ── 缓存 ──
   final Map<int, List<dynamic>> _contentCache = {};
@@ -81,6 +88,7 @@ class _HomePageState extends State<HomePage>
   static const String _cacheKeyBanner = 'home_banner_cache';
   static const String _cacheKeyHotWords = 'home_hotwords_cache';
   static const String _cacheKeyAnnouncements = 'home_announcements_cache';
+  static const String _cacheKeyHotRecommend = 'home_hot_recommend_cache';
   static const String _cacheKeyContentPrefix = 'home_content_cache_';
   static const String _cacheKeyPagePrefix = 'home_page_cache_';
   static const String _cacheKeyHasMorePrefix = 'home_hasmore_cache_';
@@ -167,6 +175,18 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
+    // HotRecommend
+    final hotRecommendJson = prefs.getString(_cacheKeyHotRecommend);
+    if (hotRecommendJson != null) {
+      try {
+        final data = jsonDecode(hotRecommendJson);
+        final cacheTime = DateTime.parse(data['time']);
+        if (DateTime.now().difference(cacheTime) < _cacheValidDuration) {
+          _hotRecommendList = data['list'];
+        }
+      } catch (_) {}
+    }
+
     // Content cache for each tab
     for (int i = 0; i < _tabIds.length; i++) {
       final contentJson = prefs.getString('$_cacheKeyContentPrefix$_tabIds[i]');
@@ -238,6 +258,17 @@ class _HomePageState extends State<HomePage>
       );
     }
 
+    // HotRecommend
+    if (_hotRecommendList.isNotEmpty) {
+      await prefs.setString(
+        _cacheKeyHotRecommend,
+        jsonEncode({
+          'time': DateTime.now().toIso8601String(),
+          'list': _hotRecommendList,
+        }),
+      );
+    }
+
     // Content cache
     for (final entry in _contentCache.entries) {
       final tabId = _tabIds[entry.key];
@@ -258,7 +289,6 @@ class _HomePageState extends State<HomePage>
     setState(() => _isLoadingTabs = true);
     try {
       final api = context.read<MacApi>();
-      // 使用 getAppInit 获取分类列表（优先使用插件接口）
       final initData = await api.getAppInit();
       final list = initData['type_list'] as List<dynamic>? ?? [];
       
@@ -274,10 +304,11 @@ class _HomePageState extends State<HomePage>
         _loadBanner();
         _loadHotWords();
         _loadAnnouncements(initData['notice']);
+        _loadHotRecommend();
+        _loadContinueWatching();
 
         _saveCache();
       } else {
-        // 修复：如果分类列表为空，设置一个默认的推荐分类，避免 TabBarView 崩溃
         _tabs = ['推荐'];
         _tabIds = [0];
         _tabController = TabController(length: _tabs.length, vsync: this);
@@ -286,7 +317,6 @@ class _HomePageState extends State<HomePage>
       }
     } catch (e) {
       debugPrint('加载分类失败: $e');
-      // 修复：异常时也设置默认分类，避免 TabBarView 崩溃
       _tabs = ['推荐'];
       _tabIds = [0];
       _tabController = TabController(length: _tabs.length, vsync: this);
@@ -301,12 +331,9 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadBanner() async {
     try {
       final api = context.read<MacApi>();
-      // 使用 getBanner 获取轮播图（优先使用插件接口）
       final bannerList = await api.getBanner();
       if (bannerList.isNotEmpty) {
-        setState(() {
-          _bannerList = bannerList;
-        });
+        setState(() => _bannerList = bannerList);
         _saveCache();
       }
     } catch (e) {
@@ -318,12 +345,9 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadHotWords() async {
     try {
       final api = context.read<MacApi>();
-      // 使用 getHotKeywords 获取热词（优先使用插件接口）
       final keywords = await api.getHotKeywords();
       if (keywords.isNotEmpty) {
-        setState(() {
-          _hotWords = keywords;
-        });
+        setState(() => _hotWords = keywords);
         _saveCache();
       }
     } catch (e) {
@@ -335,20 +359,15 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadAnnouncements([dynamic notice]) async {
     try {
       if (notice != null) {
-        setState(() {
-          _announcements = [notice];
-        });
+        setState(() => _announcements = [notice]);
         _saveCache();
         return;
       }
-
       final api = context.read<MacApi>();
       final initData = await api.getAppInit();
       final n = initData['notice'];
       if (n != null) {
-        setState(() {
-          _announcements = [n];
-        });
+        setState(() => _announcements = [n]);
         _saveCache();
       }
     } catch (e) {
@@ -356,14 +375,59 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  // ── 加载热门推荐 ──
+  Future<void> _loadHotRecommend() async {
+    try {
+      final api = context.read<MacApi>();
+      final list = await api.getFiltered(
+        typeId: null,
+        page: 1,
+        limit: 10,
+        orderby: 'hits',
+      );
+      if (list.isNotEmpty) {
+        setState(() => _hotRecommendList = list);
+        _saveCache();
+      }
+    } catch (e) {
+      debugPrint('加载热门推荐失败: $e');
+    }
+  }
+
+  // ── 加载继续观看 ──
+  Future<void> _loadContinueWatching() async {
+    try {
+      final history = await StoreService.getHistory();
+      final List<Map<String, dynamic>> result = [];
+      for (final item in history.take(10)) {
+        final parts = item.split('|');
+        if (parts.length >= 3) {
+          double progressVal = 0.0;
+          if (parts.length > 5) {
+            try {
+              final sec = int.parse(parts[5]);
+              if (sec > 0) progressVal = 0.3;
+            } catch (_) {}
+          }
+          result.add({
+            'id': parts[0],
+            'title': parts.length > 1 ? parts[1] : '',
+            'poster': parts.length > 2 ? parts[2] : '',
+            'progressVal': progressVal,
+          });
+        }
+      }
+      setState(() => _continueWatchingList = result);
+    } catch (e) {
+      debugPrint('加载继续观看失败: $e');
+    }
+  }
+
   // ── Tab 切换 ──
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) return;
-
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
-
-    // 防抖
     _tabDebounce?.cancel();
     _tabDebounce = Timer(const Duration(milliseconds: 300), () {
       setState(() => _currentTabIndex = index);
@@ -374,46 +438,31 @@ class _HomePageState extends State<HomePage>
   // ── 加载内容 ──
   Future<void> _loadContent(int index, {bool refresh = false}) async {
     if (_isLoadingContent && _loadingIndex == index) return;
-
     setState(() {
       _isLoadingContent = true;
       _loadingIndex = index;
     });
-
     try {
       final api = context.read<MacApi>();
       final typeId = _tabIds[index];
-
       if (refresh) {
         _pageCache[index] = 1;
         _hasMoreCache[index] = true;
       }
-
-      // 检查缓存
-      if (!refresh &&
-          _contentCache.containsKey(index) &&
-          _contentCache[index]!.isNotEmpty) {
-        // 数据已经在缓存中，_buildContentList 会直接读取缓存
+      if (!refresh && _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty) {
         setState(() {});
         return;
       }
-
       List<dynamic> list = [];
-      
-      // 推荐页（index == 0）优先使用 getAppInit 返回的 recommend_list
       if (index == 0) {
         try {
           final initData = await api.getAppInit();
           final recommendList = initData['recommend_list'] as List<dynamic>? ?? [];
-          if (recommendList.isNotEmpty) {
-            list = recommendList;
-          }
+          if (recommendList.isNotEmpty) list = recommendList;
         } catch (e) {
           debugPrint('加载推荐列表失败: $e');
         }
       }
-      
-      // 如果没有推荐数据，使用 getFiltered 获取
       if (list.isEmpty) {
         final currentPage = _pageCache[index] ?? 1;
         list = await api.getFiltered(
@@ -423,22 +472,16 @@ class _HomePageState extends State<HomePage>
           orderby: 'time',
         );
       }
-
       if (list.isNotEmpty) {
         setState(() {
-          // 更新缓存，每个分类独立存储
           final existingList = refresh ? [] : (_contentCache[index] ?? []);
           _contentCache[index] = [...existingList, ...list];
           _hasMoreCache[index] = list.length >= 20;
           _pageCache[index] = (_pageCache[index] ?? 1) + 1;
         });
-
         _saveCache();
       } else {
-        // 没有数据，标记为没有更多
-        setState(() {
-          _hasMoreCache[index] = false;
-        });
+        setState(() => _hasMoreCache[index] = false);
       }
     } catch (e) {
       debugPrint('加载内容失败: $e');
@@ -469,6 +512,8 @@ class _HomePageState extends State<HomePage>
     await _loadBanner();
     await _loadHotWords();
     await _loadAnnouncements();
+    await _loadHotRecommend();
+    await _loadContinueWatching();
   }
 
   @override
@@ -486,7 +531,7 @@ class _HomePageState extends State<HomePage>
     final isDark = themeProvider.isDark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.slate50,
       body: SafeArea(
         child: NestedScrollView(
           controller: _scrollController,
@@ -514,6 +559,18 @@ class _HomePageState extends State<HomePage>
               if (_announcements.isNotEmpty)
                 SliverToBoxAdapter(
                   child: _buildAnnouncementBar(isDark),
+                ),
+
+              // ── 热门推荐（仅在推荐页显示） ──
+              if (_currentTabIndex == 0 && _hotRecommendList.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildHotRecommendSection(isDark),
+                ),
+
+              // ── 继续观看（仅在推荐页显示） ──
+              if (_currentTabIndex == 0 && _continueWatchingList.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildContinueWatchingSection(isDark),
                 ),
             ];
           },
@@ -543,29 +600,22 @@ class _HomePageState extends State<HomePage>
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: isDark ? AppColors.darkCard : AppColors.slate50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: isDark ? AppColors.slate700 : AppColors.slate200,
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.search,
-              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
-              size: 20,
-            ),
+            Icon(Icons.search, color: AppColors.slate400, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 _hotWords.isNotEmpty
                     ? '搜索: ${_hotWords[Random().nextInt(_hotWords.length)]}'
                     : '搜索你想看的视频...',
-                style: TextStyle(
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.slate400, fontSize: 14),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -577,13 +627,10 @@ class _HomePageState extends State<HomePage>
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  '热搜',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 12,
-                  ),
-                ),
+                child: Text('热搜', style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 12,
+                )),
               ),
           ],
         ),
@@ -600,20 +647,14 @@ class _HomePageState extends State<HomePage>
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         labelColor: Theme.of(context).colorScheme.primary,
-        unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-        labelStyle: TextStyle(
-          fontSize: _homeTypeFontSize,
-          fontWeight: FontWeight.bold,
-        ),
+        unselectedLabelColor: isDark ? AppColors.slate400 : AppColors.slate500,
+        labelStyle: TextStyle(fontSize: _homeTypeFontSize, fontWeight: FontWeight.bold),
         unselectedLabelStyle: TextStyle(
           fontSize: (_homeTypeFontSize - 2).clamp(10, 30),
           fontWeight: FontWeight.normal,
         ),
         indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(
-            width: 3,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          borderSide: BorderSide(width: 3, color: Theme.of(context).colorScheme.primary),
           insets: const EdgeInsets.symmetric(horizontal: 12),
         ),
         dividerColor: Colors.transparent,
@@ -626,8 +667,8 @@ class _HomePageState extends State<HomePage>
   // ── Tab 骨架屏 ──
   Widget _buildTabShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColors.slate300,
+      highlightColor: AppColors.slate100,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         height: 40,
@@ -637,39 +678,103 @@ class _HomePageState extends State<HomePage>
           itemBuilder: (_, __) => Container(
             width: 60,
             margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
           ),
         ),
       ),
     );
   }
 
-  // ── 轮播图 ──
+  // ── 轮播图（全宽+文字叠加） ──
   Widget _buildBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      height: 180,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      height: 200,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: SlideBanner(
-          images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
-          onTap: (index) {
-            final item = _bannerList[index];
-            final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-            if (vodId.isEmpty || vodId == '0') return;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DetailPage(vodId: vodId),
+        child: Stack(
+          children: [
+            SlideBanner(
+              images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
+              onTap: (index) {
+                final item = _bannerList[index];
+                final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+                if (vodId.isEmpty || vodId == '0') return;
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+              },
+            ),
+            // 底部渐变遮罩
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 100,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                  ),
+                ),
               ),
-            );
-          },
+            ),
+            // 文字内容
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _bannerList.isNotEmpty ? (_bannerList[0]['remarks'] ?? _bannerList[0]['vod_remarks'] ?? '') : '',
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      if (_bannerList.isEmpty) return;
+                      final item = _bannerList[0];
+                      final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+                      if (vodId.isEmpty || vodId == '0') return;
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -681,29 +786,18 @@ class _HomePageState extends State<HomePage>
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: isDark ? AppColors.darkCard : AppColors.slate50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.campaign,
-            color: Theme.of(context).colorScheme.primary,
-            size: 16,
-          ),
+          Icon(Icons.campaign, color: Theme.of(context).colorScheme.primary, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              _announcements.isNotEmpty
-                  ? _announcements[0]['title'].toString()
-                  : '',
-              style: TextStyle(
-                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                fontSize: 13,
-              ),
+              _announcements.isNotEmpty ? _announcements[0]['title'].toString() : '',
+              style: TextStyle(color: isDark ? AppColors.slate300 : AppColors.slate700, fontSize: 13),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -713,12 +807,215 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  // ── 热门推荐区域 ──
+  Widget _buildHotRecommendSection(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 标题栏
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Row(
+            children: [
+              Text('热门推荐', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  // 跳转到更多热门推荐
+                },
+                child: Row(
+                  children: [
+                    Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                    Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 横向滚动列表
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _hotRecommendList.length.clamp(0, 10),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (ctx, i) {
+              final item = _hotRecommendList[i];
+              return _buildHotRecommendCard(item);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── 热门推荐卡片 ──
+  Widget _buildHotRecommendCard(dynamic item) {
+    return GestureDetector(
+      onTap: () {
+        final vodId = item['id']?.toString() ?? '';
+        if (vodId.isEmpty) return;
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+      },
+      child: SizedBox(
+        width: 110,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: item['poster'] ?? '',
+                  width: 110,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(color: AppColors.slate200),
+                  errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              item['title'] ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${item['year'] ?? ''} · ${item['area'] ?? ''}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── 继续观看区域 ──
+  Widget _buildContinueWatchingSection(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 标题栏
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Row(
+            children: [
+              Text('继续观看', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  // 跳转到历史记录页
+                },
+                child: Row(
+                  children: [
+                    Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                    Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 横向滚动列表
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _continueWatchingList.length.clamp(0, 10),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (ctx, i) {
+              final item = _continueWatchingList[i];
+              return _buildContinueWatchingCard(item);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── 继续观看卡片 ──
+  Widget _buildContinueWatchingCard(Map<String, dynamic> item) {
+    final progressVal = item['progressVal'] as double? ?? 0.0;
+    return GestureDetector(
+      onTap: () {
+        final vodId = item['id']?.toString() ?? '';
+        if (vodId.isEmpty) return;
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+      },
+      child: SizedBox(
+        width: 200,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: item['poster'] ?? '',
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(color: AppColors.slate200),
+                      errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
+                    ),
+                    // 播放按钮
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+                      ),
+                    ),
+                    // 进度条
+                    if (progressVal > 0)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(
+                          value: progressVal,
+                          backgroundColor: Colors.black.withOpacity(0.3),
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                          minHeight: 3,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              item['title'] ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '已看至 ${(progressVal * 100).toInt()}%',
+              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── 内容列表 ──
   Widget _buildContentList(int index) {
-    // 使用缓存中的数据，每个分类独立
     final contentList = _contentCache[index] ?? [];
     final hasMore = _hasMoreCache[index] ?? true;
-    // 只有当前分类正在加载时才显示加载状态
     final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
 
     return RefreshIndicator(
@@ -754,12 +1051,7 @@ class _HomePageState extends State<HomePage>
       onTap: () {
         final vodId = item['id']?.toString() ?? '';
         if (vodId.isEmpty) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailPage(vodId: vodId),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -774,13 +1066,8 @@ class _HomePageState extends State<HomePage>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
-                      child: const Icon(Icons.broken_image),
-                    ),
+                    placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                    errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                   ),
                 ),
                 Positioned(
@@ -789,13 +1076,10 @@ class _HomePageState extends State<HomePage>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: AppColors.slate900.withOpacity(0.54),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text(
-                      item['year'] ?? '',
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
+                    child: Text(item['year'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 10)),
                   ),
                 ),
               ],
@@ -816,8 +1100,8 @@ class _HomePageState extends State<HomePage>
   // ── 骨架屏 ──
   Widget _buildContentShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColors.slate300,
+      highlightColor: AppColors.slate100,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -828,10 +1112,7 @@ class _HomePageState extends State<HomePage>
         ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
@@ -843,19 +1124,9 @@ class _HomePageState extends State<HomePage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.inbox,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.inbox, size: 64, color: AppColors.slate400),
           const SizedBox(height: 16),
-          Text(
-            '暂无内容',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
-          ),
+          Text('暂无内容', style: TextStyle(color: AppColors.slate600, fontSize: 16)),
         ],
       ),
     );
@@ -865,9 +1136,7 @@ class _HomePageState extends State<HomePage>
   Widget _buildLoadMoreIndicator() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }

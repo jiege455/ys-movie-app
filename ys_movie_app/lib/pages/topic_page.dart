@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api.dart';
@@ -120,11 +121,11 @@ class _TopicPageState extends State<TopicPage> {
                                     fit: BoxFit.cover,
                                     placeholder: (_, __) => Container(
                                       color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      child: const Center(child: Icon(Icons.image, size: 20, color: Colors.grey)),
+                                      child: const Center(child: Icon(Icons.image, size: 20, color: AppColors.slate400)),
                                     ),
                                     errorWidget: (_, __, ___) => Container(
                                       color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      child: const Center(child: Icon(Icons.broken_image, size: 20, color: Colors.grey)),
+                                      child: const Center(child: Icon(Icons.broken_image, size: 20, color: AppColors.slate400)),
                                     ),
                                   ),
                                 ),
@@ -155,7 +156,7 @@ class _TopicPageState extends State<TopicPage> {
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: 10,
-                                              color: isDark ? Colors.white60 : Colors.grey,
+                                              color: isDark ? AppColors.slate400 : AppColors.slate400,
                                               height: 1.2,
                                             ),
                                           ),

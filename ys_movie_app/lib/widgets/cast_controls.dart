@@ -3,6 +3,7 @@
 /// 说明：投屏状态下显示在播放器上方，提供播放/暂停/进度/音量控制
 
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../services/cast/cast_manager.dart';
 import '../services/cast/models.dart';
 
@@ -38,7 +39,7 @@ class _CastControlsState extends State<CastControls> {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.85),
+                color: AppColors.slate900.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -86,7 +87,7 @@ class _CastControlsState extends State<CastControls> {
               Text(
                 '投屏到: ${device?.name ?? '未知设备'}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.primaryLight,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -102,7 +103,7 @@ class _CastControlsState extends State<CastControls> {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+          icon: const Icon(Icons.close, color: AppColors.slate300, size: 20),
           onPressed: () async {
             await _castManager.disconnect();
             if (mounted) {
@@ -123,9 +124,9 @@ class _CastControlsState extends State<CastControls> {
       children: [
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const Color(0xFF4CAF50),
-            inactiveTrackColor: Colors.white24,
-            thumbColor: Colors.white,
+            activeTrackColor: const AppColors.success,
+            inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
+            thumbColor: AppColors.primaryLight,
             trackHeight: 3,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
@@ -156,7 +157,7 @@ class _CastControlsState extends State<CastControls> {
               Text(
                 _isDragging ? _formatDuration(((_dragValue * state.duration) / 1000).floor()) : state.formattedPosition,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.slate300,
                   fontSize: 11,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
@@ -171,14 +172,14 @@ class _CastControlsState extends State<CastControls> {
                         : state.volume < 50
                             ? Icons.volume_down
                             : Icons.volume_up,
-                    color: Colors.white70,
+                    color: AppColors.slate300,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${state.volume}%',
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: AppColors.slate300,
                       fontSize: 11,
                       fontFeatures: [FontFeature.tabularFigures()],
                     ),
@@ -188,7 +189,7 @@ class _CastControlsState extends State<CastControls> {
               Text(
                 state.formattedDuration,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.slate300,
                   fontSize: 11,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
@@ -209,7 +210,7 @@ class _CastControlsState extends State<CastControls> {
       children: [
         // 音量减小
         IconButton(
-          icon: const Icon(Icons.volume_down, color: Colors.white70),
+          icon: const Icon(Icons.volume_down, color: AppColors.slate300),
           onPressed: () async {
             final newVol = (state.volume - 10).clamp(0, 100);
             await _castManager.setVolume(newVol);
@@ -218,7 +219,7 @@ class _CastControlsState extends State<CastControls> {
 
         // 快退10秒
         IconButton(
-          icon: const Icon(Icons.replay_10, color: Colors.white),
+          icon: const Icon(Icons.replay_10, color: AppColors.primaryLight),
           onPressed: () async {
             final newPos = (state.position - 10000).clamp(0, state.duration);
             await _castManager.seek(newPos);
@@ -234,7 +235,7 @@ class _CastControlsState extends State<CastControls> {
                   height: 40,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                    valueColor: AlwaysStoppedAnimation(AppColors.primaryLight),
                   ),
                 )
               : IconButton(
@@ -255,7 +256,7 @@ class _CastControlsState extends State<CastControls> {
 
         // 快进10秒
         IconButton(
-          icon: const Icon(Icons.forward_10, color: Colors.white),
+          icon: const Icon(Icons.forward_10, color: AppColors.primaryLight),
           onPressed: () async {
             final newPos = (state.position + 10000).clamp(0, state.duration);
             await _castManager.seek(newPos);
@@ -264,7 +265,7 @@ class _CastControlsState extends State<CastControls> {
 
         // 音量增大
         IconButton(
-          icon: const Icon(Icons.volume_up, color: Colors.white70),
+          icon: const Icon(Icons.volume_up, color: AppColors.slate300),
           onPressed: () async {
             final newVol = (state.volume + 10).clamp(0, 100);
             await _castManager.setVolume(newVol);
@@ -302,15 +303,15 @@ class _CastControlsState extends State<CastControls> {
   Color _getStatusColor(CastStatus status) {
     switch (status) {
       case CastStatus.playing:
-        return const Color(0xFF4CAF50);
+        return const AppColors.success;
       case CastStatus.paused:
-        return Colors.orange;
+        return AppColors.warning;
       case CastStatus.buffering:
-        return Colors.blue;
+        return AppColors.primary;
       case CastStatus.error:
-        return Colors.red;
+        return AppColors.error;
       default:
-        return Colors.white70;
+        return AppColors.slate300;
     }
   }
 

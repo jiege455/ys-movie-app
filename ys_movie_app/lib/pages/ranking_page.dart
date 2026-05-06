@@ -4,10 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api.dart';
 import '../theme/app_theme.dart';
 import 'detail_page.dart';
-// by：杰哥 
-// qq： 2711793818
-
-/// 开发者：杰哥 (qq: 2711793818)
+/// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 作用：排行榜页面，实现日榜、周榜、月榜切换，按分类排序
 /// 小白解释：这里看大家都在看什么，分今天、这周、这月最火的。
 class RankingPage extends StatefulWidget {
@@ -130,17 +127,8 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: bgColor,
-      body: Stack(
-        children: [
-          // 装饰图案层
-          Positioned.fill(
-            child: _DecorativeBackground(
-              isDark: isDark,
-              primaryColor: primaryColor,
-            ),
-          ),
-          // 内容层
-          SafeArea(
+      body: TexturedBackground(
+        child: SafeArea(
             child: Column(
               children: [
               // 顶部标题
@@ -200,7 +188,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isDark
-                                  ? Colors.white.withOpacity(0.1)
+                                  ? AppColors.slate700.withOpacity(0.1)
                                   : Theme.of(context).dividerColor,
                               width: 1,
                             ),
@@ -238,7 +226,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.1)
+                                ? AppColors.slate700.withOpacity(0.1)
                                 : Theme.of(context).dividerColor,
                             width: 1,
                           ),
@@ -261,7 +249,6 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
             ],
           ),
           ),
-        ],
       ),
     );
   }
@@ -366,7 +353,7 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.sentiment_dissatisfied, size: 48, color: Colors.grey),
+            const Icon(Icons.sentiment_dissatisfied, size: 48, color: AppColors.slate400),
             const SizedBox(height: 16),
             Text('暂无数据', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
             const SizedBox(height: 16),
@@ -411,8 +398,8 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                       width: 90,
                       height: 130,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: Colors.grey[200]),
-                      errorWidget: (_, __, ___) => Container(color: Colors.grey[200], child: const Icon(Icons.movie)),
+                      placeholder: (_, __) => Container(color: AppColors.slate200),
+                      errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.movie)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -490,101 +477,3 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   }
 }
 
-/// 装饰背景组件：天空蓝主题渐变 + 几何装饰图案
-class _DecorativeBackground extends StatelessWidget {
-  final bool isDark;
-  final Color primaryColor;
-
-  const _DecorativeBackground({
-    required this.isDark,
-    required this.primaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [
-                  Theme.of(context).scaffoldBackgroundColor,
-                  primaryColor.withAlpha(30),
-                  Theme.of(context).scaffoldBackgroundColor,
-                ]
-              : [
-                  Colors.white,
-                  primaryColor.withAlpha(25),
-                  Colors.white,
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: CustomPaint(
-        painter: _DecorativePainter(
-          isDark: isDark,
-          primaryColor: primaryColor,
-        ),
-      ),
-    );
-  }
-}
-
-/// 装饰图案绘制器
-class _DecorativePainter extends CustomPainter {
-  final bool isDark;
-  final Color primaryColor;
-
-  _DecorativePainter({
-    required this.isDark,
-    required this.primaryColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = primaryColor.withAlpha(isDark ? 15 : 20)
-      ..style = PaintingStyle.fill;
-
-    // 左上角大圆
-    canvas.drawCircle(
-      Offset(-size.width * 0.1, -size.height * 0.05),
-      size.width * 0.35,
-      paint,
-    );
-
-    // 右下角小圆
-    canvas.drawCircle(
-      Offset(size.width * 1.05, size.height * 0.75),
-      size.width * 0.25,
-      paint,
-    );
-
-    // 中间偏右小圆
-    canvas.drawCircle(
-      Offset(size.width * 0.85, size.height * 0.3),
-      size.width * 0.12,
-      paint,
-    );
-
-    // 细线装饰
-    final linePaint = Paint()
-      ..color = primaryColor.withAlpha(isDark ? 10 : 12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    for (int i = 0; i < 4; i++) {
-      final y = size.height * (0.15 + i * 0.25);
-      canvas.drawLine(
-        Offset(size.width * 0.7, y),
-        Offset(size.width * 0.95, y),
-        linePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DecorativePainter oldDelegate) {
-    return oldDelegate.primaryColor != primaryColor || oldDelegate.isDark != isDark;
-  }
-}

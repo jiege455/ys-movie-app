@@ -160,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(color: AppColors.primaryLight, strokeWidth: 2),
                       )
                     : const Text('登录', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),

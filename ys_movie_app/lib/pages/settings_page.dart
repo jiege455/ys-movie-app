@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/api.dart';
 import '../services/theme_provider.dart';
+import '../theme/app_theme.dart';
 import '../services/cache_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -269,7 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: '天空蓝',
                 subtitle: '明亮清新',
                 icon: Icons.wb_sunny,
-                iconColor: const Color(0xFF00BFFF),
+                iconColor: AppColors.primary,
                 bgColor: Theme.of(context).cardColor,
                 textColor: Theme.of(context).colorScheme.onSurface,
                 isSelected: themeProvider.themeStyle == 'light',
@@ -325,7 +326,7 @@ class _SettingsPageState extends State<SettingsPage> {
           color: isSelected ? primary.withOpacity(0.1) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? primary : Colors.grey.withOpacity(0.2),
+            color: isSelected ? primary : AppColors.slate400.withOpacity(0.2),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -338,7 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                border: Border.all(color: AppColors.slate400.withOpacity(0.2)),
               ),
               child: Icon(icon, color: iconColor, size: 28),
             ),
@@ -383,9 +384,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: AppColors.slate400.withOpacity(0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.slate400.withOpacity(0.3)),
                 ),
               ),
           ],

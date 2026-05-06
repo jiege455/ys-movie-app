@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
@@ -105,7 +106,7 @@ class _VipPageState extends State<VipPage> {
                       children: [
                         Container(
                           width: 60, height: 60,
-                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(color: AppColors.slate50, shape: BoxShape.circle),
                           alignment: Alignment.center,
                           child: Text(
                             (_user['user_name'] ?? 'U').substring(0, 1).toUpperCase(),
@@ -117,11 +118,11 @@ class _VipPageState extends State<VipPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(_user['user_name'] ?? '用户', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Text(_user['user_name'] ?? '用户', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryLight)),
                               const SizedBox(height: 4),
-                              Text('当前等级：${_user['group_name'] ?? '普通会员'}', style: const TextStyle(color: Colors.white70)),
-                              Text('剩余积分：${_user['user_points'] ?? 0}', style: const TextStyle(color: Colors.white70)),
-                              Text('到期时间：${_user['user_end_time'] != 0 ? DateTime.fromMillisecondsSinceEpoch((_user['user_end_time'] ?? 0) * 1000).toString().substring(0,10) : '永久'}', style: const TextStyle(color: Colors.white70)),
+                              Text('当前等级：${_user['group_name'] ?? '普通会员'}', style: const TextStyle(color: AppColors.slate300)),
+                              Text('剩余积分：${_user['user_points'] ?? 0}', style: const TextStyle(color: AppColors.slate300)),
+                              Text('到期时间：${_user['user_end_time'] != 0 ? DateTime.fromMillisecondsSinceEpoch((_user['user_end_time'] ?? 0) * 1000).toString().substring(0,10) : '永久'}', style: const TextStyle(color: AppColors.slate300)),
                             ],
                           ),
                         ),
@@ -133,7 +134,7 @@ class _VipPageState extends State<VipPage> {
                   const SizedBox(height: 12),
                   // 套餐列表
                   if (_vipGroups.isEmpty)
-                     const Padding(padding: EdgeInsets.all(20), child: Text('暂无套餐配置', style: TextStyle(color: Colors.grey))),
+                     const Padding(padding: EdgeInsets.all(20), child: Text('暂无套餐配置', style: TextStyle(color: AppColors.slate400))),
                   
                   ListView.separated(
                     shrinkWrap: true,
@@ -245,8 +246,8 @@ class _PointsPageState extends State<PointsPage> {
         actions: [
           TextButton.icon(
             onPressed: _watchAd,
-            icon: const Icon(Icons.play_circle_fill, color: Colors.orange, size: 16),
-            label: const Text('看广告赚积分', style: TextStyle(color: Colors.orange, fontSize: 12)),
+            icon: const Icon(Icons.play_circle_fill, color: AppColors.warning, size: 16),
+            label: const Text('看广告赚积分', style: TextStyle(color: AppColors.warning, fontSize: 12)),
           ),
           const SizedBox(width: 8),
         ],
@@ -256,8 +257,8 @@ class _PointsPageState extends State<PointsPage> {
           if (_intro.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(12),
-              color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange[50],
-              child: Text(_intro, style: const TextStyle(color: Colors.orange, fontSize: 12)),
+              color: isDark ? AppColors.warning.withOpacity(0.1) : AppColors.warning.withOpacity(0.05),
+              child: Text(_intro, style: const TextStyle(color: AppColors.warning, fontSize: 12)),
             ),
           Expanded(
             child: _loading 
@@ -276,11 +277,11 @@ class _PointsPageState extends State<PointsPage> {
                           title: Text(item['plog_remark'] ?? '积分变动', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                           subtitle: Text(item['plog_time'] != null 
                               ? DateTime.fromMillisecondsSinceEpoch((int.tryParse('${item['plog_time']}') ?? 0) * 1000).toString().substring(0, 19)
-                              : '', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
+                              : '', style: TextStyle(color: isDark ? AppColors.slate500 : AppColors.slate600)),
                           trailing: Text(
                             '${isAdd ? '+' : ''}$points',
                             style: TextStyle(
-                              color: isAdd ? Colors.red : Colors.green,
+                              color: isAdd ? AppColors.error : AppColors.success,
                               fontWeight: FontWeight.bold,
                               fontSize: 16
                             ),
@@ -394,19 +395,19 @@ class _InvitePageState extends State<InvitePage> {
              color: Theme.of(context).primaryColor,
              child: Column(
                children: [
-                 const Text('累计邀请人数', style: TextStyle(color: Colors.white70)),
+                 const Text('累计邀请人数', style: TextStyle(color: AppColors.slate300)),
                  const SizedBox(height: 8),
-                 Text('$_count', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                 Text('$_count', style: const TextStyle(color: AppColors.primaryLight, fontSize: 32, fontWeight: FontWeight.bold)),
                  const SizedBox(height: 24),
                  Container(
                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                   decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(20)),
                    child: Row(
                      mainAxisSize: MainAxisSize.min,
                      children: [
-                       Text('我的邀请码：$_myCode', style: const TextStyle(color: Colors.black54)),
+                       Text('我的邀请码：$_myCode', style: const TextStyle(color: AppColors.slate600)),
                        const SizedBox(width: 8),
-                       const Text('复制分享', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                       const Text('复制分享', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                      ],
                    ),
                  ).isValidGesture(onTap: () {
@@ -431,8 +432,8 @@ class _InvitePageState extends State<InvitePage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              color: isDark ? Colors.orange.withOpacity(0.1) : Colors.orange[50],
-              child: Text(_intro, style: const TextStyle(color: Colors.orange, fontSize: 12)),
+              color: isDark ? AppColors.warning.withOpacity(0.1) : AppColors.warning.withOpacity(0.05),
+              child: Text(_intro, style: const TextStyle(color: AppColors.warning, fontSize: 12)),
             ),
           Expanded(
             child: _loading 
@@ -448,7 +449,7 @@ class _InvitePageState extends State<InvitePage> {
                           leading: const CircleAvatar(child: Icon(Icons.person, size: 20)),
                           title: Text(item['user_name'] ?? '匿名用户', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                           subtitle: Text('注册时间：${item['user_reg_time'] != null ? DateTime.fromMillisecondsSinceEpoch((int.tryParse('${item['user_reg_time']}') ?? 0) * 1000).toString().substring(0,10) : ''}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-                          trailing: const Text('奖励已发', style: TextStyle(fontSize: 12, color: Colors.green)),
+                          trailing: const Text('奖励已发', style: TextStyle(fontSize: 12, color: AppColors.success)),
                         );
                       },
                     ),

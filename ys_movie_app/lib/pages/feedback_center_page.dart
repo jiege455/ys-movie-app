@@ -6,6 +6,7 @@
  * by：杰哥   qq：2711793818
  */
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../services/api.dart';
@@ -153,7 +154,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   elevation: 4,
                 ),
                 child: _submitting
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
                     : const Text('提交反馈', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
@@ -318,7 +319,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                   elevation: 4,
                 ),
                 child: _submitting
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
                     : const Text('提交求片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
@@ -750,16 +751,16 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (hasReply ? Colors.red : scheme.primary).withOpacity(0.10),
+                        color: (hasReply ? AppColors.error : scheme.primary).withOpacity(0.10),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: hasReply ? Colors.red : scheme.primary),
+                        border: Border.all(color: hasReply ? AppColors.error : scheme.primary),
                       ),
                       child: Text(
                         hasReply ? '管理员已回复' : '待处理',
                         style: TextStyle(
                           fontSize: 10, 
                           fontWeight: FontWeight.bold,
-                          color: hasReply ? Colors.red : scheme.primary
+                          color: hasReply ? AppColors.error : scheme.primary
                         ),
                       ),
                     ),
@@ -927,7 +928,7 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
                   Container(
                     width: double.infinity,
                     height: 1,
-                    color: isDark ? Colors.white10 : Theme.of(context).dividerColor,
+                    color: isDark ? AppColors.slate700.withOpacity(0.1) : Theme.of(context).dividerColor,
                   ),
                   const SizedBox(height: 24),
                   HtmlWidget(

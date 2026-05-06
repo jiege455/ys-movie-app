@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'detail_page.dart';
@@ -223,7 +224,7 @@ class _VodListPageState extends State<VodListPage> {
         ],
       ),
       body: _items.isEmpty
-          ? const Center(child: Text('暂无数据', style: TextStyle(color: Colors.grey)))
+          ? const Center(child: Text('暂无数据', style: TextStyle(color: AppColors.slate400)))
           : Column(
               children: [
                 if (_isCachePage && rootPath.isNotEmpty)
@@ -306,7 +307,7 @@ class _VodListPageState extends State<VodListPage> {
                                   padding: const EdgeInsets.only(left: 10, right: 6),
                                   child: Icon(
                                     selected ? Icons.check_circle : (_selectMode ? Icons.radio_button_unchecked : (_isFavPage ? Icons.favorite : Icons.download_done)),
-                                    color: selected ? Theme.of(context).colorScheme.primary : (isDark ? Colors.white38 : Colors.black38),
+                                    color: selected ? Theme.of(context).colorScheme.primary : (isDark ? AppColors.slate500 : AppColors.slate600),
                                   ),
                                 ),
                               ClipRRect(
@@ -316,8 +317,8 @@ class _VodListPageState extends State<VodListPage> {
                                   width: 70,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
-                                  errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.movie)),
+                                  placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                                  errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.movie)),
                                 ),
                               ),
                               Expanded(
@@ -337,14 +338,14 @@ class _VodListPageState extends State<VodListPage> {
                                       if (item['progress'] != null)
                                         Text(
                                           '${item['progress']}',
-                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                          style: const TextStyle(fontSize: 12, color: AppColors.slate400),
                                         ),
                                       if (_isCachePage)
                                         Text(
                                           (item['url'] ?? '').toString(),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
+                                          style: TextStyle(fontSize: 11, color: isDark ? AppColors.slate500 : AppColors.slate600),
                                         ),
                                     ],
                                   ),

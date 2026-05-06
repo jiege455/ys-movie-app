@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
 import 'home_page.dart';
@@ -146,7 +147,7 @@ class _MainPageState extends State<MainPage> {
         },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: AppColors.slate400,
         showUnselectedLabels: true,
         items: _navItems
             .map(

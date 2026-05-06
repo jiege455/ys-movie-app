@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api.dart';
@@ -201,9 +202,9 @@ class _SearchPageState extends State<SearchPage> {
                     width: 100,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                    placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
                     errorWidget: (_, __, ___) => Container(
-                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      color: isDark ? AppColors.darkElevated : AppColors.slate200,
                       child: const Icon(Icons.movie),
                     ),
                   ),
@@ -232,7 +233,7 @@ class _SearchPageState extends State<SearchPage> {
                             if ((item['area'] ?? '').toString().isNotEmpty) '${item['area']}',
                             if ((item['lang'] ?? '').toString().isNotEmpty) '${item['lang']}',
                           ].join('/'),
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.grey),
+                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.slate300 : AppColors.slate400),
                         ),
                         Text(
                           item['overview']
@@ -240,7 +241,7 @@ class _SearchPageState extends State<SearchPage> {
                               .replaceAll(RegExp(r'<[^>]*>'), ''), // 去除HTML标签
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.slate500 : AppColors.slate400),
                         ),
                         if ((item['actor'] ?? '').toString().isNotEmpty)
                           Wrap(
@@ -250,7 +251,7 @@ class _SearchPageState extends State<SearchPage> {
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white12 : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  color: isDark ? AppColors.slate700.withOpacity(0.12) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(name, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.primary)),
@@ -288,14 +289,14 @@ class _SearchPageState extends State<SearchPage> {
                 final keyword = _hotKeywords[index];
                 // 生成随机鲜艳颜色
                 final color = [
-                  Colors.redAccent, Colors.orangeAccent, Colors.blueAccent, 
-                  Colors.greenAccent, Colors.purpleAccent, Colors.teal, 
-                  Colors.pinkAccent, Colors.amber
+                  AppColors.error, AppColors.warning, AppColors.primary, 
+                  AppColors.success, AppColors.primaryDark, AppColors.primaryAccent, 
+                  AppColors.primaryLight, AppColors.warning
                 ][index % 8].withOpacity(0.15);
                 final textColor = [
-                  Colors.red, Colors.orange[800]!, Colors.blue, 
-                  Colors.green[700]!, Colors.purple, Colors.teal[700]!, 
-                  Colors.pink, Colors.amber[900]!
+                  AppColors.error, AppColors.warning, AppColors.primary, 
+                  AppColors.success, AppColors.primaryDark, AppColors.primaryAccent, 
+                  AppColors.primaryLight, AppColors.warning
                 ][index % 8];
 
                 return InkWell(
@@ -304,13 +305,13 @@ class _SearchPageState extends State<SearchPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : color,
+                      color: isDark ? AppColors.slate700.withOpacity(0.1) : color,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       keyword, 
                       style: TextStyle(
-                        color: isDark ? Colors.white70 : textColor,
+                        color: isDark ? AppColors.slate300 : textColor,
                         fontSize: 13,
                       )
                     ),
@@ -345,10 +346,10 @@ class _SearchPageState extends State<SearchPage> {
                 final kw = _histories[index];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.history, size: 20, color: Colors.grey),
-                  title: Text(kw, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+                  leading: const Icon(Icons.history, size: 20, color: AppColors.slate400),
+                  title: Text(kw, style: TextStyle(color: isDark ? AppColors.slate300 : AppColors.slate900)),
                   trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                    icon: const Icon(Icons.close, size: 18, color: AppColors.slate400),
                     onPressed: () async {
                       await StoreService.removeSearchKeyword(kw);
                       _loadHistories();
