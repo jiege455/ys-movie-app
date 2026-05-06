@@ -1373,55 +1373,46 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
       }
       
       // 2. 如果插件初始化没带数据，才尝试根据 level 去单独拉取
+      // 2. 杰哥：统一使用 jgappapi 插件接口，直接调用 getFiltered 获取最新影片
+      // 原因：getRecommended 会调用 app_api.php，在宝塔环境下可能失败
       if (firstItems.isEmpty) {
-        final configLevel = api.hotLevel;
-        print('Home Page: Loading by Level $configLevel...');
         try {
-          final recList = await api.getRecommended(level: configLevel, limit: 12);
+          print('Home Page: Loading from getFiltered(orderby: time)...');
+          final recList = await api.getFiltered(orderby: 'time', limit: 12);
+          print('Home Page: getFiltered returned \${recList.length} items');
           if (recList.isNotEmpty) {
-            firstItems = recList;
-          }
-        } catch (_) {}
-      }
-      
-      // 如果后台没有配置推荐数据，使用兜底逻辑获取最新视频
-      if (firstItems.isEmpty) {
-        try {
-          print('Home Page: Trying fallback getFiltered(orderby: time)...');
-          final fallbackList = await api.getFiltered(orderby: 'time', limit: 12);
-          print('Home Page: Fallback returned ${fallbackList.length} items');
-          if (fallbackList.isNotEmpty) {
-            firstItems = fallbackList.map((v) => {
-              'id': '${v['id']}',
+            firstItems = recList.map((v) => {
+              'id': '\${v['id']}',
               'title': v['title'] ?? '',
               'poster': v['poster'] ?? '',
-              'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
-              'year': '${v['year'] ?? ''}',
+              'score': double.tryParse('\${v['score'] ?? 0}') ?? 0.0,
+              'year': '\${v['year'] ?? ''}',
               'overview': v['overview'] ?? '',
             }).toList();
           }
         } catch (e) {
-          print('Home Page: Fallback failed: $e');
+          print('Home Page: getFiltered failed: \$e');
         }
-        
-        // 杰哥：如果按时间排序也失败，尝试按热度排序兜底
-        if (firstItems.isEmpty) {
-          try {
-            print('Home Page: Trying second fallback getFiltered(orderby: hits)...');
-            final hotFallback = await api.getFiltered(orderby: 'hits', limit: 12);
-            if (hotFallback.isNotEmpty) {
-              firstItems = hotFallback.map((v) => {
-                'id': '${v['id']}',
-                'title': v['title'] ?? '',
-                'poster': v['poster'] ?? '',
-                'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
-                'year': '${v['year'] ?? ''}',
-                'overview': v['overview'] ?? '',
-              }).toList();
-            }
-          } catch (e) {
-            print('Home Page: Second fallback failed: $e');
+      }
+      
+      
+      // 杰哥：如果按时间排序也失败，尝试按热度排序兜底
+      if (firstItems.isEmpty) {
+        try {
+          print('Home Page: Trying second fallback getFiltered(orderby: hits)...');
+          final hotFallback = await api.getFiltered(orderby: 'hits', limit: 12);
+          if (hotFallback.isNotEmpty) {
+            firstItems = hotFallback.map((v) => {
+              'id': '\${v['id']}',
+              'title': v['title'] ?? '',
+              'poster': v['poster'] ?? '',
+              'score': double.tryParse('\${v['score'] ?? 0}') ?? 0.0,
+              'year': '\${v['year'] ?? ''}',
+              'overview': v['overview'] ?? '',
+            }).toList();
           }
+        } catch (e) {
+          print('Home Page: Second fallback failed: \$e');
         }
       }
       

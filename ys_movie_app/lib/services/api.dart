@@ -1626,27 +1626,9 @@ class MacApi {
         }
       } catch (_) {}
 
-      // 1. 尝试 app_api.php (自定义接口通常支持更好)
-      final customApiUrl = '${rootUrl}app_api.php';
-      try {
-        final resp = await _dio.get(customApiUrl, queryParameters: {
-          'ac': 'list',
-          'level': level,
-          'pagesize': limit,
-          'at': 'json',
-        });
-        if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
-           final list = (resp.data['list'] as List?) ?? [];
-           return list.map((v) => {
-             'id': '${v['vod_id']}',
-             'title': v['vod_name'] ?? '',
-             'poster': _fixUrl(v['vod_pic']),
-             'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-             'year': '${v['vod_year'] ?? ''}',
-             'overview': v['vod_remarks'] ?? '',
-           }).toList();
-        }
-      } catch (_) {}
+      // 1. 杰哥：统一使用 jgappapi 插件接口，移除 app_api.php 调用
+      // 原因：app_api.php 在宝塔环境下可能因 open_basedir 限制无法工作
+      // 直接使用 getFiltered 兜底获取最新影片
 
       // 2. 兜底：若 level 查询为空，用 getFiltered 获取最新影片防止白板
       try {
