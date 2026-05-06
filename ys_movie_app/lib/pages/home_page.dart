@@ -48,15 +48,10 @@ class _HomePageState extends State<HomePage>
   // ── 加载状态 ──
   bool _isLoadingTabs = true;
   bool _isLoadingContent = false;
-
-  // ── 内容 ──
-  List<dynamic> _contentList = [];
-  int _currentPage = 1;
-  bool _hasMore = true;
+  int _loadingIndex = -1; // 当前正在加载的分类索引
 
   // ── 下拉刷新 ──
-  final GlobalKey<RefreshIndicatorState> _refreshKey =
-      GlobalKey<RefreshIndicatorState>();
+  final Map<int, GlobalKey<RefreshIndicatorState>> _refreshKeys = {};
 
   // ── 轮播图 ──
   List<dynamic> _bannerList = [];
@@ -187,6 +182,11 @@ class _HomePageState extends State<HomePage>
         } catch (_) {}
       }
     }
+
+    // 修复：确保 _currentTabIndex 不超出范围
+    if (_tabs.isNotEmpty && _currentTabIndex >= _tabs.length) {
+      _currentTabIndex = 0;
+    }
   }
 
   Future<void> _saveCache() async {
@@ -264,7 +264,7 @@ class _HomePageState extends State<HomePage>
       
       if (list.isNotEmpty) {
         _tabs = ['推荐', ...list.map((e) => e['type_name'].toString())];
-        _tabIds = [0, ...list.map((e) => e['type_id'] as int)];
+        _tabIds = [0, ...list.map((e) => int.tryParse('${e['type_id']}') ?? 0)];
 
         _tabController = TabController(length: _tabs.length, vsync: this);
         _tabController.addListener(_onTabChanged);
@@ -273,12 +273,25 @@ class _HomePageState extends State<HomePage>
         _loadContent(0, refresh: true);
         _loadBanner();
         _loadHotWords();
-        _loadAnnouncements();
+        _loadAnnouncements(initData['notice']);
 
         _saveCache();
+      } else {
+        // 修复：如果分类列表为空，设置一个默认的推荐分类，避免 TabBarView 崩溃
+        _tabs = ['推荐'];
+        _tabIds = [0];
+        _tabController = TabController(length: _tabs.length, vsync: this);
+        _tabController.addListener(_onTabChanged);
+        _loadContent(0, refresh: true);
       }
     } catch (e) {
       debugPrint('加载分类失败: $e');
+      // 修复：异常时也设置默认分类，避免 TabBarView 崩溃
+      _tabs = ['推荐'];
+      _tabIds = [0];
+      _tabController = TabController(length: _tabs.length, vsync: this);
+      _tabController.addListener(_onTabChanged);
+      _loadContent(0, refresh: true);
     } finally {
       setState(() => _isLoadingTabs = false);
     }
@@ -319,15 +332,22 @@ class _HomePageState extends State<HomePage>
   }
 
   // ── 加载通知 ──
-  Future<void> _loadAnnouncements() async {
+  Future<void> _loadAnnouncements([dynamic notice]) async {
     try {
-      final api = context.read<MacApi>();
-      // 使用 getAppInit 获取通知（优先使用插件接口）
-      final initData = await api.getAppInit();
-      final notice = initData['notice'];
       if (notice != null) {
         setState(() {
           _announcements = [notice];
+        });
+        _saveCache();
+        return;
+      }
+
+      final api = context.read<MacApi>();
+      final initData = await api.getAppInit();
+      final n = initData['notice'];
+      if (n != null) {
+        setState(() {
+          _announcements = [n];
         });
         _saveCache();
       }
@@ -353,60 +373,82 @@ class _HomePageState extends State<HomePage>
 
   // ── 加载内容 ──
   Future<void> _loadContent(int index, {bool refresh = false}) async {
-    if (_isLoadingContent) return;
+    if (_isLoadingContent && _loadingIndex == index) return;
 
-    setState(() => _isLoadingContent = true);
+    setState(() {
+      _isLoadingContent = true;
+      _loadingIndex = index;
+    });
 
     try {
       final api = context.read<MacApi>();
       final typeId = _tabIds[index];
 
       if (refresh) {
-        _currentPage = 1;
-        _hasMore = true;
+        _pageCache[index] = 1;
+        _hasMoreCache[index] = true;
       }
 
       // 检查缓存
       if (!refresh &&
           _contentCache.containsKey(index) &&
           _contentCache[index]!.isNotEmpty) {
-        setState(() {
-          _contentList = _contentCache[index]!;
-          _currentPage = _pageCache[index] ?? 1;
-          _hasMore = _hasMoreCache[index] ?? true;
-        });
+        // 数据已经在缓存中，_buildContentList 会直接读取缓存
+        setState(() {});
         return;
       }
 
-      // 使用 getFiltered 获取内容（优先使用插件接口）
-      final list = await api.getFiltered(
-        typeId: typeId == 0 ? null : typeId,
-        page: _currentPage,
-        limit: 20,
-        orderby: 'time',
-      );
+      List<dynamic> list = [];
+      
+      // 推荐页（index == 0）优先使用 getAppInit 返回的 recommend_list
+      if (index == 0) {
+        try {
+          final initData = await api.getAppInit();
+          final recommendList = initData['recommend_list'] as List<dynamic>? ?? [];
+          if (recommendList.isNotEmpty) {
+            list = recommendList;
+          }
+        } catch (e) {
+          debugPrint('加载推荐列表失败: $e');
+        }
+      }
+      
+      // 如果没有推荐数据，使用 getFiltered 获取
+      if (list.isEmpty) {
+        final currentPage = _pageCache[index] ?? 1;
+        list = await api.getFiltered(
+          typeId: typeId == 0 ? null : typeId,
+          page: currentPage,
+          limit: 20,
+          orderby: 'time',
+        );
+      }
 
       if (list.isNotEmpty) {
         setState(() {
-          if (refresh) {
-            _contentList = list;
-          } else {
-            _contentList = [..._contentList, ...list];
-          }
-          _hasMore = list.length >= 20;
-          _currentPage++;
+          // 更新缓存，每个分类独立存储
+          final existingList = refresh ? [] : (_contentCache[index] ?? []);
+          _contentCache[index] = [...existingList, ...list];
+          _hasMoreCache[index] = list.length >= 20;
+          _pageCache[index] = (_pageCache[index] ?? 1) + 1;
         });
 
-        // 更新缓存
-        _contentCache[index] = List.from(_contentList);
-        _pageCache[index] = _currentPage;
-        _hasMoreCache[index] = _hasMore;
         _saveCache();
+      } else {
+        // 没有数据，标记为没有更多
+        setState(() {
+          _hasMoreCache[index] = false;
+        });
       }
     } catch (e) {
       debugPrint('加载内容失败: $e');
     } finally {
-      setState(() => _isLoadingContent = false);
+      if (_loadingIndex == index) {
+        setState(() {
+          _isLoadingContent = false;
+          _loadingIndex = -1;
+        });
+      }
     }
   }
 
@@ -414,7 +456,8 @@ class _HomePageState extends State<HomePage>
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingContent && _hasMore) {
+      final hasMore = _hasMoreCache[_currentTabIndex] ?? true;
+      if (!_isLoadingContent && hasMore) {
         _loadContent(_currentTabIndex);
       }
     }
@@ -615,13 +658,15 @@ class _HomePageState extends State<HomePage>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: SlideBanner(
-          images: _bannerList.map((e) => e['vod_pic'].toString()).toList(),
+          images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
           onTap: (index) {
             final item = _bannerList[index];
+            final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+            if (vodId.isEmpty || vodId == '0') return;
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => DetailPage(vodId: item['vod_id']),
+                builder: (_) => DetailPage(vodId: vodId),
               ),
             );
           },
@@ -670,21 +715,27 @@ class _HomePageState extends State<HomePage>
 
   // ── 内容列表 ──
   Widget _buildContentList(int index) {
+    // 使用缓存中的数据，每个分类独立
+    final contentList = _contentCache[index] ?? [];
+    final hasMore = _hasMoreCache[index] ?? true;
+    // 只有当前分类正在加载时才显示加载状态
+    final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
+    
     return RefreshIndicator(
-      key: _refreshKey,
+      key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
       onRefresh: _onRefresh,
-      child: _contentList.isEmpty && _isLoadingContent
+      child: contentList.isEmpty && isLoadingThisCategory
           ? _buildContentShimmer()
-          : _contentList.isEmpty
+          : contentList.isEmpty
               ? _buildEmptyView()
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: _contentList.length + (_hasMore ? 1 : 0),
+                  itemCount: contentList.length + (hasMore ? 1 : 0),
                   itemBuilder: (context, i) {
-                    if (i >= _contentList.length) {
+                    if (i >= contentList.length) {
                       return _buildLoadMoreIndicator();
                     }
-                    return _buildContentCard(_contentList[i]);
+                    return _buildContentCard(contentList[i]);
                   },
                 ),
     );
@@ -693,12 +744,16 @@ class _HomePageState extends State<HomePage>
   // ── 内容卡片 ──
   Widget _buildContentCard(dynamic item) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DetailPage(vodId: item['vod_id']),
-        ),
-      ),
+      onTap: () {
+        final vodId = item['id']?.toString() ?? '';
+        if (vodId.isEmpty) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DetailPage(vodId: vodId),
+          ),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -711,7 +766,7 @@ class _HomePageState extends State<HomePage>
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: CachedNetworkImage(
-                imageUrl: item['vod_pic'],
+                imageUrl: item['poster'] ?? '',
                 width: 120,
                 height: 160,
                 fit: BoxFit.cover,
@@ -736,7 +791,7 @@ class _HomePageState extends State<HomePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['vod_name'],
+                      item['title'] ?? '',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -746,7 +801,7 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${item['vod_year']} · ${item['vod_area']}',
+                      '${item['year'] ?? ''} · ${item['area'] ?? ''}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
@@ -754,7 +809,7 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '导演: ${item['vod_director'] ?? '未知'}',
+                      '导演: ${item['director'] ?? '未知'}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -764,32 +819,13 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '主演: ${item['vod_actor'] ?? '未知'}',
+                      '主演: ${item['actor'] ?? '未知'}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          size: 14,
-                          color: AppColors.warning,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${item['vod_score'] ?? '0.0'}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.warning,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),

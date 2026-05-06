@@ -226,7 +226,6 @@ class _SearchPageState extends State<SearchPage> {
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
-                        Text('评分：${item['score']}', style: const TextStyle(fontSize: 12, color: Colors.orange)),
                         Text(
                           [
                             if ((item['year'] ?? '').toString().isNotEmpty) '${item['year']}',

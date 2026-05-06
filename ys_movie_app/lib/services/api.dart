@@ -792,10 +792,10 @@ class MacApi {
         return list.map((item) {
           final v = item as Map<String, dynamic>;
           return {
-            'id': '${v['vod_id']}',
-            'title': v['vod_name'] ?? '',
-            'poster': _fixUrl(v['vod_pic']),
-            'type': v['type_name'] ?? '',
+            'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+            'title': v['vod_name'] ?? v['title'] ?? '',
+            'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+            'type': v['type_name'] ?? v['type'] ?? '',
           };
         }).toList();
       } catch (e) {
@@ -847,12 +847,12 @@ class MacApi {
       }
       final rows = (resp.data?['list'] as List?) ?? [];
       return rows.map((v) => {
-        'id': '${v['vod_id']}',
-        'title': v['vod_name'] ?? '',
-        'poster': _fixUrl(v['vod_pic']),
-        'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-        'year': '${v['vod_year'] ?? ''}',
-        'overview': v['vod_remarks'] ?? v['vod_blurb'] ?? '',
+        'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+        'title': v['vod_name'] ?? v['title'] ?? '',
+        'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+        'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+        'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+        'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
       }).toList();
     } catch (_) {
       return [];
@@ -1148,12 +1148,15 @@ class MacApi {
                 };
               }).toList(),
           'recommend_list': ((dataMap['recommend_list'] as List?) ?? const []).whereType<Map>().map((v) => {
-                'id': '${v['vod_id']}',
-                'title': v['vod_name'] ?? '',
-                'poster': _fixUrl(v['vod_pic']),
-                'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-                'year': '${v['vod_year'] ?? ''}',
-                'overview': v['vod_remarks'] ?? '',
+                'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+                'title': v['vod_name'] ?? v['title'] ?? '',
+                'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+                'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+                'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+                'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+                'area': v['vod_area'] ?? v['area'] ?? '',
+                'director': v['vod_director'] ?? v['director'] ?? '',
+                'actor': v['vod_actor'] ?? v['actor'] ?? '',
               }).toList(),
           'type_recommend_list': typeList.whereType<Map>().where((t) {
             final id = int.tryParse('${t['type_id'] ?? 0}') ?? 0;
@@ -1416,14 +1419,14 @@ class MacApi {
           final dynamic rawTypeId = v['type_id'] ?? v['type_id_1'] ?? v['type'];
           final int parsedTypeId = int.tryParse('$rawTypeId') ?? 0;
           return {
-            'id': '${v['vod_id']}',
-            'title': v['vod_name'] ?? '',
-            'poster': _fixUrl(v['vod_pic']),
+            'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+            'title': v['vod_name'] ?? v['title'] ?? '',
+            'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
             'type_id': parsedTypeId,
-            'type': v['type_name'] ?? '',
-            'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-            'year': '${v['vod_year'] ?? ''}',
-            'overview': v['vod_remarks'] ?? '',
+            'type': v['type_name'] ?? v['type'] ?? '',
+            'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+            'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+            'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
           };
         }).toList();
       }
@@ -1472,14 +1475,14 @@ class MacApi {
           final dynamic rawTypeId = v['type_id'] ?? v['type_id_1'] ?? v['type'];
           final int parsedTypeId = int.tryParse('$rawTypeId') ?? 0;
           return {
-            'id': '${v['vod_id']}',
-            'title': v['vod_name'] ?? '',
-            'poster': _fixUrl(v['vod_pic']),
+            'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+            'title': v['vod_name'] ?? v['title'] ?? '',
+            'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
             'type_id': parsedTypeId,
-            'type': v['type_name'] ?? '',
-            'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-            'year': '${v['vod_year'] ?? ''}',
-            'overview': v['vod_remarks'] ?? '',
+            'type': v['type_name'] ?? v['type'] ?? '',
+            'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+            'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+            'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
           };
         }).toList();
       }
@@ -1585,21 +1588,22 @@ class MacApi {
         final dynamic rawTypeId = v['type_id'] ?? v['type_id_1'] ?? v['type'];
         final int parsedTypeId = int.tryParse('$rawTypeId') ?? 0;
         return {
-          'id': '${v['vod_id']}',
-          'title': v['vod_name'] ?? '',
-          'poster': _fixUrl(v['vod_pic']),
-          'type': v['type_name'] ?? '',
+          'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+          'title': v['vod_name'] ?? v['title'] ?? '',
+          'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+          'type': v['type_name'] ?? v['type'] ?? '',
           'type_id': parsedTypeId,
-          'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-          'year': '${v['vod_year'] ?? ''}',
-          'overview': v['vod_remarks'] ?? '',
-          'remarks': v['vod_remarks'] ?? '', // 新增字段
-          'blurb': v['vod_blurb'] ?? v['vod_content'] ?? '', // 新增字段
-          'area': v['vod_area'] ?? '',
-          'lang': v['vod_lang'] ?? '',
-          'class': v['type_name'] ?? v['vod_class'] ?? '',
-          'actor': v['vod_actor'] ?? '',
-          'play_url': v['vod_play_url'] ?? '',
+          'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+          'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+          'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+          'remarks': v['vod_remarks'] ?? v['remarks'] ?? '', // 新增字段
+          'blurb': v['vod_blurb'] ?? v['blurb'] ?? v['vod_content'] ?? v['content'] ?? '', // 新增字段
+          'area': v['vod_area'] ?? v['area'] ?? '',
+          'lang': v['vod_lang'] ?? v['lang'] ?? '',
+          'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+          'actor': v['vod_actor'] ?? v['actor'] ?? '',
+          'director': v['vod_director'] ?? v['director'] ?? '',
+          'play_url': v['vod_play_url'] ?? v['play_url'] ?? '',
         };
       }).toList();
     } catch (_) {
@@ -1624,12 +1628,12 @@ class MacApi {
            final list = (resp.data['data']['list'] as List?) ?? [];
            if (list.isNotEmpty) {
              return list.map((v) => {
-               'id': '${v['vod_id']}',
-               'title': v['vod_name'] ?? '',
-               'poster': _fixUrl(v['vod_pic']),
-               'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-               'year': '${v['vod_year'] ?? ''}',
-               'overview': v['vod_remarks'] ?? '',
+               'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+               'title': v['vod_name'] ?? v['title'] ?? '',
+               'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+               'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+               'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+               'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
              }).toList();
            }
         }
@@ -1717,16 +1721,16 @@ class MacApi {
          final list = (resp.data['data']['search_list'] as List?) ?? [];
          final results = list.map((v) {
             return {
-              'id': '${v['vod_id']}',
-              'title': v['vod_name'] ?? '',
-              'poster': _fixUrl(v['vod_pic']),
-              'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-              'year': '${v['vod_year'] ?? ''}',
-              'overview': v['vod_remarks'] ?? v['vod_blurb'] ?? '',
-              'area': v['vod_area'] ?? '',
-              'lang': v['vod_lang'] ?? '',
-              'class': v['type_name'] ?? v['vod_class'] ?? '',
-              'actor': v['vod_actor'] ?? '',
+              'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+              'title': v['vod_name'] ?? v['title'] ?? '',
+              'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+              'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+              'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+              'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+              'area': v['vod_area'] ?? v['area'] ?? '',
+              'lang': v['vod_lang'] ?? v['lang'] ?? '',
+              'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+              'actor': v['vod_actor'] ?? v['actor'] ?? '',
             };
          }).toList();
          
@@ -1751,16 +1755,16 @@ class MacApi {
           final results = list.map((item) {
              final v = item as Map<String, dynamic>;
              return {
-               'id': '${v['vod_id']}',
-               'title': v['vod_name'] ?? '',
-               'poster': _fixUrl(v['vod_pic']),
-               'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-               'year': '${v['vod_year'] ?? ''}',
-               'overview': v['vod_remarks'] ?? '',
-               'area': v['vod_area'] ?? '',
-               'lang': v['vod_lang'] ?? '',
-               'class': v['type_name'] ?? v['vod_class'] ?? '',
-               'actor': v['vod_actor'] ?? '',
+               'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+               'title': v['vod_name'] ?? v['title'] ?? '',
+               'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+               'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+               'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+               'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+               'area': v['vod_area'] ?? v['area'] ?? '',
+               'lang': v['vod_lang'] ?? v['lang'] ?? '',
+               'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+               'actor': v['vod_actor'] ?? v['actor'] ?? '',
              };
           }).toList();
           
@@ -1780,17 +1784,17 @@ class MacApi {
     });
     final rows = (resp.data?['list'] as List?) ?? [];
     final results = rows.map((v) => {
-      'id': '${v['vod_id']}',
-      'title': v['vod_name'] ?? '',
-      'poster': _fixUrl(v['vod_pic']),
-      'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-      'year': '${v['vod_year'] ?? ''}',
+      'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+      'title': v['vod_name'] ?? v['title'] ?? '',
+      'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+      'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+      'year': '${v['vod_year'] ?? v['year'] ?? ''}',
       // 修复：优先使用内容简介
-      'overview': v['vod_content'] ?? v['vod_blurb'] ?? v['vod_remarks'] ?? '',
-      'area': v['vod_area'] ?? '',
-      'lang': v['vod_lang'] ?? '',
-      'class': v['type_name'] ?? v['vod_class'] ?? '',
-      'actor': v['vod_actor'] ?? '',
+      'overview': v['vod_content'] ?? v['vod_blurb'] ?? v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+      'area': v['vod_area'] ?? v['area'] ?? '',
+      'lang': v['vod_lang'] ?? v['lang'] ?? '',
+      'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+      'actor': v['vod_actor'] ?? v['actor'] ?? '',
     }).toList();
     
     // 存入缓存
@@ -2125,20 +2129,21 @@ class MacApi {
               final dynamic rawTypeId = v['type_id'] ?? v['type_id_1'] ?? v['type'];
               final int parsedTypeId = int.tryParse('$rawTypeId') ?? 0;
               return {
-                'id': '${v['vod_id']}',
-                'title': v['vod_name'] ?? '',
-                'poster': _fixUrl(v['vod_pic']),
+                'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+                'title': v['vod_name'] ?? v['title'] ?? '',
+                'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
                 'type_id': parsedTypeId,
-                'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-                'year': '${v['vod_year'] ?? ''}',
-                'overview': v['vod_remarks'] ?? '',
-                'remarks': v['vod_remarks'] ?? '', // 新增字段
-                'blurb': v['vod_blurb'] ?? v['vod_content'] ?? '', // 新增字段
-                'area': v['vod_area'] ?? '',
-                'lang': v['vod_lang'] ?? '',
-                'class': v['type_name'] ?? v['vod_class'] ?? '',
-                'actor': v['vod_actor'] ?? '',
-                'play_url': v['vod_play_url'] ?? '',
+                'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+                'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+                'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+                'remarks': v['vod_remarks'] ?? v['remarks'] ?? '', // 新增字段
+                'blurb': v['vod_blurb'] ?? v['blurb'] ?? v['vod_content'] ?? v['content'] ?? '', // 新增字段
+                'area': v['vod_area'] ?? v['area'] ?? '',
+                'lang': v['vod_lang'] ?? v['lang'] ?? '',
+                'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+                'actor': v['vod_actor'] ?? v['actor'] ?? '',
+                'director': v['vod_director'] ?? v['director'] ?? '',
+                'play_url': v['vod_play_url'] ?? v['play_url'] ?? '',
               };
             }).toList();
             
@@ -2173,26 +2178,29 @@ class MacApi {
             final dynamic rawTypeId = v['type_id'] ?? v['type_id_1'] ?? v['type'];
             final int parsedTypeId = int.tryParse('$rawTypeId') ?? 0;
             return {
-              'id': '${v['vod_id']}',
-              'title': v['vod_name'] ?? '',
-              'poster': _fixUrl(v['vod_pic']),
+              'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+              'title': v['vod_name'] ?? v['title'] ?? '',
+              'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
               'type_id': parsedTypeId,
-              'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-              'year': '${v['vod_year'] ?? ''}',
-              'overview': v['vod_remarks'] ?? '',
-              'area': v['vod_area'] ?? '',
-              'lang': v['vod_lang'] ?? '',
-              'class': v['type_name'] ?? v['vod_class'] ?? '',
-              'actor': v['vod_actor'] ?? '',
-              'play_url': v['vod_play_url'] ?? '',
+              'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+              'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+              'overview': v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+              'area': v['vod_area'] ?? v['area'] ?? '',
+              'lang': v['vod_lang'] ?? v['lang'] ?? '',
+              'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+              'actor': v['vod_actor'] ?? v['actor'] ?? '',
+              'director': v['vod_director'] ?? v['director'] ?? '',
+              'play_url': v['vod_play_url'] ?? v['play_url'] ?? '',
             };
           }).toList();
           
           if (results.isNotEmpty) {
-            // 客户端二次校验分类ID
-            final validated = _filterByTypeId(typeId, results);
-            _categoryCache.set(cacheKey, validated);
-            return validated;
+            // 客户端二次校验分类ID（app_api.php 已按 t=typeId 筛选，传入 apiAlreadyFiltered=true）
+            final validated = _filterByTypeId(typeId, results, apiAlreadyFiltered: true);
+            if (validated.isNotEmpty) {
+              _categoryCache.set(cacheKey, validated);
+              return validated;
+            }
           }
        }
     } catch (_) {
@@ -2202,7 +2210,8 @@ class MacApi {
     // 3. 最终兜底：使用标准API
     try {
       final list = await _fetchStandardList(typeId: typeId, page: page, limit: limit, by: orderby);
-      final validated = _filterByTypeId(typeId, list);
+      // 标准API已按 t=typeId 筛选，传入 apiAlreadyFiltered=true
+      final validated = _filterByTypeId(typeId, list, apiAlreadyFiltered: true);
       if (validated.isNotEmpty) {
         _categoryCache.set(cacheKey, validated);
         return validated;
@@ -2211,15 +2220,18 @@ class MacApi {
     return [];
   }
 
-  List<Map<String, dynamic>> _filterByTypeId(int? typeId, List<Map<String, dynamic>> items) {
+  List<Map<String, dynamic>> _filterByTypeId(int? typeId, List<Map<String, dynamic>> items, {bool apiAlreadyFiltered = false}) {
     if (typeId == null) return items;
     final filtered = items.where((e) {
       final raw = e['type_id'];
       final tid = int.tryParse('$raw') ?? 0;
-      if (tid == 0) return true;
+      // 修复：如果 API 已经按 typeId 筛选过，且数据没有 type_id 字段，保留数据
+      // 因为标准API已经按 t=typeId 筛选了，返回的数据就是该分类的
+      if (tid == 0) return apiAlreadyFiltered;
       return tid == typeId;
     }).toList();
-    return filtered.isNotEmpty ? filtered : items;
+    // 修复：如果过滤后有数据，返回过滤结果；否则返回空列表，避免显示错误分类的数据
+    return filtered.isNotEmpty ? filtered : [];
   }
 
   /// 开发者：杰哥

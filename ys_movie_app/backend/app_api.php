@@ -136,7 +136,7 @@ if ($ac == 'init') {
         ->where('vod_level', 8)
         ->order('vod_hits desc')
         ->limit(10)
-        ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year')
+        ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_area, vod_director, vod_actor')
         ->select();
     
     // 杰哥兜底：如果后台没设 level=8 的推荐视频，自动用最新影片填充
@@ -145,7 +145,7 @@ if ($ac == 'init') {
             ->where('vod_status', 1)
             ->order('vod_time desc')
             ->limit(10)
-            ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year')
+            ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_area, vod_director, vod_actor')
             ->select();
     }
     
@@ -179,6 +179,18 @@ if ($ac == 'init') {
         }
     }
     $data['type_recommend_list'] = $type_recommend_list;
+
+    // 5. 分类列表 (供 Flutter 首页 Tab 使用)
+    $type_list = \think\Db::name('type')
+        ->where('type_status', 1)
+        ->where('type_pid', 0)
+        ->order('type_sort asc')
+        ->field('type_id, type_name, type_status as enabled')
+        ->select();
+    foreach ($type_list as &$t) {
+        $t['enabled'] = (int)$t['enabled'];
+    }
+    $data['type_list'] = $type_list;
 
     echo json_encode($data);
     exit;
@@ -384,7 +396,7 @@ if ($ac == 'list') {
         ->where($where)
         ->order($order)
         ->page($page, $limit)
-        ->field('vod_id, type_id, type_id_1, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_actor')
+        ->field('vod_id, type_id, type_id_1, vod_name, vod_pic, vod_remarks, vod_score, vod_year, vod_area, vod_lang, vod_class, vod_actor, vod_director')
         ->select();
 
     foreach ($list as &$v) {
@@ -431,7 +443,10 @@ if ($ac == 'search') {
                     'vod_score' => $doc->vod_score,
                     'vod_year' => $doc->vod_year,
                     'vod_area' => $doc->vod_area,
+                    'vod_lang' => $doc->vod_lang,
                     'vod_class' => $doc->vod_class,
+                    'vod_actor' => $doc->vod_actor,
+                    'vod_director' => $doc->vod_director,
                 ];
             }
             $used_xs = true;
@@ -465,7 +480,10 @@ if ($ac == 'search') {
                     'vod_score' => $v['vod_score'],
                     'vod_year' => $v['vod_year'],
                     'vod_area' => $v['vod_area'],
+                    'vod_lang' => $v['vod_lang'],
                     'vod_class' => $v['vod_class'],
+                    'vod_actor' => $v['vod_actor'],
+                    'vod_director' => $v['vod_director'],
                 ];
             }
         }

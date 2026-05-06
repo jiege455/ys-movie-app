@@ -447,14 +447,6 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(Icons.star, size: 14, color: AppColors.warning),
-                              const SizedBox(width: 4),
-                              Text('${item['score'] ?? '0.0'}', style: const TextStyle(fontSize: 13, color: AppColors.warning, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
                           if ((item['actor'] ?? '').toString().isNotEmpty) ...[
                             const SizedBox(height: 6),
                             Wrap(
