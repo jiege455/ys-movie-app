@@ -351,6 +351,20 @@ class CastManager {
     return await _currentEngine?.getPosition() ?? 0;
   }
 
+  /// 取消心跳检测（用于拖动进度条时避免冲突）
+  void cancelHeartbeat() {
+    if (_currentEngine is BaseCastEngine) {
+      (_currentEngine as BaseCastEngine).cancelHeartbeat();
+    }
+  }
+
+  /// 恢复心跳检测
+  void startHeartbeat() {
+    if (_currentEngine is BaseCastEngine) {
+      (_currentEngine as BaseCastEngine).startHeartbeat();
+    }
+  }
+
   /// 网络变化处理
   void _onNetworkChanged(List<ConnectivityResult> results) {
     if (results.contains(ConnectivityResult.none)) {

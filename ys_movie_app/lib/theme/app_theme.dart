@@ -35,6 +35,11 @@ class AppColors {
   static const Color darkCard = Color(0xFF1E293B);
   static const Color darkElevated = Color(0xFF27354F);
 
+  // === 纹理相关颜色 ===
+  static const Color gridLine = Color(0x0D38BDF8);      // 极淡蓝色网格线 (5%透明度)
+  static const Color noiseTint = Color(0x0838BDF8);     // 噪点蓝色色调 (3%透明度)
+  static const Color radialGlow = Color(0x1A38BDF8);    // 径向光晕 (10%透明度)
+
   // === 功能色 ===
   static const Color success = Color(0xFF22C55E);
   static const Color warning = Color(0xFFF59E0B);
@@ -215,6 +220,30 @@ class AppGradients {
       AppColors.slate200.withOpacity(0.5),
     ],
     stops: const [0.0, 0.5, 1.0],
+  );
+
+  /// 深色背景径向渐变 - 中心蓝色光晕效果
+  static RadialGradient get darkRadialGlow => RadialGradient(
+    center: const Alignment(0.3, -0.5),
+    radius: 0.8,
+    colors: [
+      AppColors.radialGlow.withOpacity(0.15),
+      AppColors.radialGlow.withOpacity(0.05),
+      Colors.transparent,
+    ],
+    stops: const [0.0, 0.5, 1.0],
+  );
+
+  /// 深色背景底部光晕
+  static RadialGradient get darkBottomGlow => RadialGradient(
+    center: const Alignment(0.0, 1.2),
+    radius: 0.6,
+    colors: [
+      AppColors.primary.withOpacity(0.08),
+      AppColors.primary.withOpacity(0.02),
+      Colors.transparent,
+    ],
+    stops: const [0.0, 0.4, 1.0],
   );
 }
 
@@ -510,4 +539,84 @@ class GradientText extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 带纹理的深色背景 Widget
+/// 包含：径向渐变光晕 + 网格纹理 + 底部光晕
+class TexturedBackground extends StatelessWidget {
+  final Widget child;
+
+  const TexturedBackground({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (!isDark) {
+      return Container(
+        color: AppColors.slate50,
+        child: child,
+      );
+    }
+
+    return Container(
+      color: AppColors.darkBackground,
+      child: Stack(
+        children: [
+          // 第一层：径向渐变光晕（右上角）
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppGradients.darkRadialGlow,
+              ),
+            ),
+          ),
+          // 第二层：底部光晕
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppGradients.darkBottomGlow,
+              ),
+            ),
+          ),
+          // 第三层：网格纹理
+          Positioned.fill(
+            child: CustomPaint(
+              painter: GridPatternPainter(),
+            ),
+          ),
+          // 内容层
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// 网格纹理绘制器
+class GridPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.gridLine
+      ..strokeWidth = 0.5;
+
+    const gridSize = 40.0;
+
+    // 绘制垂直线
+    for (double x = 0; x < size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    // 绘制水平线
+    for (double y = 0; y < size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -156,6 +156,19 @@ abstract class BaseCastEngine implements CastEngine {
     _heartbeatTimer = null;
   }
 
+  /// 取消心跳检测（公开方法，供外部临时暂停）
+  void cancelHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+  }
+
+  /// 恢复心跳检测（公开方法）
+  void startHeartbeat() {
+    if (_isConnected) {
+      _startHeartbeat();
+    }
+  }
+
   /// 心跳回调，子类可重写
   Future<void> onHeartbeat() async {}
 

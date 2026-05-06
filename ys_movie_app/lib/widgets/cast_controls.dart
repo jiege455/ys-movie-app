@@ -155,11 +155,43 @@ class _CastControlsState extends State<CastControls> {
             children: [
               Text(
                 _isDragging ? _formatDuration(((_dragValue * state.duration) / 1000).floor()) : state.formattedPosition,
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              // 音量显示
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    state.volume == 0
+                        ? Icons.volume_off
+                        : state.volume < 50
+                            ? Icons.volume_down
+                            : Icons.volume_up,
+                    color: Colors.white70,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${state.volume}%',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
               Text(
                 state.formattedDuration,
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
               ),
             ],
           ),

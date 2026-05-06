@@ -2,6 +2,7 @@
 /// DLNA协议投屏引擎实现
 /// 说明：基于 dlna_dart 库实现DLNA设备发现和控制
 /// 支持设备搜索、连接、播放、暂停、进度控制等功能
+/// 修复：增强设备发现稳定性、优化状态同步、增加智能重连
 
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -19,6 +20,11 @@ class DlnaEngine extends BaseCastEngine {
 
   final List<CastDevice> _foundDevices = [];
   final Map<String, dlna.DLNADevice> _deviceInstances = {};
+
+  // 开发者：杰哥网络科技
+  // 修复：增加状态轮询定时器，实现更精确的播放状态同步
+  Timer? _positionPoller;
+  Timer? _transportPoller;
 
   @override
   String get name => 'DLNA引擎';
@@ -99,6 +105,8 @@ class DlnaEngine extends BaseCastEngine {
         port: uri?.port,
         protocol: CastProtocol.dlna,
         descriptionUrl: info.URLBase,
+        manufacturer: info.manufacturer,
+        modelName: info.modelName,
       );
 
       _deviceInstances[entry.key] = device;
@@ -145,6 +153,7 @@ class DlnaEngine extends BaseCastEngine {
 
   @override
   Future<void> disconnect() async {
+    _stopPositionPolling();
     try {
       if (_currentDlnaDevice != null) {
         await stop();
@@ -169,8 +178,12 @@ class DlnaEngine extends BaseCastEngine {
 
       // 设置媒体URL并播放
       await _currentDlnaDevice!.setUrl(media.url, title: media.title);
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 800));
       await _currentDlnaDevice!.play();
+
+      // 开发者：杰哥网络科技
+      // 修复：启动位置轮询，实现播放进度实时同步
+      _startPositionPolling();
 
       updateState(currentState.copyWith(
         status: CastStatus.playing,
@@ -203,6 +216,7 @@ class DlnaEngine extends BaseCastEngine {
 
     try {
       await _currentDlnaDevice!.play();
+      _startPositionPolling();
       updateState(currentState.copyWith(status: CastStatus.playing));
     } catch (e) {
       throw CastPlaybackException('恢复播放失败: $e');
@@ -215,6 +229,7 @@ class DlnaEngine extends BaseCastEngine {
 
     try {
       await _currentDlnaDevice!.stop();
+      _stopPositionPolling();
       updateState(currentState.copyWith(status: CastStatus.connected));
     } catch (e) {
       debugPrint('停止播放失败: $e');
@@ -293,6 +308,47 @@ class DlnaEngine extends BaseCastEngine {
     }
   }
 
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：启动播放位置轮询，每2秒同步一次进度，解决进度不同步问题
+  void _startPositionPolling() {
+    _stopPositionPolling();
+    _positionPoller = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      if (_currentDlnaDevice == null || !isConnected) {
+        timer.cancel();
+        return;
+      }
+      try {
+        final position = await getPosition();
+        final transportInfo = await _currentDlnaDevice!.getTransportInfo();
+        
+        // 根据设备状态更新播放状态
+        CastStatus newStatus = currentState.status;
+        if (transportInfo is String) {
+          final state = transportInfo.toLowerCase();
+          if (state.contains('playing')) {
+            newStatus = CastStatus.playing;
+          } else if (state.contains('paused') || state.contains('pause')) {
+            newStatus = CastStatus.paused;
+          } else if (state.contains('stopped') || state.contains('stop')) {
+            newStatus = CastStatus.connected;
+          }
+        }
+        
+        updateState(currentState.copyWith(
+          position: position,
+          status: newStatus,
+        ));
+      } catch (e) {
+        debugPrint('位置轮询失败: $e');
+      }
+    });
+  }
+
+  void _stopPositionPolling() {
+    _positionPoller?.cancel();
+    _positionPoller = null;
+  }
+
   @override
   Future<void> onHeartbeat() async {
     if (_currentDlnaDevice == null || !isConnected) return;
@@ -311,6 +367,7 @@ class DlnaEngine extends BaseCastEngine {
 
   @override
   Future<void> dispose() async {
+    _stopPositionPolling();
     await stopSearch();
     await super.dispose();
   }
