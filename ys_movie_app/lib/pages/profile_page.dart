@@ -461,19 +461,19 @@ class ProfilePageState extends State<ProfilePage> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withAlpha(30),
+                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.diamond, size: 12, color: Colors.amber[700]),
+                                      Icon(Icons.diamond, size: 12, color: Theme.of(context).colorScheme.secondary),
                                       const SizedBox(width: 4),
                                       Text(
                                         userInfo?['is_vip'] == true ? 'VIP会员' : '普通会员',
                                         style: TextStyle(
                                           fontSize: 10, 
-                                          color: Colors.amber[700],
+                                          color: Theme.of(context).colorScheme.secondary,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -482,7 +482,7 @@ class ProfilePageState extends State<ProfilePage> {
                                 ),
                               )
                             else
-                              const Text('登录同步云端数据', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              Text('登录同步云端数据', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                           ],
                         ),
                       ),
@@ -537,9 +537,9 @@ class ProfilePageState extends State<ProfilePage> {
                               children: [
                                 const Text('观看历史', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                 Row(
-                                  children: const [
-                                    Text('全部', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                    Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+                                  children: [
+                                    Text('全部', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                                    Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                                   ],
                                 ),
                               ],
@@ -547,9 +547,9 @@ class ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 16),
                           if (historyList.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(child: Text('暂无观看历史', style: TextStyle(color: Colors.grey))),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Center(child: Text('暂无观看历史', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)))),
                             )
                           else
                             SizedBox(
@@ -585,7 +585,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                       bottom: 0, left: 0, right: 0,
                                                       child: LinearProgressIndicator(
                                                         value: item['progressVal'] as double? ?? 0,
-                                                        backgroundColor: isDark ? Colors.white30 : Colors.black12,
+                                                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                                                         valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                                                         minHeight: 2,
                                                       ),
@@ -603,7 +603,7 @@ class ProfilePageState extends State<ProfilePage> {
                                           ),
                                           Text(
                                             item['progress'] ?? '继续观看',
-                                            style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                                           ),
                                         ],
                                       ),
@@ -698,8 +698,8 @@ class ProfilePageState extends State<ProfilePage> {
                                   right: 20,
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.error,
                                       shape: BoxShape.circle,
                                     ),
                                     constraints: const BoxConstraints(
@@ -708,8 +708,8 @@ class ProfilePageState extends State<ProfilePage> {
                                     ),
                                     child: Text(
                                       '$_noticeCount',
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onError,
                                         fontSize: 10,
                                       ),
                                       textAlign: TextAlign.center,
@@ -728,7 +728,7 @@ class ProfilePageState extends State<ProfilePage> {
                     
                     const SizedBox(height: 30),
                     if (!_hideVersion)
-                      Text('$_versionLabel @ 杰哥影视', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      Text('$_versionLabel @ 杰哥影视', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -747,7 +747,7 @@ class ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(count, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Removed hardcoded color
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ],
       ),
     );
@@ -761,7 +761,7 @@ class ProfilePageState extends State<ProfilePage> {
         children: [
           Icon(icon, size: 24, color: primaryColor),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ],
       ),
     );
@@ -779,7 +779,7 @@ class ProfilePageState extends State<ProfilePage> {
           children: [
             Icon(icon, size: 28, color: primaryColor),
             const SizedBox(height: 8),
-            Text(label, style: TextStyle(fontSize: 12, color: primaryColor.withAlpha(180)), textAlign: TextAlign.center),
+            Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)), textAlign: TextAlign.center),
           ],
         ),
       ),

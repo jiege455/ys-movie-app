@@ -167,7 +167,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text('狐狸影视', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             if (!hideVer) ...[
               const SizedBox(height: 8),
-              Text('Version $_version', style: const TextStyle(color: Colors.grey)),
+              Text('Version $_version', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             ],
             const SizedBox(height: 16),
             const Text('我们致力于提供最优质的影视观看体验。\n如有侵权请联系我们删除。', textAlign: TextAlign.center),
@@ -230,7 +230,7 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         final bg = Theme.of(ctx).cardColor;
-        final textColor = isDark ? Colors.white : Colors.black87;
+        final textColor = Theme.of(ctx).colorScheme.onSurface;
         final primary = Theme.of(ctx).colorScheme.primary;
         return Container(
           decoration: BoxDecoration(
@@ -270,8 +270,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle: '明亮清新',
                 icon: Icons.wb_sunny,
                 iconColor: const Color(0xFF00BFFF),
-                bgColor: Colors.white,
-                textColor: Colors.black87,
+                bgColor: Theme.of(context).cardColor,
+                textColor: Theme.of(context).colorScheme.onSurface,
                 isSelected: themeProvider.themeStyle == 'light',
                 onTap: () {
                   themeProvider.setThemeStyle('light');
@@ -288,7 +288,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icons.nights_stay,
                 iconColor: Theme.of(context).colorScheme.primary,
                 bgColor: Theme.of(context).scaffoldBackgroundColor,
-                textColor: Colors.white,
+                textColor: Theme.of(context).colorScheme.onSurface,
                 isSelected: themeProvider.themeStyle == 'dark',
                 onTap: () {
                   themeProvider.setThemeStyle('dark');
@@ -492,8 +492,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (mounted) Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[50],
-                  foregroundColor: Colors.red,
+                  backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                  foregroundColor: Theme.of(context).colorScheme.error,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 0,
                 ),

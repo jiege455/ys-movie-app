@@ -1,4 +1,4 @@
-/// 文件名：api.dart
+﻿/// 文件名：api.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2025-12-16
 /// 作用：MacCMS10 接口封装（首页初始化、分类筛选、详情、评论、弹幕、登录等）
@@ -1657,43 +1657,26 @@ class MacApi {
         }
       } catch (_) {}
 
-      // 2. 插件兜底：移除自动兜底逻辑
-      // 开发者：杰哥
-      // 原因：首页有专门的兜底逻辑（限制数量），这里如果自动填充会导致首页误判为“已配置推荐”而显示过多数据。
-      // 如果后台没配置 level 推荐，就应该返回空。
-      /*
+      // 2. 兜底：若 level 查询为空，用 getFiltered 获取最新影片防止白板
       try {
-        final hot = await getFiltered(orderby: 'hits', limit: limit);
-        if (hot.isNotEmpty) return hot;
-        final good = await getFiltered(orderby: 'score', limit: limit);
-        if (good.isNotEmpty) return good;
+        final fallback = await getFiltered(orderby: 'time', limit: limit);
+        if (fallback.isNotEmpty) {
+          return fallback.map((v) => {
+            'id': '${v['id']}',
+            'title': v['title'] ?? '',
+            'poster': v['poster'] ?? '',
+            'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
+            'year': '${v['year'] ?? ''}',
+            'overview': v['overview'] ?? '',
+          }).toList();
+        }
       } catch (_) {}
-      */
-
-      // 3. 尝试标准接口 (provide/vod/) - 已移除
-      // 开发者：杰哥
-      // 原因：用户明确要求仅通过插件后台获取数据，不需要开启 CMS 开放 API。
-      // 如果插件配置正确，数据应包含在 init 接口的 recommend_list 中，或通过 jgappapi 获取。
-      /*
-      try {
-        final resp = await _dio.get('provide/vod/', queryParameters: {
-          'ac': 'detail', // 使用 detail 获取图片和 vod_level
-          'level': level,
-          'pagesize': limit,
-          'at': 'json',
-        });
-        // ...
-      } catch (_) {}
-      */
 
       return [];
     } catch (_) {
       return [];
     }
-  }
-
-
-  /// 解析热搜词（支持数组或逗号分隔字符串）
+      return [];
   List<String> _parseHotSearch(Map data) {
     dynamic raw = data['hot_search_list'] ?? data['search_hot'];
     if (raw == null) return [];
@@ -2109,8 +2092,6 @@ class MacApi {
     final cached = _categoryCache.get(cacheKey);
     if (cached != null) return cached;
 
-    await detectInterfaces();
-
     // 1. 尝试 JgApp 插件接口 (jgappapi.index/typeFilterVodList)
     // 支持高级筛选：class, area, lang, year, sort
     try {
@@ -2186,10 +2167,9 @@ class MacApi {
        }
     } catch (_) {}
 
-    // 2. 优先使用 app_api.php 的高级筛选接口
+    // 2. 尝试 app_api.php 自定义接口
     final customApiUrl = '${rootUrl}app_api.php';
     try {
-       if (_customApiOk == false) { throw Exception('custom disabled'); }
        final params = {
          'ac': 'list',
          'pg': page,
@@ -2236,17 +2216,15 @@ class MacApi {
       // 忽略错误，降级处理
     }
 
-    // 兜底：无论是否带有高级筛选参数，若前两个接口失败或无数据，
-    // 使用标准API返回“分类+排序”的列表，避免出现白板
-    // 修复：如果标准接口 closed，则不尝试
-    if (_standardApiOk != false) {
+    // 3. 最终兜底：使用标准API
+    try {
       final list = await _fetchStandardList(typeId: typeId, page: page, limit: limit, by: orderby);
       final validated = _filterByTypeId(typeId, list);
       if (validated.isNotEmpty) {
         _categoryCache.set(cacheKey, validated);
         return validated;
       }
-    }
+    } catch (_) {}
     return [];
   }
 

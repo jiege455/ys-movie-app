@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api.dart';
+import '../theme/app_theme.dart';
 import 'detail_page.dart';
 // by：杰哥 
 // qq： 2711793818
@@ -195,14 +196,12 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           height: 40,
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? Theme.of(context).colorScheme.surface
-                                : Colors.white.withAlpha((255 * 0.7).round()),
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isDark
                                   ? Colors.white.withOpacity(0.1)
-                                  : Colors.white.withOpacity(0.8),
+                                  : Theme.of(context).dividerColor,
                               width: 1,
                             ),
                           ),
@@ -212,9 +211,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                               value: _selectedTypeId == 0 ? null : _selectedTypeId,
                               hint: const Text('选择分类'),
                               style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
-                              dropdownColor: isDark
-                                  ? Theme.of(context).colorScheme.surface
-                                  : Colors.white,
+                              dropdownColor: Theme.of(context).cardColor,
                               items: _typeList.map((t) {
                                 final id = int.tryParse('${t['type_id'] ?? 0}') ?? 0;
                                 final name = (t['type_name'] ?? '').toString();
@@ -237,14 +234,12 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Theme.of(context).colorScheme.surface
-                              : Colors.white.withAlpha((255 * 0.7).round()),
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isDark
                                 ? Colors.white.withOpacity(0.1)
-                                : Colors.white.withOpacity(0.8),
+                                : Theme.of(context).dividerColor,
                             width: 1,
                           ),
                         ),
@@ -373,18 +368,18 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
           children: [
             const Icon(Icons.sentiment_dissatisfied, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('暂无数据', style: TextStyle(color: Colors.grey)),
+            Text('暂无数据', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
                  setState(() => loading = true);
                  _loadData();
               },
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              label: const Text('点我刷新', style: TextStyle(color: Colors.white)),
+              icon: const Icon(Icons.refresh),
+              label: const Text('点我刷新'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
             ),
           ],
@@ -435,25 +430,25 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                               if ((item['area'] ?? '').toString().isNotEmpty) '${item['area']}',
                               if ((item['lang'] ?? '').toString().isNotEmpty) '${item['lang']}',
                             ].join(' · '),
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
                           Text(
                             '导演：${item['director'] ?? '未知'}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
                           Text(
                             '主演：${item['actor'] ?? '未知'}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
                           Row(
                             children: [
-                              const Icon(Icons.star, size: 14, color: Colors.orange),
+                              const Icon(Icons.star, size: 14, color: AppColors.warning),
                               const SizedBox(width: 4),
-                              Text('${item['score'] ?? '0.0'}', style: const TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.bold)),
+                              Text('${item['score'] ?? '0.0'}', style: const TextStyle(fontSize: 13, color: AppColors.warning, fontWeight: FontWeight.bold)),
                             ],
                           ),
                           if ((item['actor'] ?? '').toString().isNotEmpty)

@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -97,21 +97,21 @@ class _LoginPageState extends State<LoginPage> {
               '请登录您的账号以继续',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white60 : Colors.black54,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 32),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.white10 : Colors.grey[100],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _nameCtrl,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: '用户名',
-                  hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38),
+                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                   prefixIcon: Icon(Icons.person_outline, color: scheme.primary),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -121,21 +121,21 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.white10 : Colors.grey[100],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _pwdCtrl,
                 obscureText: _obscure,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: '密码',
-                  hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38),
+                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                   prefixIcon: Icon(Icons.lock_outline, color: scheme.primary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscure ? Icons.visibility_off : Icons.visibility,
-                      color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),

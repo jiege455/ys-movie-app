@@ -79,11 +79,9 @@ class _HistoryPageState extends State<HistoryPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: Text('播放记录', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('播放记录', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        backgroundColor: isDark ? Theme.of(context).appBarTheme.backgroundColor : Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -99,9 +97,9 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.history, size: 64, color: Colors.grey),
+                  Icon(Icons.history, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                   const SizedBox(height: 16),
-                  Text('暂无播放记录', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey)),
+                  Text('暂无播放记录', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
                 ],
               ),
             )
@@ -113,15 +111,8 @@ class _HistoryPageState extends State<HistoryPage> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? Theme.of(context).cardColor : Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha((255 * 0.05).round()),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(8),
@@ -132,15 +123,15 @@ class _HistoryPageState extends State<HistoryPage> {
                         width: 50,
                         height: 70,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
-                        errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.movie)),
+                        placeholder: (_, __) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                        errorWidget: (_, __, ___) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest, child: const Icon(Icons.movie)),
                       ),
                     ),
                     title: Text(
                       item['title']!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                     ),
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -151,7 +142,7 @@ class _HistoryPageState extends State<HistoryPage> {
                             Text(item['progress']!, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary)),
                           Text(
                             '上次观看：${_formatTime(item['time'])}',
-                            style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                           ),
                         ],
                       ),

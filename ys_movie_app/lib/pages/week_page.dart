@@ -45,13 +45,13 @@ class _WeekPageState extends State<WeekPage> with SingleTickerProviderStateMixin
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: isDark ? Theme.of(context).cardColor : Colors.white,
+            color: Theme.of(context).cardColor,
             child: TabBar(
               controller: _tabCtrl,
               isScrollable: true,
               tabAlignment: TabAlignment.center,
               labelColor: Colors.white,
-              unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
+              unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               indicatorSize: TabBarIndicatorSize.label,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(50),

@@ -364,21 +364,18 @@ class _MessageCenterPageState extends State<MessageCenterPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('消息中心'),
-        // 使用主题默认配色
         bottom: TabBar(
           controller: _tabCtrl,
-          indicatorColor: isDark ? scheme.primary : scheme.primary,
-          labelColor: isDark ? Colors.white : Colors.black87,
-          unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
+          indicatorColor: scheme.primary,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           tabs: const [
             Tab(text: '系统公告'),
             Tab(text: '我的消息'),
           ],
         ),
       ),
-      body: Container(
-        color: isDark ? null : Theme.of(context).colorScheme.surface.withOpacity(0.02),
-        child: TabBarView(
+      body: TabBarView(
           controller: _tabCtrl,
           children: const [
             _NoticeListTab(),
@@ -443,18 +440,10 @@ class _NoticeListTabState extends State<_NoticeListTab> {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (ctx, i) {
           final item = _items[i];
-          final isDark = Theme.of(context).brightness == Brightness.dark;
           return Container(
             decoration: BoxDecoration(
-              color: isDark ? Theme.of(context).cardColor : Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255 * 0.05).round()),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -755,15 +744,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
           
           return Container(
             decoration: BoxDecoration(
-              color: isDark ? Theme.of(context).cardColor : Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255 * 0.05).round()),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -808,7 +790,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                     child: Text(
                       item['content'] ?? '',
                       style: TextStyle(
-                        color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 14,
                         height: 1.4,
                       ),
@@ -840,7 +822,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                                 item['reply_content'] ?? '',
                                 style: TextStyle(
                                   fontSize: 14, 
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   height: 1.4,
                                 ),
                               ),

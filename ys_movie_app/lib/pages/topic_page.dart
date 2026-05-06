@@ -107,31 +107,23 @@ class _TopicPageState extends State<TopicPage> {
                           onTap: () => _openTopic(t),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isDark ? Theme.of(context).cardColor : Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha((255 * 0.05).round()),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
-                            clipBehavior: Clip.antiAlias, // 确保子组件不溢出圆角
+                            clipBehavior: Clip.antiAlias,
                             child: Row(
                               children: [
-                                // Poster (Left)
                                 AspectRatio(
-                                  aspectRatio: 1.0, // 正方形封面
+                                  aspectRatio: 1.0,
                                   child: CachedNetworkImage(
                                     imageUrl: poster,
                                     fit: BoxFit.cover,
                                     placeholder: (_, __) => Container(
-                                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                       child: const Center(child: Icon(Icons.image, size: 20, color: Colors.grey)),
                                     ),
                                     errorWidget: (_, __, ___) => Container(
-                                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                       child: const Center(child: Icon(Icons.broken_image, size: 20, color: Colors.grey)),
                                     ),
                                   ),
@@ -152,7 +144,7 @@ class _TopicPageState extends State<TopicPage> {
                                           style: TextStyle(
                                             fontSize: 14, 
                                             fontWeight: FontWeight.bold,
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: Theme.of(context).colorScheme.onSurface,
                                           ),
                                         ),
                                         const SizedBox(height: 4),

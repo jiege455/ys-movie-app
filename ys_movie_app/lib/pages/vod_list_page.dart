@@ -228,16 +228,16 @@ class _VodListPageState extends State<VodListPage> {
               children: [
                 if (_isCachePage && rootPath.isNotEmpty)
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                    color: isDark ? Colors.white10 : Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                    child: Text(
-                      '存储路径：$rootPath',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
-                    ),
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: Text(
+                    '存储路径：$rootPath',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
+                ),
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -282,14 +282,19 @@ class _VodListPageState extends State<VodListPage> {
                           decoration: BoxDecoration(
                             color: selected
                                 ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
-                                : (isDark ? Theme.of(context).cardColor : Colors.white),
+                                : Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(8),
                             border: selected
                                 ? Border.all(color: Theme.of(context).colorScheme.primary, width: 1)
                                 : null,
-                            boxShadow: [
+                            boxShadow: selected ? [
                               BoxShadow(
-                                color: Colors.black.withAlpha((255 * 0.05).round()),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                blurRadius: 6,
+                              )
+                            ] : [
+                              BoxShadow(
+                                color: Theme.of(context).dividerColor.withOpacity(0.3),
                                 blurRadius: 4,
                               )
                             ],
@@ -326,7 +331,7 @@ class _VodListPageState extends State<VodListPage> {
                                         (item['title'] ?? '').toString(),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                                       ),
                                       const SizedBox(height: 6),
                                       if (item['progress'] != null)

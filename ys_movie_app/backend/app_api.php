@@ -101,6 +101,16 @@ if ($ac == 'init') {
         ->field('vod_id, vod_name, vod_pic, vod_pic_slide, vod_remarks, type_id')
         ->select();
     
+    // 杰哥兜底：如果后台没设 level=9 的轮播视频，自动用最新影片填充
+    if (empty($banner_list)) {
+        $banner_list = \think\Db::name('vod')
+            ->where('vod_status', 1)
+            ->order('vod_time desc')
+            ->limit(5)
+            ->field('vod_id, vod_name, vod_pic, vod_pic_slide, vod_remarks, type_id')
+            ->select();
+    }
+    
     // 处理图片链接
     foreach ($banner_list as &$v) {
         // 如果有幻灯片图，优先用幻灯片图
@@ -123,6 +133,17 @@ if ($ac == 'init') {
         ->limit(10)
         ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year')
         ->select();
+    
+    // 杰哥兜底：如果后台没设 level=8 的推荐视频，自动用最新影片填充
+    if (empty($recommend_list)) {
+        $recommend_list = \think\Db::name('vod')
+            ->where('vod_status', 1)
+            ->order('vod_time desc')
+            ->limit(10)
+            ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year')
+            ->select();
+    }
+    
     foreach ($recommend_list as &$v) {
         $v['vod_pic'] = mac_url_img($v['vod_pic']);
     }
@@ -134,8 +155,8 @@ if ($ac == 'init') {
     foreach ($type_ids as $tid => $tname) {
         $list = \think\Db::name('vod')
             ->where('vod_status', 1)
-            ->where('type_id', $tid) // 简单匹配一级分类，如果需要包含子分类需用 type_id_1
-            ->order('vod_time desc') // 按更新时间
+            ->where('type_id', $tid)
+            ->order('vod_time desc')
             ->limit(6)
             ->field('vod_id, vod_name, vod_pic, vod_remarks, vod_score, vod_year')
             ->select();

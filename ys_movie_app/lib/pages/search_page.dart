@@ -112,7 +112,7 @@ class _SearchPageState extends State<SearchPage> {
         title: Container(
           height: 40,
           decoration: BoxDecoration(
-            color: isDark ? Colors.white12 : Colors.grey[200],
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
           ),
           child: TextField(
@@ -120,12 +120,12 @@ class _SearchPageState extends State<SearchPage> {
             textInputAction: TextInputAction.search,
             onSubmitted: _doSearch,
             autofocus: true,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             decoration: InputDecoration(
               hintText: '请输入影片名...',
-              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
               border: InputBorder.none,
-              prefixIcon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.grey),
+              prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
               contentPadding: const EdgeInsets.only(top: 8), // 微调垂直位置
             ),
           ),
@@ -154,13 +154,13 @@ class _SearchPageState extends State<SearchPage> {
 
     // 如果搜了没结果
     if (_results.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.movie_filter_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('暂无资源', style: TextStyle(color: Colors.grey)),
+            Icon(Icons.movie_filter_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+            const SizedBox(height: 16),
+            Text('暂无资源', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
           ],
         ),
       );
@@ -185,15 +185,8 @@ class _SearchPageState extends State<SearchPage> {
             margin: const EdgeInsets.only(bottom: 16),
             height: 140,
             decoration: BoxDecoration(
-              color: isDark ? Theme.of(context).cardColor : Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255 * 0.05).round()),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Row(
               children: [
@@ -230,7 +223,7 @@ class _SearchPageState extends State<SearchPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         Text('评分：${item['score']}', style: const TextStyle(fontSize: 12, color: Colors.orange)),

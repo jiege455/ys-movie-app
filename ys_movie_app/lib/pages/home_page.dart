@@ -1689,7 +1689,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
             const SizedBox(height: 8),
             Text(
               '请检查网络连接或后台API配置',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -1982,7 +1982,7 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             if (item['score'] != null && item['score'].toString().isNotEmpty)
@@ -2591,7 +2591,7 @@ class _HomeCategoryTabState extends State<HomeCategoryTab> with AutomaticKeepAli
               selected: active,
               onSelected: (_) => onSelect(opt),
               labelStyle: TextStyle(
-                color: active ? Theme.of(context).colorScheme.primary : (isDark ? Colors.grey[400] : Colors.black54), 
+                color: active ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.6), 
                 fontSize: 12,
                 fontWeight: active ? FontWeight.bold : FontWeight.normal
               ),

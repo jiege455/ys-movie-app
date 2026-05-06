@@ -175,8 +175,8 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     // 键盘弹出时，底部 padding 需要增加
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final bgColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       decoration: BoxDecoration(
@@ -192,7 +192,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
           Center(
             child: Container(
               width: 40, height: 4,
-              decoration: BoxDecoration(color: isDark ? Colors.grey[700] : Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 20),
@@ -301,12 +301,12 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('登录即代表同意', style: TextStyle(color: dark ? Colors.white60 : Colors.grey[600], fontSize: 12)),
+                  Text('登录即代表同意', style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontSize: 12)),
                   GestureDetector(
                     onTap: () => _showAgreement('用户协议', 'agreement_content'),
                     child: Text('《用户协议》', style: TextStyle(color: Theme.of(ctx).colorScheme.primary, fontSize: 12)),
                   ),
-                  Text('和', style: TextStyle(color: dark ? Colors.white60 : Colors.grey[600], fontSize: 12)),
+                  Text('和', style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6), fontSize: 12)),
                   GestureDetector(
                     onTap: () => _showAgreement('隐私政策', 'privacy_content'),
                     child: Text('《隐私政策》', style: TextStyle(color: Theme.of(ctx).colorScheme.primary, fontSize: 12)),
@@ -368,7 +368,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
                     width: 100,
                     height: 50,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _verifyCodeUrl.isNotEmpty
@@ -430,7 +430,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.grey[100],
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -438,14 +438,14 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
         controller: controller,
         obscureText: isPassword ? _obscureText : false,
         onSubmitted: onSubmitted,
-        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           icon: Icon(icon, color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
           border: InputBorder.none,
           labelText: label,
-          labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+          labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
           hintText: hint,
-          hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38),
+          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: isDark ? Colors.white60 : Colors.grey),

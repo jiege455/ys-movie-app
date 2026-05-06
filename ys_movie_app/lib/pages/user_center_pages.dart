@@ -146,13 +146,13 @@ class _VipPageState extends State<VipPage> {
                       final name = item['group_name'] ?? '套餐$i';
                       // 显示逻辑需根据后端字段
                       return Container(
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? Theme.of(context).cardColor : Colors.white, 
-                          borderRadius: BorderRadius.circular(8), 
-                          border: isDark ? null : Border.all(color: Colors.grey[200]!)
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListTile(
-                          title: Text(name, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                          title: Text(name, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                           trailing: ElevatedButton(
                             onPressed: () => _buy(i), // 传递索引
                             child: const Text('购买'),
@@ -273,7 +273,7 @@ class _PointsPageState extends State<PointsPage> {
                         final points = item['plog_points'] ?? 0;
                         final isAdd = (int.tryParse('$points') ?? 0) > 0;
                         return ListTile(
-                          title: Text(item['plog_remark'] ?? '积分变动', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                          title: Text(item['plog_remark'] ?? '积分变动', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                           subtitle: Text(item['plog_time'] != null 
                               ? DateTime.fromMillisecondsSinceEpoch((int.tryParse('${item['plog_time']}') ?? 0) * 1000).toString().substring(0, 19)
                               : '', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
@@ -446,8 +446,8 @@ class _InvitePageState extends State<InvitePage> {
                         final item = _logs[i];
                         return ListTile(
                           leading: const CircleAvatar(child: Icon(Icons.person, size: 20)),
-                          title: Text(item['user_name'] ?? '匿名用户', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
-                          subtitle: Text('注册时间：${item['user_reg_time'] != null ? DateTime.fromMillisecondsSinceEpoch((int.tryParse('${item['user_reg_time']}') ?? 0) * 1000).toString().substring(0,10) : ''}', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
+                          title: Text(item['user_name'] ?? '匿名用户', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                          subtitle: Text('注册时间：${item['user_reg_time'] != null ? DateTime.fromMillisecondsSinceEpoch((int.tryParse('${item['user_reg_time']}') ?? 0) * 1000).toString().substring(0,10) : ''}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                           trailing: const Text('奖励已发', style: TextStyle(fontSize: 12, color: Colors.green)),
                         );
                       },

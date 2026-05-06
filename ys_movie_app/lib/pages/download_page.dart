@@ -331,15 +331,8 @@ class _DownloadPageState extends State<DownloadPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black
-                                    .withAlpha((255 * 0.06).round()),
-                                blurRadius: 8,
-                              ),
-                            ],
                           ),
                           child: Row(
                             children: [
@@ -351,9 +344,9 @@ class _DownloadPageState extends State<DownloadPage> {
                                   height: 80,
                                   fit: BoxFit.cover,
                                   placeholder: (_, __) =>
-                                      Container(color: Colors.grey[200]),
+                                      Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
                                   errorWidget: (_, __, ___) => Container(
-                                    color: Colors.grey[200],
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                     child: const Icon(Icons.movie),
                                   ),
                                 ),
@@ -404,9 +397,9 @@ class _DownloadPageState extends State<DownloadPage> {
                                             maxLines: 1,
                                             overflow:
                                                 TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.black54,
+                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                             ),
                                           ),
                                         ),
@@ -432,9 +425,9 @@ class _DownloadPageState extends State<DownloadPage> {
                                       children: [
                                         Text(
                                           '${(progress * 100).clamp(0, 100).round()}%',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: Colors.black45,
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                           ),
                                         ),
                                         const Spacer(),
