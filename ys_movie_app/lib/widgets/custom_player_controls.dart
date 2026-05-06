@@ -1077,34 +1077,36 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
               ),
             ),
             
-            if (isFullScreen) ...[
-              _buildIconBtn(Icons.timer, _showSleepTimerSheet), // 新增定时关闭按钮
-              _buildIconBtn(Icons.picture_in_picture_alt, () async {
-                 // 使用 BetterPlayer 自带 PiP
-                 if (_controller != null) {
-                    try {
-                       bool? isPipSupported = await _controller!.isPictureInPictureSupported();
-                       if (isPipSupported == true) {
-                         final pipKey = _controller!.betterPlayerGlobalKey;
-                         if (pipKey != null) {
-                           _controller!.enablePictureInPicture(pipKey);
-                         } else {
-                           if (mounted) {
-                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
-                           }
-                         }
+            // 开发者：杰哥网络科技 (qq: 2711793818)
+            // 修复：PiP按钮在竖屏和横屏都显示，不再仅限全屏模式
+            _buildIconBtn(Icons.picture_in_picture_alt, () async {
+               // 使用 BetterPlayer 自带 PiP
+               if (_controller != null) {
+                  try {
+                     bool? isPipSupported = await _controller!.isPictureInPictureSupported();
+                     if (isPipSupported == true) {
+                       final pipKey = _controller!.betterPlayerGlobalKey;
+                       if (pipKey != null) {
+                         _controller!.enablePictureInPicture(pipKey);
                        } else {
                          if (mounted) {
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
                          }
                        }
-                    } catch (e) {
+                     } else {
                        if (mounted) {
-                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
+                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
                        }
-                    }
-                 }
-              }), 
+                     }
+                  } catch (e) {
+                     if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
+                     }
+                  }
+               }
+            }),
+            if (isFullScreen) ...[
+              _buildIconBtn(Icons.timer, _showSleepTimerSheet), // 新增定时关闭按钮
               _buildIconBtn(Icons.cast, _showCastDialog),
             ] else ...[
                _buildIconBtn(Icons.cast, _showCastDialog),

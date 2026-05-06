@@ -1069,6 +1069,8 @@ class BetterPlayerController {
   ///Enable Picture in Picture (PiP) mode. [betterPlayerGlobalKey] is required
   ///to open PiP mode in iOS. When device is not supported, PiP mode won't be
   ///open.
+  ///开发者：杰哥网络科技 (qq: 2711793818)
+  ///修复：Android端移除错误的enterFullScreen调用，iOS端修复keyWindow获取
   Future<void>? enablePictureInPicture(GlobalKey betterPlayerGlobalKey) async {
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
@@ -1082,16 +1084,16 @@ class BetterPlayerController {
       _wasControlsEnabledBeforePiP = _controlsEnabled;
       setControlsEnabled(false);
       if (Platform.isAndroid) {
-        _wasInFullScreenBeforePiP = _isFullScreen;
+        // 开发者：杰哥网络科技
+        // 修复：Android端PiP不需要进入全屏，直接调用原生PiP即可
         await videoPlayerController?.enablePictureInPicture(
             left: 0, top: 0, width: 0, height: 0);
-        enterFullScreen();
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
         return;
       }
       if (Platform.isIOS) {
-        final RenderBox? renderBox = betterPlayerGlobalKey.currentContext!
-            .findRenderObject() as RenderBox?;
+        final RenderBox? renderBox = betterPlayerGlobalKey.currentContext
+            ?.findRenderObject() as RenderBox?;
         if (renderBox == null) {
           BetterPlayerUtils.log(
               "Can't show PiP. RenderBox is null. Did you provide valid global"
@@ -1131,6 +1133,8 @@ class BetterPlayerController {
   }
 
   ///Check if picture in picture mode is supported in this device.
+  ///开发者：杰哥网络科技 (qq: 2711793818)
+  ///修复：移除 !_isFullScreen 限制，让PiP按钮在全屏和普通模式都能显示
   Future<bool> isPictureInPictureSupported() async {
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
@@ -1139,7 +1143,7 @@ class BetterPlayerController {
     final bool isPipSupported =
         (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
 
-    return isPipSupported && !_isFullScreen;
+    return isPipSupported;
   }
 
   ///Handle VideoEvent when remote controls notification / PiP is shown
