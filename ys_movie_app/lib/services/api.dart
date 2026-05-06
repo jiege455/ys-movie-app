@@ -803,7 +803,7 @@ class MacApi {
       }
     }
 
-    // 插件/自定义接口不可用时，使用筛选接口近似“轮播”：取最新影片作为兜底
+    // 插件/自定义接口不可用时，使用筛选接口近似"轮播"：取最新影片作为兜底
     // 杰哥修复：恢复兜底逻辑，防止首页轮播图为空导致白板
     try {
       final latest = await getFiltered(orderby: 'time', limit: 5);
@@ -816,7 +816,7 @@ class MacApi {
         }).toList();
       }
     } catch (e) {
-      print('Banner fallback failed: $e');
+      print('Banner fallback failed: \$e');
     }
     return [];
   }
@@ -1637,26 +1637,20 @@ class MacApi {
         });
         if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
            final list = (resp.data['list'] as List?) ?? [];
-           if (list.isNotEmpty) {
-             return list.map((v) => {
-               'id': '${v['vod_id']}',
-               'title': v['vod_name'] ?? '',
-               'poster': _fixUrl(v['vod_pic']),
-               'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-               'year': '${v['vod_year'] ?? ''}',
-               'overview': v['vod_remarks'] ?? '',
-             }).toList();
-           }
+           return list.map((v) => {
+             'id': '${v['vod_id']}',
+             'title': v['vod_name'] ?? '',
+             'poster': _fixUrl(v['vod_pic']),
+             'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
+             'year': '${v['vod_year'] ?? ''}',
+             'overview': v['vod_remarks'] ?? '',
+           }).toList();
         }
       } catch (_) {}
 
       // 2. 兜底：若 level 查询为空，用 getFiltered 获取最新影片防止白板
-      // 杰哥修复：app_api.php 在宝塔环境下可能因 open_basedir 限制无法工作
-      // 直接调用 getFiltered 获取最新影片作为兜底
       try {
-        print('getRecommended: Falling back to getFiltered(orderby: time, limit: $limit)');
         final fallback = await getFiltered(orderby: 'time', limit: limit);
-        print('getRecommended: getFiltered returned ${fallback.length} items');
         if (fallback.isNotEmpty) {
           return fallback.map((v) => {
             'id': '${v['id']}',
@@ -1667,13 +1661,10 @@ class MacApi {
             'overview': v['overview'] ?? '',
           }).toList();
         }
-      } catch (e) {
-        print('getRecommended: getFiltered fallback failed: $e');
-      }
+      } catch (_) {}
 
       return [];
-    } catch (e) {
-      print('getRecommended: Outer catch: $e');
+    } catch (_) {
       return [];
     }
   }

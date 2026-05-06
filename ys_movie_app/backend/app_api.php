@@ -20,7 +20,11 @@ header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 // --------------------------------------------------------------------
 // 开发者：杰哥网络科技 (qq: 2711793818)
 // 修复：增加多路径兼容，支持宝塔面板各种部署方式
+// 修复2：抑制 open_basedir 警告，避免干扰 JSON 输出
 $macIncludePaths = [
+    __DIR__ . '/include.php',
+    __DIR__ . '/../include.php',
+    __DIR__ . '/../../include.php',
     'include.php',
     '../include.php',
     '../../include.php',
@@ -30,7 +34,8 @@ $macIncludePaths = [
 ];
 $macIncludeFound = false;
 foreach ($macIncludePaths as $macPath) {
-    if (file_exists($macPath)) {
+    // 使用 @ 抑制 open_basedir 警告
+    if (@file_exists($macPath)) {
         require($macPath);
         $macIncludeFound = true;
         break;
