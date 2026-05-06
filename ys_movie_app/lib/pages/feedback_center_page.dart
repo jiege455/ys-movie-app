@@ -359,16 +359,11 @@ class _MessageCenterPageState extends State<MessageCenterPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('消息中心'),
         bottom: TabBar(
           controller: _tabCtrl,
-          indicatorColor: scheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           tabs: const [
             Tab(text: '系统公告'),
             Tab(text: '我的消息'),
@@ -376,12 +371,11 @@ class _MessageCenterPageState extends State<MessageCenterPage>
         ),
       ),
       body: TabBarView(
-          controller: _tabCtrl,
-          children: const [
-            _NoticeListTab(),
-            _UserNoticeTab(),
-          ],
-        ),
+        controller: _tabCtrl,
+        children: const [
+          _NoticeListTab(),
+          _UserNoticeTab(),
+        ],
       ),
     );
   }
