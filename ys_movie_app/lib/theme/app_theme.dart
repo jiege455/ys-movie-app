@@ -486,19 +486,20 @@ class _GlowTabPainter extends BoxPainter {
 class GradientText extends StatelessWidget {
   final String text;
   final TextStyle? style;
-  final Gradient gradient;
+  final Gradient? gradient;
 
   const GradientText({
     super.key,
     required this.text,
     this.style,
-    this.gradient = AppGradients.primaryGradient,
+    this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
+    final grad = gradient ?? AppGradients.primaryGradient;
     return ShaderMask(
-      shaderCallback: (bounds) => gradient.createShader(bounds),
+      shaderCallback: (bounds) => grad.createShader(bounds),
       child: Text(
         text,
         style: style?.copyWith(color: Colors.white) ??
