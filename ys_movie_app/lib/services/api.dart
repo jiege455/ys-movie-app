@@ -902,7 +902,16 @@ class MacApi {
   int get cacheTime => int.tryParse('${appConfig['init_cache_time'] ?? 60}') ?? 60;
 
   // ================= 评论开关 =================
-  bool get isCommentOpen => (int.tryParse('${appConfig['system_comment_status'] ?? 1}') ?? 1) == 1;
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // 修复：兼容多个可能的评论开关字段名（system_comment_status / app_comment_open / comment_open）
+  bool get isCommentOpen {
+    final dynamic val = appConfig['system_comment_status']
+        ?? appConfig['app_comment_open']
+        ?? appConfig['comment_open']
+        ?? appConfig['comment_status']
+        ?? 1;
+    return (int.tryParse('$val') ?? 1) == 1;
+  }
   bool get isCommentAudit => (int.tryParse('${appConfig['system_comment_audit'] ?? 0}') ?? 0) == 1;
 
   // ================= 注册开关 =================

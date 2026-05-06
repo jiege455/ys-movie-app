@@ -278,9 +278,12 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       
       // 检查收藏状态 (仅云端)
       _checkFavoriteStatus();
-      
+
       // 加载猜你喜欢
       _loadRelated();
+
+      // 加载评论列表
+      _loadComments();
 
       setState(() => loading = false);
       
