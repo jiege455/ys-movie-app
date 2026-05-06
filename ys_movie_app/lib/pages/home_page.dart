@@ -747,8 +747,9 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 内容卡片 ──
-  Widget _buildContentCard(dynamic item) {
+  // ── 网格卡片 ──
+  Widget _buildGridItem(dynamic item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         final vodId = item['id']?.toString() ?? '';
@@ -760,85 +761,54 @@ class _HomePageState extends State<HomePage>
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: item['poster'] ?? '',
-                width: 120,
-                height: 160,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  color: Colors.grey[200],
-                  width: 120,
-                  height: 160,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: item['poster'] ?? '',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      child: const Icon(Icons.broken_image),
+                    ),
+                  ),
                 ),
-                errorWidget: (_, __, ___) => Container(
-                  color: Colors.grey[200],
-                  width: 120,
-                  height: 160,
-                  child: const Icon(Icons.movie),
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item['year'] ?? '',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['title'] ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${item['year'] ?? ''} · ${item['area'] ?? ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '导演: ${item['director'] ?? '未知'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '主演: ${item['actor'] ?? '未知'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item['title'] ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
@@ -848,15 +818,19 @@ class _HomePageState extends State<HomePage>
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
-      child: ListView.builder(
+      child: GridView.builder(
         padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.65,
+        ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          height: 160,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
       ),
