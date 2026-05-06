@@ -104,7 +104,7 @@ class _CastDialogState extends State<CastDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1F1F1F),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       title: Row(
         children: [
           const Icon(Icons.cast_connected, color: Colors.white),

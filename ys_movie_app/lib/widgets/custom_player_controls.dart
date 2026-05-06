@@ -329,7 +329,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     } else {
       showModalBottomSheet(
         context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         builder: (_) => SizedBox(height: 400, child: content),
       );
     }
@@ -396,7 +396,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     } else {
       showModalBottomSheet(
         context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         builder: (_) => SizedBox(height: 400, child: content),
       );
     }
@@ -542,7 +542,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     } else {
       showModalBottomSheet(
         context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         builder: (_) => SizedBox(height: MediaQuery.of(context).size.height * 0.6, child: builder),
       );
     }
@@ -638,7 +638,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     } else {
       showModalBottomSheet(
         context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         builder: (_) => SizedBox(height: 400, child: content),
       );
     }
@@ -711,11 +711,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
        _showRightSideSheet(content);
      } else {
        showModalBottomSheet(
-        context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
-        builder: (_) => SizedBox(height: 300, child: content),
-      );
-     }
+       context: context,
+       backgroundColor: Theme.of(context).colorScheme.surface,
+       builder: (_) => SizedBox(height: 300, child: content),
+     );
+    }
   }
 
   // 跳过片头片尾 (复用 PlayerSettings)
@@ -766,7 +766,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     } else {
       showModalBottomSheet(
         context: context,
-        backgroundColor: const Color(0xFF1F1F1F),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         builder: (_) => SizedBox(height: 300, child: content),
       );
     }

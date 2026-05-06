@@ -286,8 +286,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: '暗夜蓝',
                 subtitle: '深邃护眼',
                 icon: Icons.nights_stay,
-                iconColor: const Color(0xFF00BFFF),
-                bgColor: const Color(0xFF051018),
+                iconColor: Theme.of(context).colorScheme.primary,
+                bgColor: Theme.of(context).scaffoldBackgroundColor,
                 textColor: Colors.white,
                 isSelected: themeProvider.themeStyle == 'dark',
                 onTap: () {

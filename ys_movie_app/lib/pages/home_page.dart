@@ -971,7 +971,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: isDark 
-                    ? [const Color(0xFF1565C0).withOpacity(0.5), const Color(0xFF0B1724)]
+                    ? [Theme.of(context).colorScheme.primary.withOpacity(0.5), Theme.of(context).scaffoldBackgroundColor]
                     : [Theme.of(context).colorScheme.primary.withOpacity(0.2), Theme.of(context).colorScheme.primary.withOpacity(0.05), Colors.white],
                 stops: const [0.0, 1.0],
               ),
@@ -997,8 +997,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   height: 40,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF1E2A3A) : const Color(0xFFF0F0F0),
+                                    gradient: isDark
+                                        ? LinearGradient(
+                                            colors: [
+                                              Colors.white.withOpacity(0.1),
+                                              Colors.white.withOpacity(0.05),
+                                            ],
+                                          )
+                                        : LinearGradient(
+                                            colors: [
+                                              Colors.white.withOpacity(0.8),
+                                              Colors.white.withOpacity(0.4),
+                                            ],
+                                          ),
                                     borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.1)
+                                          : Colors.white.withOpacity(0.6),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                   children: [
@@ -1033,14 +1058,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           labelStyle: TextStyle(
                             fontSize: _homeTypeFontSize,
                             fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                blurRadius: 8,
+                              ),
+                            ],
                           ),
                           unselectedLabelStyle: TextStyle(
                             fontSize: (_homeTypeFontSize - 2).clamp(10, 30),
                             fontWeight: FontWeight.normal,
                           ),
-                          indicator: const BoxDecoration(),
+                          indicator: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
                           dividerColor: Colors.transparent,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           tabs: _tabs.map((t) => Tab(text: t)).toList(),
                         ),
                     ),
@@ -1839,29 +1880,47 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: CachedNetworkImage(
-                                  imageUrl: item['poster'],
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
-                                  errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.broken_image)),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(isDark ? 0.4 : 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                      spreadRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: CachedNetworkImage(
+                                    imageUrl: item['poster'],
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    placeholder: (_, __) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                                    errorWidget: (_, __, ___) => Container(color: isDark ? Colors.grey[800] : Colors.grey[200], child: const Icon(Icons.broken_image)),
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
                               item['title'],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
                             ),
                             if (item['score'] != null && item['score'].toString().isNotEmpty)
                               Row(
                                 children: [
                                   const Icon(Icons.star, size: 12, color: Colors.orange),
-                                  Text('${item['score']}', style: const TextStyle(fontSize: 11, color: Colors.orange)),
+                                  const SizedBox(width: 2),
+                                  Text('${item['score']}', style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500)),
                                 ],
                               ),
                           ],
@@ -1916,8 +1975,34 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
                         width: 200,
                         margin: const EdgeInsets.only(right: 12),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A2A3A) : const Color(0xFFF5F5F5),
+                          gradient: isDark
+                              ? LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.1),
+                                    Colors.white.withOpacity(0.05),
+                                  ],
+                                )
+                              : LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.9),
+                                    Colors.white.withOpacity(0.7),
+                                  ],
+                                ),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.white.withOpacity(0.8),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                              spreadRadius: 0,
+                            ),
+                          ],
                         ),
                         child: Row(
                           children: [

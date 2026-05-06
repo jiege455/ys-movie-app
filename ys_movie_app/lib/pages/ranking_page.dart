@@ -195,8 +195,16 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           height: 40,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF15202B) : Colors.white.withAlpha((255 * 0.7).round()),
+                            color: isDark
+                                ? Theme.of(context).colorScheme.surface
+                                : Colors.white.withAlpha((255 * 0.7).round()),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.white.withOpacity(0.8),
+                              width: 1,
+                            ),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<int>(
@@ -204,7 +212,9 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                               value: _selectedTypeId == 0 ? null : _selectedTypeId,
                               hint: const Text('选择分类'),
                               style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
-                              dropdownColor: isDark ? const Color(0xFF15202B) : Colors.white,
+                              dropdownColor: isDark
+                                  ? Theme.of(context).colorScheme.surface
+                                  : Colors.white,
                               items: _typeList.map((t) {
                                 final id = int.tryParse('${t['type_id'] ?? 0}') ?? 0;
                                 final name = (t['type_name'] ?? '').toString();
@@ -227,8 +237,16 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF15202B) : Colors.white.withAlpha((255 * 0.7).round()),
+                          color: isDark
+                              ? Theme.of(context).colorScheme.surface
+                              : Colors.white.withAlpha((255 * 0.7).round()),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.white.withOpacity(0.8),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           _rankListType == 4 ? '总榜' : (_rankListType == 1 ? '日榜' : (_rankListType == 2 ? '周榜' : '月榜')),
@@ -496,9 +514,9 @@ class _DecorativeBackground extends StatelessWidget {
         gradient: LinearGradient(
           colors: isDark
               ? [
-                  const Color(0xFF051018),
+                  Theme.of(context).scaffoldBackgroundColor,
                   primaryColor.withAlpha(30),
-                  const Color(0xFF051018),
+                  Theme.of(context).scaffoldBackgroundColor,
                 ]
               : [
                   Colors.white,

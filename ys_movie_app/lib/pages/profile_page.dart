@@ -407,7 +407,7 @@ class ProfilePageState extends State<ProfilePage> {
                   : BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDark 
-                            ? [primaryColor.withAlpha(60), const Color(0xFF051018)]
+                            ? [primaryColor.withAlpha(60), Theme.of(context).scaffoldBackgroundColor]
                             : [primaryColor.withAlpha(35), Colors.white],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,

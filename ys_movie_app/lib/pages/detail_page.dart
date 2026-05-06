@@ -591,7 +591,17 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   context: context, 
                   backgroundColor: Colors.transparent,
                   builder: (ctx) => Container(
-                     decoration: BoxDecoration(color: const Color(0xFF1F1F1F), borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
+                     decoration: BoxDecoration(
+                       gradient: LinearGradient(
+                         begin: Alignment.topCenter,
+                         end: Alignment.bottomCenter,
+                         colors: [
+                           Theme.of(context).colorScheme.surface.withOpacity(0.95),
+                           Theme.of(context).scaffoldBackgroundColor,
+                         ],
+                       ),
+                       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                     ),
                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [0.5, 1.0, 1.25, 1.5, 2.0].map((speed) => ListTile(

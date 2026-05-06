@@ -175,7 +175,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
     // 键盘弹出时，底部 padding 需要增加
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E2A3A) : Colors.white;
+    final bgColor = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
 
     return Container(
