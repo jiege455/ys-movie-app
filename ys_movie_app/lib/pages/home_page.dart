@@ -1403,6 +1403,26 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         } catch (e) {
           print('Home Page: Fallback failed: $e');
         }
+        
+        // 杰哥：如果按时间排序也失败，尝试按热度排序兜底
+        if (firstItems.isEmpty) {
+          try {
+            print('Home Page: Trying second fallback getFiltered(orderby: hits)...');
+            final hotFallback = await api.getFiltered(orderby: 'hits', limit: 12);
+            if (hotFallback.isNotEmpty) {
+              firstItems = hotFallback.map((v) => {
+                'id': '${v['id']}',
+                'title': v['title'] ?? '',
+                'poster': v['poster'] ?? '',
+                'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
+                'year': '${v['year'] ?? ''}',
+                'overview': v['overview'] ?? '',
+              }).toList();
+            }
+          } catch (e) {
+            print('Home Page: Second fallback failed: $e');
+          }
+        }
       }
       
       // 最终兜底：如果所有方式都失败，尝试直接请求标准接口

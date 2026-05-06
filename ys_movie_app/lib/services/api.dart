@@ -1676,7 +1676,8 @@ class MacApi {
     } catch (_) {
       return [];
     }
-      return [];
+  }
+
   List<String> _parseHotSearch(Map data) {
     dynamic raw = data['hot_search_list'] ?? data['search_hot'];
     if (raw == null) return [];
