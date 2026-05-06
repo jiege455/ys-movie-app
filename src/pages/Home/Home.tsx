@@ -68,19 +68,19 @@ export const Home: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#0a0e1a]">
       {/* 顶部搜索（移动端样式） */}
-      <div className="px-4 pt-4 pb-2 sticky top-0 z-10 bg-white">
+      <div className="px-4 pt-4 pb-2 sticky top-0 z-10 glass">
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
             type="text"
             placeholder="搜影视、演员..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none bg-gray-100"
+            className="w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none bg-[#0f172a]/80 text-sky-100 placeholder-sky-400/50 border border-sky-500/20 focus:border-sky-400/50"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -91,11 +91,11 @@ export const Home: React.FC = () => {
       <main className="px-4 pb-20">
         {/* 错误提示 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-600 text-center">{error}</p>
+          <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-4">
+            <p className="text-red-400 text-center">{error}</p>
             <button
               onClick={loadMovies}
-              className="mt-2 w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition-colors"
+              className="mt-2 w-full bg-sky-500 hover:bg-sky-400 text-white py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>
@@ -105,7 +105,7 @@ export const Home: React.FC = () => {
         {/* 轮播图区域 */}
         {hotMovies.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">热门推荐</h2>
+            <h2 className="text-3xl font-bold mb-6 text-sky-400">热门推荐</h2>
             <Carousel
               movies={hotMovies}
               onMovieClick={handleMovieClick}
@@ -118,10 +118,10 @@ export const Home: React.FC = () => {
         {/* 视频列表 */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">热播精选</h2>
+            <h2 className="text-xl font-bold text-sky-400">热播精选</h2>
             <button
               onClick={() => handleCategoryClick('movie')}
-              className="text-red-600 hover:text-red-700 text-sm"
+              className="text-sky-400 hover:text-sky-300 text-sm"
             >
               查看更多 →
             </button>
@@ -129,7 +129,7 @@ export const Home: React.FC = () => {
 
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400"></div>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
@@ -150,14 +150,14 @@ export const Home: React.FC = () => {
 
           {!loading && movies.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-lg text-gray-500">暂无电影数据</p>
+              <p className="text-lg text-sky-400/60">暂无电影数据</p>
             </div>
           )}
         </section>
 
         {/* 分类导航（简洁移动样式） */}
         <section className="mt-8">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">分类浏览</h2>
+          <h2 className="text-xl font-bold mb-4 text-sky-400">分类浏览</h2>
           <div className="grid grid-cols-4 gap-3">
             {[
               { name: '动作', icon: '🔥', category: 'action' },
@@ -172,10 +172,10 @@ export const Home: React.FC = () => {
               <button
                 key={genre.category}
                 onClick={() => handleCategoryClick(genre.category)}
-                className="rounded-lg p-3 text-center bg-gray-100"
+                className="rounded-lg p-3 text-center glass-card hover:bg-sky-500/10 transition-colors"
               >
                 <div className="text-xl mb-1">{genre.icon}</div>
-                <div className="text-sm text-gray-800">{genre.name}</div>
+                <div className="text-sm text-sky-300">{genre.name}</div>
               </button>
             ))}
           </div>

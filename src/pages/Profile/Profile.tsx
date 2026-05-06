@@ -53,12 +53,12 @@ export const Profile: React.FC = () => {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">请先登录</p>
+          <p className="text-sky-300 mb-4">请先登录</p>
           <button
             onClick={() => navigate('/login')}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg transition-colors"
           >
             去登录
           </button>
@@ -68,18 +68,18 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0a0e1a]">
       {/* 用户信息头部 */}
-      <div className="bg-white shadow-sm">
+      <div className="glass">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-sky-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                 {user?.user_name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">{user?.user_name || '用户'}</h1>
-                <p className="text-gray-500 text-sm">ID: {user?.user_id || '-'}</p>
+                <h1 className="text-xl font-bold text-sky-100">{user?.user_name || '用户'}</h1>
+                <p className="text-sky-400/60 text-sm">ID: {user?.user_id || '-'}</p>
               </div>
             </div>
           </div>
@@ -87,7 +87,7 @@ export const Profile: React.FC = () => {
           <div className="mt-4 flex space-x-4">
             <button
               onClick={() => navigate('/messages')}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
+              className="text-sky-400 hover:text-sky-300 text-sm font-medium flex items-center"
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -96,7 +96,7 @@ export const Profile: React.FC = () => {
             </button>
             <button
               onClick={handleLogout}
-              className="text-red-600 hover:text-red-700 text-sm font-medium"
+              className="text-sky-400 hover:text-sky-300 text-sm font-medium"
             >
               退出登录
             </button>
@@ -106,14 +106,14 @@ export const Profile: React.FC = () => {
 
       {/* 标签切换 */}
       <div className="max-w-4xl mx-auto px-4 mt-4">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex border-b border-gray-200">
+        <div className="glass-card rounded-lg">
+          <div className="flex border-b border-sky-500/20">
             <button
               onClick={() => setActiveTab('favorites')}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'favorites'
-                  ? 'text-red-600 border-b-2 border-red-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-sky-400 border-b-2 border-sky-400'
+                  : 'text-sky-400/60 hover:text-sky-300'
               }`}
             >
               我的收藏
@@ -122,8 +122,8 @@ export const Profile: React.FC = () => {
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'history'
-                  ? 'text-red-600 border-b-2 border-red-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-sky-400 border-b-2 border-sky-400'
+                  : 'text-sky-400/60 hover:text-sky-300'
               }`}
             >
               播放记录
@@ -135,10 +135,10 @@ export const Profile: React.FC = () => {
               <div>
                 {favorites.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">暂无收藏</p>
+                    <p className="text-sky-400/60">暂无收藏</p>
                     <button
                       onClick={() => navigate('/')}
-                      className="mt-2 text-red-600 hover:text-red-700 text-sm"
+                      className="mt-2 text-sky-400 hover:text-sky-300 text-sm"
                     >
                       去发现好剧
                     </button>
@@ -151,7 +151,7 @@ export const Profile: React.FC = () => {
                         onClick={() => handleMovieClick(item.vodId)}
                         className="cursor-pointer group"
                       >
-                        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-200">
+                        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-[#1e293b]">
                           <img
                             src={item.poster || 'https://via.placeholder.com/300x450?text=No+Image'}
                             alt={item.title}
@@ -162,7 +162,7 @@ export const Profile: React.FC = () => {
                             }}
                           />
                         </div>
-                        <p className="mt-1 text-sm text-gray-800 truncate">{item.title}</p>
+                        <p className="mt-1 text-sm text-sky-200 truncate">{item.title}</p>
                       </div>
                     ))}
                   </div>
@@ -170,7 +170,7 @@ export const Profile: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">播放记录功能开发中...</p>
+                <p className="text-sky-400/60">播放记录功能开发中...</p>
               </div>
             )}
           </div>

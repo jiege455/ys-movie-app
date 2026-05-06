@@ -9,7 +9,7 @@ import { getAppPageSetting, AppPageSetting } from '../../api'
  */
 export const TabBar: React.FC = () => {
   const itemCls = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-red-600' : 'text-gray-600'}`
+    `flex flex-col items-center justify-center flex-1 py-2 ${isActive ? 'text-sky-400' : 'text-sky-400/50'}`
 
   /**
    * 通过插件页面设置动态控制标签名称与显示
@@ -31,7 +31,7 @@ export const TabBar: React.FC = () => {
   const topicName = pageSetting?.app_tab_topic_name || '专题'
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t shadow bg-white border-gray-200">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-sky-500/20">
       <div className="flex">
         <NavLink to="/" className={itemCls}>
           <span className="text-sm">首页</span>

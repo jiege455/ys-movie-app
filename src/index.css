@@ -6,11 +6,17 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
   font-weight: 400;
+  color-scheme: dark;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #0a0e1a;
+  color: #e2e8f0;
 }
 
 /* 自定义工具类 */
@@ -47,15 +53,32 @@
     display: none;
   }
 
-  /* 自定义渐变 */
-  .bg-gradient-movie {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 玻璃拟态效果 - 户外玻璃风格 */
+  .glass {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.15);
   }
 
-  /* 玻璃拟态效果 */
-  .glass-effect {
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.1);
+  .glass-light {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(56, 189, 248, 0.1);
+  }
+
+  .glass-card {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.05);
+  }
+
+  /* 天空蓝渐变 */
+  .bg-sky-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%);
   }
 
   /* 视频播放器样式 */
@@ -82,7 +105,7 @@
 
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.15);
   }
 }
 
@@ -95,6 +118,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  background-color: #0a0e1a;
 }
 
 /* 移动端优化 */

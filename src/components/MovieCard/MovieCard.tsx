@@ -47,7 +47,7 @@ export const MovieCard: React.FC<MovieProps> = ({
 
   return (
     <div
-      className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden group bg-white"
+      className="rounded-lg overflow-hidden cursor-pointer group glass-card hover:bg-sky-500/10 transition-all duration-300"
       onClick={handleClick}
     >
       <div className="aspect-[2/3] relative overflow-hidden">
@@ -62,14 +62,14 @@ export const MovieCard: React.FC<MovieProps> = ({
           }}
         />
 
-        <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+        <div className="absolute top-2 right-2 bg-sky-500 text-white px-2 py-1 rounded-full text-sm font-bold">
           {formatRating(vote_average)}
         </div>
 
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="bg-white bg-opacity-90 rounded-full p-3">
-              <svg className="w-8 h-8 text-gray-800" fill="currentColor" viewBox="0 0 20 20">
+            <div className="bg-sky-500/80 rounded-full p-3 backdrop-blur-sm">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
               </svg>
             </div>
@@ -77,16 +77,16 @@ export const MovieCard: React.FC<MovieProps> = ({
         </div>
       </div>
 
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2 text-gray-800">
+      <div className="p-3">
+        <h3 className="font-bold text-sm mb-1 line-clamp-2 text-sky-100">
           {title}
         </h3>
 
-        <p className="text-sm mb-2 text-gray-600">
+        <p className="text-xs mb-1 text-sky-400/60">
           {formatDate(release_date)}
         </p>
 
-        <p className="text-sm line-clamp-3 text-gray-700">
+        <p className="text-xs line-clamp-2 text-sky-300/70">
           {overview || '暂无简介'}
         </p>
       </div>

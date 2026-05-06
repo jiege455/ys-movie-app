@@ -66,7 +66,7 @@ export const Carousel: React.FC<CarouselProps> = ({
       onMouseLeave={handleMouseLeave}
     >
       {/* 轮播内容 */}
-      <div className="relative aspect-[16/9] bg-gray-200">
+      <div className="relative aspect-[16/9] bg-[#1e293b]">
         <img
           src={currentMovie.backdrop_path || currentMovie.poster_path}
           alt={currentMovie.title}
@@ -78,19 +78,19 @@ export const Carousel: React.FC<CarouselProps> = ({
         />
 
         {/* 渐变遮罩 */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e1a] via-transparent to-transparent" />
 
         {/* 电影信息 */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <h3
-            className="text-white text-xl font-bold mb-1 cursor-pointer hover:text-red-400 transition-colors"
+            className="text-white text-xl font-bold mb-1 cursor-pointer hover:text-sky-400 transition-colors"
             onClick={() => onMovieClick(currentMovie.id, currentMovie.link)}
           >
             {currentMovie.title}
           </h3>
-          <div className="flex items-center space-x-3 text-sm text-gray-300">
+          <div className="flex items-center space-x-3 text-sm text-sky-300">
             <span className="flex items-center">
-              <span className="text-yellow-400 mr-1">★</span>
+              <span className="text-sky-400 mr-1">★</span>
               {currentMovie.vote_average.toFixed(1)}
             </span>
             <span>{currentMovie.release_date}</span>
@@ -103,7 +103,7 @@ export const Carousel: React.FC<CarouselProps> = ({
         <>
           <button
             onClick={goToPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-colors"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-sky-500/50 transition-colors backdrop-blur-sm"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -111,7 +111,7 @@ export const Carousel: React.FC<CarouselProps> = ({
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-sky-500/50 transition-colors backdrop-blur-sm"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -125,7 +125,7 @@ export const Carousel: React.FC<CarouselProps> = ({
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                  index === currentIndex ? 'bg-sky-400' : 'bg-white/50'
                 }`}
               />
             ))}
