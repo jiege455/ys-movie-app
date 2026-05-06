@@ -744,7 +744,9 @@ class ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-    );
+    ],
+   ),
+);
   }
 
   Widget _buildStatItem(String count, String label, {VoidCallback? onTap}) {
