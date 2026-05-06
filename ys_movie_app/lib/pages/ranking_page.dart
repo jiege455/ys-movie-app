@@ -397,19 +397,19 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
             child: Container(
               margin: const EdgeInsets.only(bottom: 12),
-              height: 120,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(
                       imageUrl: item['poster'],
-                      width: 80,
-                      height: double.infinity,
+                      width: 90,
+                      height: 130,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(color: Colors.grey[200]),
                       errorWidget: (_, __, ___) => Container(color: Colors.grey[200], child: const Icon(Icons.movie)),
@@ -418,12 +418,13 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                   const SizedBox(width: 12),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.fromLTRB(0, 10, 12, 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
+                          const SizedBox(height: 6),
                           Text(
                             [
                               if ((item['year'] ?? '').toString().isNotEmpty) '${item['year']}',
@@ -432,18 +433,21 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                             ].join(' · '),
                             style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             '导演：${item['director'] ?? '未知'}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             '主演：${item['actor'] ?? '未知'}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                           ),
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               const Icon(Icons.star, size: 14, color: AppColors.warning),
@@ -451,13 +455,14 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                               Text('${item['score'] ?? '0.0'}', style: const TextStyle(fontSize: 13, color: AppColors.warning, fontWeight: FontWeight.bold)),
                             ],
                           ),
-                          if ((item['actor'] ?? '').toString().isNotEmpty)
+                          if ((item['actor'] ?? '').toString().isNotEmpty) ...[
+                            const SizedBox(height: 6),
                             Wrap(
                               spacing: 6,
                               runSpacing: 6,
                               children: _splitActors(item['actor']).map((name) {
                                 return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: Theme.of(context).colorScheme.primary.withAlpha(25),
                                     borderRadius: BorderRadius.circular(12),
@@ -466,6 +471,7 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                                 );
                               }).toList(),
                             ),
+                          ],
                         ],
                       ),
                     ),

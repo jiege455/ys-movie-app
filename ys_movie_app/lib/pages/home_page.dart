@@ -1140,18 +1140,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             fontWeight: FontWeight.normal,
                           ),
                           indicator: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
+                            borderRadius: BorderRadius.circular(8),
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
                           ),
                           dividerColor: Colors.transparent,
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           tabs: _tabs.map((t) => Tab(text: t)).toList(),
                         ),
                     ),
