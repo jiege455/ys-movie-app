@@ -1,9 +1,9 @@
 import React, { Component, type ReactNode } from 'react'
 
 /**
- * 开发者：杰哥网络科技
- * 模块：错误边界组件
- * 说明：捕获子组件渲染错误，防止整个应用白屏
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 错误边界组件
+ * 捕获子组件渲染错误，防止整个应用白屏
  */
 
 interface Props {
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <button
               onClick={this.handleReset}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
               重新加载
             </button>

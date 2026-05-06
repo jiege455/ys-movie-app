@@ -2,14 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { getImageUrl } from '../../api'
 
 /**
- * 文件名: Carousel.tsx
- * 作者: by：杰哥 (qq：2711793818)
- * 创建日期: 2026-01-01
- * 说明: 首页轮播组件，支持自动轮播与手动切换，兼容 MacCMS 图片地址
- */
-
-/**
- * 轮播图组件属性接口
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 首页轮播组件
+ * 支持自动轮播与手动切换，兼容 MacCMS 图片地址
  */
 interface CarouselProps {
   movies: Array<{

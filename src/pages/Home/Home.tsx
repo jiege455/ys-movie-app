@@ -7,10 +7,9 @@ import { useMovieStore } from '../../store/movieStore'
 import { useTheme } from '../../contexts/ThemeContext'
 
 /**
- * 文件名: Home.tsx
- * 作者: by：杰哥 (qq：2711793818)
- * 创建日期: 2026-01-01
- * 说明: 首页页面，负责加载轮播与电影列表，支持搜索与分类跳转
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 首页页面
+ * 负责加载轮播与电影列表，支持搜索与分类跳转
  */
 /**
  * 首页组件

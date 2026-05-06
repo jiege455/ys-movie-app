@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
 /**
- * 开发者：杰哥网络科技
- * 模块：UI 状态管理
- * 说明：管理主题、侧边栏、搜索等UI状态
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * UI 状态管理
+ * 管理主题、侧边栏、搜索等UI状态
  */
 
 type Theme = 'light' | 'dark'

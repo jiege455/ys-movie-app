@@ -7,9 +7,9 @@ import { debounce } from '../../lib/utils'
 import type { Movie } from '../../types'
 
 /**
- * 开发者：杰哥网络科技
- * 模块：搜索页面
- * 说明：支持关键词搜索视频，实时展示搜索结果
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 搜索页面
+ * 支持关键词搜索视频，实时展示搜索结果
  */
 
 export const Search: React.FC = () => {

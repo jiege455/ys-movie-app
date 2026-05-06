@@ -5,10 +5,9 @@ import { getCategoryMovies } from '../../api'
 import { useTheme } from '../../contexts/ThemeContext'
 
 /**
- * 文件名: Category.tsx
- * 作者: by：杰哥 (qq：2711793818)
- * 创建日期: 2026-01-02
- * 说明: 分类详情页，展示指定分类下的视频列表
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 分类详情页
+ * 展示指定分类下的视频列表
  */
 export const Category: React.FC = () => {
   const { id } = useParams<{ id: string }>()

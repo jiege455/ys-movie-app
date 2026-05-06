@@ -74,12 +74,12 @@ export const Profile: React.FC = () => {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <ThemeToggleButton />
           </div>
-          <p className="text-gray-600 mb-4">请先登录</p>
+          <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>请先登录</p>
           <button
             onClick={() => navigate('/login')}
             className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
@@ -92,9 +92,9 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* 用户信息头部 */}
-      <div className="bg-white shadow-sm">
+      <div className={`shadow-sm ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -102,8 +102,8 @@ export const Profile: React.FC = () => {
                 {user?.user_name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">{user?.user_name || '用户'}</h1>
-                <p className="text-gray-500 text-sm">ID: {user?.user_id || '-'}</p>
+                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{user?.user_name || '用户'}</h1>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>ID: {user?.user_id || '-'}</p>
               </div>
             </div>
             {/* 主题切换按钮 */}
@@ -132,14 +132,14 @@ export const Profile: React.FC = () => {
 
       {/* 标签切换 */}
       <div className="max-w-4xl mx-auto px-4 mt-4">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex border-b">
+        <div className={`rounded-lg shadow-sm ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`flex border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               onClick={() => setActiveTab('favorites')}
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'favorites'
                   ? 'text-red-600 border-b-2 border-red-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               我的收藏
@@ -149,7 +149,7 @@ export const Profile: React.FC = () => {
               className={`flex-1 py-3 text-center font-medium transition-colors ${
                 activeTab === 'history'
                   ? 'text-red-600 border-b-2 border-red-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               播放记录
@@ -161,7 +161,7 @@ export const Profile: React.FC = () => {
               <div>
                 {favorites.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">暂无收藏</p>
+                    <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>暂无收藏</p>
                     <button
                       onClick={() => navigate('/')}
                       className="mt-2 text-red-600 hover:text-red-700 text-sm"
@@ -177,7 +177,7 @@ export const Profile: React.FC = () => {
                         onClick={() => handleMovieClick(item.vodId)}
                         className="cursor-pointer group"
                       >
-                        <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-200">
+                        <div className={`relative aspect-[2/3] rounded-lg overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                           <img
                             src={item.poster || 'https://via.placeholder.com/300x450?text=No+Image'}
                             alt={item.title}
@@ -188,7 +188,7 @@ export const Profile: React.FC = () => {
                             }}
                           />
                         </div>
-                        <p className="mt-1 text-sm text-gray-800 truncate">{item.title}</p>
+                        <p className={`mt-1 text-sm truncate ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{item.title}</p>
                       </div>
                     ))}
                   </div>
@@ -196,7 +196,7 @@ export const Profile: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">播放记录功能开发中...</p>
+                <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>播放记录功能开发中...</p>
               </div>
             )}
           </div>

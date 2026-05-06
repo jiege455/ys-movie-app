@@ -4,15 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
 
 /**
- * 文件名: Topic.tsx
- * 作者: by：杰哥 (qq：2711793818)
- * 创建日期: 2026-01-01
- * 说明: 专题页面，动态读取插件后台页面设置，展示可自定义的专题名称
- */
-
-/**
- * 专题页面组件
- * 仅对接“页面设置”的专题名称展示，不引入其他数据
+ * 开发者：杰哥网络科技 (qq: 2711793818)
+ * 专题页面
+ * 动态读取插件后台页面设置，展示可自定义的专题名称
  */
 export const Topic: React.FC = () => {
   const navigate = useNavigate()

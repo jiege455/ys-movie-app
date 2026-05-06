@@ -1379,19 +1379,19 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
         try {
           print('Home Page: Loading from getFiltered(orderby: time)...');
           final recList = await api.getFiltered(orderby: 'time', limit: 12);
-          print('Home Page: getFiltered returned \${recList.length} items');
+          print('Home Page: getFiltered returned ${recList.length} items');
           if (recList.isNotEmpty) {
             firstItems = recList.map((v) => {
-              'id': '\${v['id']}',
+              'id': '${v['id']}',
               'title': v['title'] ?? '',
               'poster': v['poster'] ?? '',
-              'score': double.tryParse('\${v['score'] ?? 0}') ?? 0.0,
-              'year': '\${v['year'] ?? ''}',
+              'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
+              'year': '${v['year'] ?? ''}',
               'overview': v['overview'] ?? '',
             }).toList();
           }
         } catch (e) {
-          print('Home Page: getFiltered failed: \$e');
+          print('Home Page: getFiltered failed: $e');
         }
       }
       
@@ -1403,16 +1403,16 @@ class _HomeRecommendTabState extends State<HomeRecommendTab> with AutomaticKeepA
           final hotFallback = await api.getFiltered(orderby: 'hits', limit: 12);
           if (hotFallback.isNotEmpty) {
             firstItems = hotFallback.map((v) => {
-              'id': '\${v['id']}',
+              'id': '${v['id']}',
               'title': v['title'] ?? '',
               'poster': v['poster'] ?? '',
-              'score': double.tryParse('\${v['score'] ?? 0}') ?? 0.0,
-              'year': '\${v['year'] ?? ''}',
+              'score': double.tryParse('${v['score'] ?? 0}') ?? 0.0,
+              'year': '${v['year'] ?? ''}',
               'overview': v['overview'] ?? '',
             }).toList();
           }
         } catch (e) {
-          print('Home Page: Second fallback failed: \$e');
+          print('Home Page: Second fallback failed: $e');
         }
       }
       
