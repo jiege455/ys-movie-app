@@ -1,4 +1,4 @@
-﻿/// 文件名：api.dart
+/// 文件名：api.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2025-12-16
 /// 作用：MacCMS10 接口封装（首页初始化、分类筛选、详情、评论、弹幕、登录等）
@@ -803,30 +803,21 @@ class MacApi {
       }
     }
 
-    // 插件/自定义接口不可用时，使用筛选接口近似“轮播”：取周热榜或最热
-    // 杰哥：根据用户要求，移除所有自动兜底数据。如果没有配置 Banner，就不显示。
-    /*
+    // 插件/自定义接口不可用时，使用筛选接口近似“轮播”：取最新影片作为兜底
+    // 杰哥修复：恢复兜底逻辑，防止首页轮播图为空导致白板
     try {
-      final hotWeek = await getFiltered(orderby: 'hits_week', limit: 5);
-      if (hotWeek.isNotEmpty) {
-        return hotWeek.map((e) => {
+      final latest = await getFiltered(orderby: 'time', limit: 5);
+      if (latest.isNotEmpty) {
+        return latest.map((e) => {
           'id': e['id'],
           'title': e['title'],
           'poster': e['poster'],
           'type': e['type'] ?? '',
         }).toList();
       }
-      final hot = await getFiltered(orderby: 'hits', limit: 5);
-      if (hot.isNotEmpty) {
-        return hot.map((e) => {
-          'id': e['id'],
-          'title': e['title'],
-          'poster': e['poster'],
-          'type': e['type'] ?? '',
-        }).toList();
-      }
-    } catch (_) {}
-    */
+    } catch (e) {
+      print('Banner fallback failed: $e');
+    }
     return [];
   }
 
@@ -1646,20 +1637,26 @@ class MacApi {
         });
         if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
            final list = (resp.data['list'] as List?) ?? [];
-           return list.map((v) => {
-             'id': '${v['vod_id']}',
-             'title': v['vod_name'] ?? '',
-             'poster': _fixUrl(v['vod_pic']),
-             'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
-             'year': '${v['vod_year'] ?? ''}',
-             'overview': v['vod_remarks'] ?? '',
-           }).toList();
+           if (list.isNotEmpty) {
+             return list.map((v) => {
+               'id': '${v['vod_id']}',
+               'title': v['vod_name'] ?? '',
+               'poster': _fixUrl(v['vod_pic']),
+               'score': double.tryParse('${v['vod_score'] ?? 0}') ?? 0.0,
+               'year': '${v['vod_year'] ?? ''}',
+               'overview': v['vod_remarks'] ?? '',
+             }).toList();
+           }
         }
       } catch (_) {}
 
       // 2. 兜底：若 level 查询为空，用 getFiltered 获取最新影片防止白板
+      // 杰哥修复：app_api.php 在宝塔环境下可能因 open_basedir 限制无法工作
+      // 直接调用 getFiltered 获取最新影片作为兜底
       try {
+        print('getRecommended: Falling back to getFiltered(orderby: time, limit: $limit)');
         final fallback = await getFiltered(orderby: 'time', limit: limit);
+        print('getRecommended: getFiltered returned ${fallback.length} items');
         if (fallback.isNotEmpty) {
           return fallback.map((v) => {
             'id': '${v['id']}',
@@ -1670,10 +1667,13 @@ class MacApi {
             'overview': v['overview'] ?? '',
           }).toList();
         }
-      } catch (_) {}
+      } catch (e) {
+        print('getRecommended: getFiltered fallback failed: $e');
+      }
 
       return [];
-    } catch (_) {
+    } catch (e) {
+      print('getRecommended: Outer catch: $e');
       return [];
     }
   }
