@@ -1239,8 +1239,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         ? Duration(milliseconds: (_draggingValue! * duration.inMilliseconds).round())
         : position;
 
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 竖屏时底部栏适配：根据屏幕宽度动态调整按钮和进度条大小
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isPortrait = screenWidth < 600;
+    final double playBtnSize = isPortrait ? 32 : 28;
+    final double fullscreenBtnSize = isPortrait ? 32 : 28;
+
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, isFullScreen ? 16 : 4),
+      padding: EdgeInsets.fromLTRB(12, 8, 12, isFullScreen ? 16 : 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
@@ -1266,6 +1273,8 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
               showHours: showHours,
               displayPosition: displayPosition,
               isFullScreen: isFullScreen,
+              playBtnSize: playBtnSize,
+              fullscreenBtnSize: fullscreenBtnSize,
             ),
             
             if (isFullScreen) ...[
@@ -1353,6 +1362,8 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     required bool showHours,
     required Duration displayPosition,
     required bool isFullScreen,
+    double playBtnSize = 28,
+    double fullscreenBtnSize = 28,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1394,34 +1405,34 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         Row(
           children: [
             if (!isFullScreen) ...[
-              _buildPlayPauseBtn(28),
-              const SizedBox(width: 8),
+              _buildPlayPauseBtn(playBtnSize),
+              const SizedBox(width: 6),
             ],
-            
+
             // 当前时间 - 拖动时显示预览时间，有气泡时隐藏避免重复
             SizedBox(
-              width: showHours ? 64 : 44,
+              width: showHours ? 58 : 40,
               child: _isDragging
                   ? const SizedBox.shrink() // 拖动时有气泡显示，隐藏左侧时间
                   : Text(
                       _formatDuration(displayPosition, forceShowHours: showHours),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 11,
                         fontFeatures: [FontFeature.tabularFigures()], // 等宽数字，防止抖动
                       ),
                       textAlign: TextAlign.right,
                     ),
             ),
-            const SizedBox(width: 8),
-            
+            const SizedBox(width: 6),
+
             // 进度条 - 使用 GestureDetector 实现更精确的点击和拖动
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final double barHeight = isFullScreen ? 4.0 : 3.0;
                   final double thumbRadius = isFullScreen ? 8.0 : 6.0;
-                  
+
                   return GestureDetector(
                     behavior: HitTestBehavior.translucent,
                     onHorizontalDragStart: (details) {
@@ -1520,28 +1531,28 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 },
               ),
             ),
-            const SizedBox(width: 8),
-            
+            const SizedBox(width: 6),
+
             // 总时长 - 拖动时隐藏，保持界面简洁
             SizedBox(
-              width: showHours ? 64 : 44,
+              width: showHours ? 58 : 40,
               child: _isDragging
                   ? const SizedBox.shrink()
                   : Text(
                       _formatDuration(duration, forceShowHours: showHours),
                       style: const TextStyle(
                         color: Colors.white70,
-                        fontSize: 12,
+                        fontSize: 11,
                         fontFeatures: [FontFeature.tabularFigures()], // 等宽数字
                       ),
                       textAlign: TextAlign.left,
                     ),
             ),
-            
+
             if (!isFullScreen) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               IconButton(
-                icon: const Icon(Icons.fullscreen_rounded, color: Colors.white, size: 28),
+                icon: Icon(Icons.fullscreen_rounded, color: Colors.white, size: fullscreenBtnSize),
                 onPressed: () {
                   _controller?.toggleFullScreen();
                   cancelAndRestartTimer();
