@@ -420,8 +420,8 @@ class ProfilePageState extends State<ProfilePage> {
                             end: Alignment.bottomCenter,
                           ),
                         ),
-              child: Column(
-                children: [
+                        child: Column(
+                          children: [
                   // 顶部用户信息区域（包含设置按钮）
                   Row(
                     children: [

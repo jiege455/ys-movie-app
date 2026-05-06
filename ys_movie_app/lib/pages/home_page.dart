@@ -258,10 +258,11 @@ class _HomePageState extends State<HomePage>
     setState(() => _isLoadingTabs = true);
     try {
       final api = context.read<MacApi>();
-      final res = await api.getTypeList();
-
-      if (res['code'] == 1 && res['data'] != null) {
-        final list = res['data'] as List<dynamic>;
+      // 使用 getAppInit 获取分类列表（优先使用插件接口）
+      final initData = await api.getAppInit();
+      final list = initData['type_list'] as List<dynamic>? ?? [];
+      
+      if (list.isNotEmpty) {
         _tabs = ['推荐', ...list.map((e) => e['type_name'].toString())];
         _tabIds = [0, ...list.map((e) => e['type_id'] as int)];
 
@@ -287,10 +288,11 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadBanner() async {
     try {
       final api = context.read<MacApi>();
-      final res = await api.getVodList(typeId: 0, page: 1, limit: 5);
-      if (res['code'] == 1 && res['data'] != null) {
+      // 使用 getBanner 获取轮播图（优先使用插件接口）
+      final bannerList = await api.getBanner();
+      if (bannerList.isNotEmpty) {
         setState(() {
-          _bannerList = res['data']['list'] ?? [];
+          _bannerList = bannerList;
         });
         _saveCache();
       }
@@ -303,10 +305,11 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadHotWords() async {
     try {
       final api = context.read<MacApi>();
-      final res = await api.getHotWords(limit: 10);
-      if (res['code'] == 1 && res['data'] != null) {
+      // 使用 getHotKeywords 获取热词（优先使用插件接口）
+      final keywords = await api.getHotKeywords();
+      if (keywords.isNotEmpty) {
         setState(() {
-          _hotWords = List<String>.from(res['data']);
+          _hotWords = keywords;
         });
         _saveCache();
       }
@@ -319,10 +322,12 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadAnnouncements() async {
     try {
       final api = context.read<MacApi>();
-      final res = await api.getAnnouncements();
-      if (res['code'] == 1 && res['data'] != null) {
+      // 使用 getAppInit 获取通知（优先使用插件接口）
+      final initData = await api.getAppInit();
+      final notice = initData['notice'];
+      if (notice != null) {
         setState(() {
-          _announcements = res['data'] ?? [];
+          _announcements = [notice];
         });
         _saveCache();
       }
@@ -373,23 +378,22 @@ class _HomePageState extends State<HomePage>
         return;
       }
 
-      final res = await api.getVodList(
-        typeId: typeId,
+      // 使用 getFiltered 获取内容（优先使用插件接口）
+      final list = await api.getFiltered(
+        typeId: typeId == 0 ? null : typeId,
         page: _currentPage,
         limit: 20,
+        orderby: 'time',
       );
 
-      if (res['code'] == 1 && res['data'] != null) {
-        final list = res['data']['list'] as List<dynamic>;
-        final total = res['data']['total'] as int? ?? 0;
-
+      if (list.isNotEmpty) {
         setState(() {
           if (refresh) {
             _contentList = list;
           } else {
             _contentList = [..._contentList, ...list];
           }
-          _hasMore = _contentList.length < total;
+          _hasMore = list.length >= 20;
           _currentPage++;
         });
 
