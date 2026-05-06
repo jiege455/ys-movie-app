@@ -1,0 +1,37 @@
+# 文件名：build_apk.yml
+# 作者：杰哥网络科技（qq：2711793818）
+# 创建日期：2026-05-06
+# 作用：在 GitHub Actions 上构建 Android APK（release模式）
+# 解释：推送代码后自动编译，生成可直接安装的APK包
+name: android-release-build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+
+      - run: flutter --version
+      - run: flutter pub get
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ys-movie-app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
