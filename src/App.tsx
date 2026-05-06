@@ -1,20 +1,18 @@
+import React from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary'
 import { AppRoutes } from './routes/AppRoutes'
 
 /**
- * 应用主组件
- * 负责渲染整个应用的路由系统
- *
  * 开发者：杰哥网络科技 (qq: 2711793818)
- * @returns 应用主组件
+ * 应用根组件
+ * 说明：最外层容器，包裹全局错误边界和路由
  */
-export default function App() {
-  /**
-   * 开发者：杰哥网络科技 (qq: 2711793818)
-   * 作用：应用根组件，渲染路由与底部导航，移动端优先布局
-   */
+const App: React.FC = () => {
   return (
-    <div className="min-h-screen">
+    <ErrorBoundary>
       <AppRoutes />
-    </div>
+    </ErrorBoundary>
   )
 }
+
+export default App

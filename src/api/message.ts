@@ -5,33 +5,10 @@
  */
 
 import { api } from './index'
+import type { Message, MessageSummary } from '../types'
 
-// ============================================================
-// 类型定义
-// ============================================================
+export type { Message, MessageSummary }
 
-export interface Message {
-  id: string
-  title: string
-  content: string
-  type: 'system' | 'notice' | 'activity'
-  isRead: boolean
-  createTime: number
-  link?: string
-}
-
-export interface MessageSummary {
-  total: number
-  unread: number
-}
-
-// ============================================================
-// API 函数
-// ============================================================
-
-/**
- * 获取消息列表
- */
 export const getMessages = async (page: number = 1, limit: number = 20): Promise<Message[]> => {
   try {
     const res: any = await api.get('/app_api.php', {
@@ -55,9 +32,6 @@ export const getMessages = async (page: number = 1, limit: number = 20): Promise
   }
 }
 
-/**
- * 获取消息统计（总数和未读数）
- */
 export const getMessageSummary = async (): Promise<MessageSummary> => {
   try {
     const res: any = await api.get('/app_api.php', {
@@ -76,9 +50,6 @@ export const getMessageSummary = async (): Promise<MessageSummary> => {
   }
 }
 
-/**
- * 标记消息为已读
- */
 export const markMessageAsRead = async (messageId: string): Promise<boolean> => {
   try {
     const res: any = await api.post('/app_api.php', { ac: 'message_read', msg_id: messageId })
@@ -89,9 +60,6 @@ export const markMessageAsRead = async (messageId: string): Promise<boolean> => 
   }
 }
 
-/**
- * 标记所有消息为已读
- */
 export const markAllMessagesAsRead = async (): Promise<boolean> => {
   try {
     const res: any = await api.post('/app_api.php', { ac: 'message_read_all' })
@@ -102,9 +70,6 @@ export const markAllMessagesAsRead = async (): Promise<boolean> => {
   }
 }
 
-/**
- * 删除消息
- */
 export const deleteMessage = async (messageId: string): Promise<boolean> => {
   try {
     const res: any = await api.post('/app_api.php', { ac: 'message_delete', msg_id: messageId })

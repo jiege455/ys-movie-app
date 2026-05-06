@@ -6,43 +6,9 @@
 
 import axios from 'axios'
 import { api } from './index'
+import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode } from '../types'
 
-// ============================================================
-// 类型定义
-// ============================================================
-
-export interface Movie {
-  id: string
-  title: string
-  poster_path: string
-  vote_average: number
-  release_date: string
-  overview: string
-}
-
-export interface BannerMovie extends Movie {
-  backdrop_path: string
-  link: string
-}
-
-export interface MovieDetail extends Movie {
-  backdrop_path: string
-  vod_play_list: VodSource[]
-}
-
-export interface VodEpisode {
-  name?: string
-  url: string
-}
-
-export interface VodSource {
-  name?: string
-  urls?: VodEpisode[]
-}
-
-// ============================================================
-// 数据映射
-// ============================================================
+export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode }
 
 const mapVodToMovie = (v: any): Movie => ({
   id: String(v.vod_id),
@@ -52,10 +18,6 @@ const mapVodToMovie = (v: any): Movie => ({
   release_date: String(v.vod_year || ''),
   overview: v.vod_remarks || ''
 })
-
-// ============================================================
-// API 函数
-// ============================================================
 
 /**
  * 获取热门视频列表（按周热度）
@@ -120,11 +82,9 @@ export const getCategoryMovies = async (categoryId: string, page: number = 1): P
 
 /**
  * 按名称搜索视频（优先使用Xunsearch，失败降级到MacCMS原生搜索）
- * 说明：Xunsearch搜索速度更快，支持模糊匹配
  */
 export const searchMovies = async (keyword: string): Promise<Movie[]> => {
   try {
-    // 优先调用Xunsearch搜索（app_api.php）
     const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
     const res: any = await axios.get(appApiBase, {
       params: { ac: 'search', wd: keyword, page: 1, limit: 20 },
@@ -140,15 +100,11 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
         overview: v.vod_remarks || ''
       }))
     }
-    // Xunsearch失败，降级到MacCMS原生搜索
     console.warn('Xunsearch搜索失败，降级到数据库搜索')
   } catch (error) {
     console.warn('Xunsearch搜索异常，降级到数据库搜索:', error)
   }
 
-  // 降级：使用MacCMS原生搜索
-  // 开发者：杰哥网络科技 (qq: 2711793818)
-  // 修复：MacCMS 搜索参数应为 wd，不是 vod_name
   try {
     const res: any = await api.get('/vod/get_list', {
       params: { wd: keyword, limit: 20 }
@@ -163,11 +119,9 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
 
 /**
  * 高级搜索（Xunsearch，返回完整信息包括总数和搜索来源）
- * 说明：需要显示搜索结果总数时使用此接口
  */
 export const searchMoviesAdvanced = async (keyword: string, page: number = 1, limit: number = 20): Promise<{ list: Movie[], total: number, source: string }> => {
   try {
-    // 优先调用Xunsearch搜索（app_api.php）
     const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
     const res: any = await axios.get(appApiBase, {
       params: { ac: 'search', wd: keyword, page, limit },
@@ -188,13 +142,11 @@ export const searchMoviesAdvanced = async (keyword: string, page: number = 1, li
         source: res.data.source || 'database'
       }
     }
-    // Xunsearch失败，降级到MacCMS原生搜索
     console.warn('Xunsearch高级搜索失败，降级到数据库搜索')
   } catch (error) {
     console.warn('Xunsearch高级搜索异常，降级到数据库搜索:', error)
   }
 
-  // 降级：使用MacCMS原生搜索
   try {
     const res: any = await api.get('/vod/get_list', {
       params: { vod_name: keyword, limit }
@@ -219,13 +171,10 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
     const res: any = await api.get('/vod/get_detail', { params: { vod_id: id } })
     const info = res?.info || {}
 
-    // 播放列表兼容处理：MacCMS可能返回不同格式
     let playList: VodSource[] = []
     if (info.vod_play_list && Array.isArray(info.vod_play_list)) {
       playList = info.vod_play_list
     } else if (info.vod_play_url) {
-      // 兼容：有些版本返回vod_play_url字符串，需要解析
-      // 格式："源1$$$第1集$url1#第2集$url2$$$源2$$$..."
       playList = parseVodPlayUrl(info.vod_play_url)
     }
 
@@ -253,7 +202,6 @@ function parseVodPlayUrl(playUrl: string): VodSource[] {
   if (!playUrl) return []
 
   const sources: VodSource[] = []
-  // MacCMS格式：源名$$$集1$URL1#集2$URL2$$$源名2$$$...
   const sourceParts = playUrl.split('$$$')
 
   for (let i = 0; i < sourceParts.length; i += 2) {

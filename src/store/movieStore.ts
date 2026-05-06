@@ -1,19 +1,5 @@
 import { create } from 'zustand'
-
-/**
- * 开发者：杰哥网络科技 (qq: 2711793818)
- * 模块：电影数据状态管理
- * 说明：管理电影列表、当前选中电影、加载状态等
- */
-
-interface Movie {
-  id: string
-  title: string
-  poster_path: string
-  vote_average: number
-  release_date: string
-  overview: string
-}
+import type { Movie } from '../types'
 
 interface MovieDetail extends Movie {
   runtime?: number

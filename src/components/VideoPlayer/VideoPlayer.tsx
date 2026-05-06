@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react'
+import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 
@@ -288,7 +288,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       link.rel = 'preconnect'
       link.href = url.origin
       document.head.appendChild(link)
-    } catch (_) {
+    } catch {
       // 相对路径或无效 URL，忽略
     }
 
@@ -367,7 +367,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       player.on('ended', () => { if (isMountedRef.current) onEnded?.() })
       player.on('timeupdate', () => {
         if (isMountedRef.current) {
-          const time = player.currentTime()
+          const time = player.currentTime() ?? 0
           setCurrentTime(time)
           onTimeUpdate?.(time)
         }
@@ -377,7 +377,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
           const dur = player.duration() || 0
           setDuration(dur)
           onLoadedMetadata?.(dur)
-          if (startTimeRef.current > 0 && player.currentTime() < startTimeRef.current) {
+          if (startTimeRef.current > 0 && (player.currentTime() ?? 0) < startTimeRef.current) {
             player.currentTime(startTimeRef.current)
           }
         }
@@ -442,7 +442,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
             return null
           }
         }
-      } catch (e) {
+      } catch {
         // 非HLS/DASH源，忽略
       }
     })

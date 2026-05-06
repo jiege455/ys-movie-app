@@ -830,12 +830,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     if (_latestValue == null) return const SizedBox.shrink();
 
     // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：PiP模式下隐藏所有Flutter控制UI，避免按钮幻影和无法点击问题
-    // 系统PiP窗口自带原生控制，不需要Flutter层叠加控制栏
+    // 修复：PiP模式下使用IgnorePointer让Flutter控制UI不拦截点击事件
+    // 系统PiP窗口自带原生控制，Flutter层只需显示但不拦截手势
     final bool isPipMode = _latestValue?.isPip ?? false;
-    if (isPipMode) {
-      return const SizedBox.shrink();
-    }
 
     final size = MediaQuery.of(context).size;
 
@@ -918,105 +915,111 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       },
       child: Container(
         color: Colors.transparent,
-        child: Stack(
-          children: [
-            // 1. 锁定按钮
-            if (_controlsVisible && (_controller?.isFullScreen == true))
-              Positioned(
-                left: 30,
-                top: 0,
-                bottom: 0,
-                child: Center(child: _buildLockButton()),
-              ),
-            
-            // 2. 顶部栏
-            if (_controlsVisible && !_isLocked)
-              Positioned(
-                top: 0, left: 0, right: 0,
-                child: _buildTopBar(),
-              ),
-
-            // 3. 底部栏
-            if (_controlsVisible && !_isLocked)
-              Positioned(
-                bottom: 0, left: 0, right: 0,
-                child: _buildBottomBar(),
-              ),
-
-            // 4. 投屏控制条（投屏状态下显示在顶部）
-            if (_isCasting)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 65,
-                left: 16, right: 16,
-                child: CastControls(
-                  onStopCast: () {
-                    setState(() => _isCasting = false);
-                  },
+        // 开发者：杰哥网络科技
+        // 修复：PiP模式下使用IgnorePointer，让系统原生控制按钮可以正常点击
+        // 同时保持Flutter控制UI可见（透明），避免视频区域闪烁
+        child: IgnorePointer(
+          ignoring: isPipMode,
+          child: Stack(
+            children: [
+              // 1. 锁定按钮
+              if (_controlsVisible && (_controller?.isFullScreen == true) && !isPipMode)
+                Positioned(
+                  left: 30,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(child: _buildLockButton()),
                 ),
-              ),
 
-            // 5. 加载中
-            if (_latestValue!.isBuffering)
-               const Center(
-                 child: SizedBox(
-                   width: 50,
-                   height: 50,
-                   child: CircularProgressIndicator(
-                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                     strokeWidth: 4,
+              // 2. 顶部栏
+              if (_controlsVisible && !_isLocked && !isPipMode)
+                Positioned(
+                  top: 0, left: 0, right: 0,
+                  child: _buildTopBar(),
+                ),
+
+              // 3. 底部栏
+              if (_controlsVisible && !_isLocked && !isPipMode)
+                Positioned(
+                  bottom: 0, left: 0, right: 0,
+                  child: _buildBottomBar(),
+                ),
+
+              // 4. 投屏控制条（投屏状态下显示在顶部）
+              if (_isCasting && !isPipMode)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 65,
+                  left: 16, right: 16,
+                  child: CastControls(
+                    onStopCast: () {
+                      setState(() => _isCasting = false);
+                    },
+                  ),
+                ),
+
+              // 5. 加载中
+              if (_latestValue!.isBuffering && !isPipMode)
+                 const Center(
+                   child: SizedBox(
+                     width: 50,
+                     height: 50,
+                     child: CircularProgressIndicator(
+                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                       strokeWidth: 4,
+                     ),
                    ),
                  ),
-               ),
-               
-            // 6. 长按倍速提示
-            if (_isLongPressing)
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.fast_forward, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('2倍速播放中', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ),
 
-            // 7. 亮度/音量 提示
-            if (_isSlidingBrightness || _isSlidingVolume)
-              Center(
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _isSlidingBrightness ? Icons.brightness_6 : Icons.volume_up,
-                        color: Colors.white,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
-                      LinearProgressIndicator(
-                        value: _isSlidingBrightness ? _brightness : _volume,
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    ],
+              // 6. 长按倍速提示
+              if (_isLongPressing && !isPipMode)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.fast_forward, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('2倍速播放中', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+
+              // 7. 亮度/音量 提示
+              if ((_isSlidingBrightness || _isSlidingVolume) && !isPipMode)
+                Center(
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isSlidingBrightness ? Icons.brightness_6 : Icons.volume_up,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        LinearProgressIndicator(
+                          value: _isSlidingBrightness ? _brightness : _volume,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

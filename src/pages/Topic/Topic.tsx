@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAppPageSetting, AppPageSetting } from '../../api'
+import { getAppPageSetting } from '../../api'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
+import type { Movie } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -12,7 +13,7 @@ import { MovieCard } from '../../components/MovieCard/MovieCard'
 export const Topic: React.FC = () => {
   const navigate = useNavigate()
   const [topicName, setTopicName] = useState('专题')
-  const [movies, setMovies] = useState<any[]>([])
+  const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isMountedRef = useRef(true)
@@ -35,7 +36,7 @@ export const Topic: React.FC = () => {
         }
         setMovies([])
       }
-    } catch (e) {
+    } catch {
       if (isMountedRef.current) {
         setError('加载专题数据失败')
       }

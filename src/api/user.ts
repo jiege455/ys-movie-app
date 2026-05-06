@@ -5,42 +5,15 @@
  */
 
 import { api } from './index'
+import type { UserAuth, UserInfo, FavoriteItem } from '../types'
 
-// ============================================================
-// 类型定义
-// ============================================================
-
-export interface UserAuth {
-  user_id: string
-  user_name: string
-  user_check: string
-}
-
-export interface UserInfo {
-  user_id: string
-  user_name: string
-  user_nick_name: string
-  user_phone: string
-  user_reg_time: number
-}
-
-export interface FavoriteItem {
-  id: string
-  vodId: string
-  title: string
-  poster: string
-  time: number
-}
+export type { UserAuth, UserInfo, FavoriteItem }
 
 export interface ApiResult<T = unknown> {
   success: boolean
   data?: T
   message: string
 }
-
-// ============================================================
-// 本地存储工具
-// ============================================================
 
 const AUTH_KEY = 'user_auth'
 const AUTH_EXPIRE_KEY = 'user_auth_expire'
@@ -75,13 +48,6 @@ export const checkLoggedIn = (): boolean => {
   return getUserAuth() !== null
 }
 
-// ============================================================
-// API 函数
-// ============================================================
-
-/**
- * 用户登录
- */
 export const userLogin = async (userName: string, userPwd: string): Promise<ApiResult<UserAuth>> => {
   try {
     const res: any = await api.post('/user/login', { user_name: userName, user_pwd: userPwd })
@@ -101,9 +67,6 @@ export const userLogin = async (userName: string, userPwd: string): Promise<ApiR
   }
 }
 
-/**
- * 用户注册
- */
 export const userRegister = async (userName: string, userPwd: string, userPwd2: string): Promise<ApiResult<UserAuth>> => {
   try {
     const res: any = await api.post('/user/reg', {
@@ -127,9 +90,6 @@ export const userRegister = async (userName: string, userPwd: string, userPwd2: 
   }
 }
 
-/**
- * 用户退出登录
- */
 export const userLogout = async (): Promise<ApiResult<null>> => {
   try {
     const res: any = await api.post('/user/logout')
@@ -138,20 +98,12 @@ export const userLogout = async (): Promise<ApiResult<null>> => {
       return { success: true, message: '退出成功' }
     }
     return { success: true, message: '已退出登录' }
-  } catch (error) {
-    console.error('退出失败:', error)
+  } catch {
     clearUserAuth()
     return { success: true, message: '已清除登录状态' }
   }
 }
 
-// ============================================================
-// 收藏 API
-// ============================================================
-
-/**
- * 添加收藏
- */
 export const addFavorite = async (rid: string | number, mid: number = 1): Promise<ApiResult<null>> => {
   try {
     const res: any = await api.post('/user/ulog_add', {
@@ -169,9 +121,6 @@ export const addFavorite = async (rid: string | number, mid: number = 1): Promis
   }
 }
 
-/**
- * 取消收藏
- */
 export const removeFavorite = async (rid: string | number, mid: number = 1): Promise<ApiResult<null>> => {
   try {
     const res: any = await api.post('/user/ulog_del', {
@@ -189,9 +138,6 @@ export const removeFavorite = async (rid: string | number, mid: number = 1): Pro
   }
 }
 
-/**
- * 获取收藏列表
- */
 export const getFavorites = async (page: number = 1, limit: number = 20): Promise<FavoriteItem[]> => {
   try {
     const res: any = await api.get('/user/ulog_list', {
@@ -216,9 +162,6 @@ export const getFavorites = async (page: number = 1, limit: number = 20): Promis
   }
 }
 
-/**
- * 检查是否已收藏
- */
 export const checkFavoriteStatus = async (rid: string | number, mid: number = 1): Promise<boolean> => {
   try {
     const res: any = await api.get('/user/ulog_check', {

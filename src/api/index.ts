@@ -27,16 +27,10 @@ export const api = axios.create({
  */
 api.interceptors.request.use(
   (config) => {
-    // 从localStorage获取登录信息
     const authStr = localStorage.getItem('user_auth')
     if (authStr) {
       try {
-        const auth = JSON.parse(authStr)
-        // MacCMS通过Cookie验证，这里确保withCredentials已启用
-        // 如果后端支持Header验证，可以取消下面注释
-        // config.headers['X-User-Id'] = auth.user_id
-        // config.headers['X-User-Name'] = auth.user_name
-        // config.headers['X-User-Check'] = auth.user_check
+        JSON.parse(authStr)
       } catch {
         // 解析失败，忽略
       }
@@ -67,12 +61,7 @@ api.interceptors.response.use(
 /**
  * 统一API响应格式
  */
-export interface ApiResponse<T = unknown> {
-  code: number
-  msg: string
-  info?: T
-  data?: T
-}
+export type { ApiResponse } from '../types'
 
 /**
  * 返回图片URL（MacCMS 已是完整地址则直接返回，否则拼接域名）

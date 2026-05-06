@@ -3,8 +3,7 @@
  * 模块：评论相关类型定义
  */
 
-/** 评论 */
-export interface Comment {
+export interface MovieComment {
   id: string
   userName: string
   content: string

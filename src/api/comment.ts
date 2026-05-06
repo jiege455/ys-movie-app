@@ -5,41 +5,23 @@
  */
 
 import { api } from './index'
+import type { MovieComment } from '../types'
 
-// ============================================================
-// 类型定义
-// ============================================================
+export type { MovieComment }
 
-export interface Comment {
-  id: string
-  userName: string
-  content: string
-  time: string
-  rid: string
-}
-
-// ============================================================
-// API 函数
-// ============================================================
-
-/**
- * 获取评论列表
- */
-export const getComments = async (rid: string, page: number = 1, limit: number = 20): Promise<Comment[]> => {
+export const getComments = async (rid: string, page: number = 1, limit: number = 20): Promise<MovieComment[]> => {
   try {
     const res: any = await api.get('/comment/get_list', {
       params: { rid, offset: (page - 1) * limit, limit }
     })
     if (res?.code === 1 && res?.info?.rows) {
       return res.info.rows.map((item: any) => {
-        // 时间戳可能是字符串或数字，兼容处理
         let timeStr = ''
         if (item.comment_time) {
           const timestamp = typeof item.comment_time === 'string'
             ? parseInt(item.comment_time, 10)
             : item.comment_time
           if (!isNaN(timestamp)) {
-            // 判断是秒还是毫秒（大于1e12认为是毫秒）
             const ms = timestamp > 1e12 ? timestamp : timestamp * 1000
             timeStr = new Date(ms).toLocaleString('zh-CN')
           }
@@ -60,9 +42,6 @@ export const getComments = async (rid: string, page: number = 1, limit: number =
   }
 }
 
-/**
- * 发送评论
- */
 export const addComment = async (rid: string, content: string): Promise<boolean> => {
   try {
     const res: any = await api.post('/comment/add', {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getCategoryMovies } from '../../api'
+import type { Movie } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -14,7 +15,7 @@ export const Category: React.FC = () => {
   const location = useLocation()
   const categoryName = location.state?.name || '分类'
 
-  const [movies, setMovies] = useState<any[]>([])
+  const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

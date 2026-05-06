@@ -4,6 +4,7 @@ import { Carousel } from '../../components/Carousel/Carousel'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getHotMovies, getBannerMovies } from '../../api'
 import { useMovieStore } from '../../store/movieStore'
+import type { BannerMovie } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -14,16 +15,6 @@ export const Home: React.FC = () => {
   const navigate = useNavigate()
   const { movies, setMovies, loading, setLoading } = useMovieStore()
 
-  type BannerMovie = {
-    id: string
-    title: string
-    poster_path: string
-    vote_average: number
-    release_date: string
-    overview: string
-    backdrop_path?: string
-    link?: string
-  }
   const [hotMovies, setHotMovies] = useState<BannerMovie[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState<string | null>(null)

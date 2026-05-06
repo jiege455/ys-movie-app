@@ -428,9 +428,21 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             player.setupMediaSession(flutterState!!.applicationContext)
             val builder = PictureInPictureParams.Builder()
+            // 开发者：杰哥网络科技
+            // 修复：使用16:9比例，避免视频比例导致PiP窗口过大或变形
             val aspectRatio = player.getAspectRatio()
             if (aspectRatio != null) {
-                builder.setAspectRatio(aspectRatio)
+                // 限制宽高比在 16:9 到 4:3 之间，避免极端比例
+                val ratioValue = aspectRatio.toFloat()
+                val clampedRatio = when {
+                    ratioValue > 16f/9f -> Rational(16, 9)
+                    ratioValue < 4f/3f -> Rational(4, 3)
+                    else -> aspectRatio
+                }
+                builder.setAspectRatio(clampedRatio)
+            } else {
+                // 默认16:9
+                builder.setAspectRatio(Rational(16, 9))
             }
             activity!!.enterPictureInPictureMode(builder.build())
             startPictureInPictureListenerTimer(player)
@@ -455,9 +467,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                     player.onPictureInPictureStatusChanged(false)
                     player.disposeMediaSession()
                     stopPipHandler()
-                    if (activity is LifecycleOwner && (activity as LifecycleOwner).lifecycle.currentState != Lifecycle.State.RESUMED) {
-                        player.pause()
-                    }
+                    // 开发者：杰哥网络科技
+                    // 修复：移除错误的pause()调用，用户从PiP放大回App时不应自动暂停
+                    // 原逻辑：if (activity is LifecycleOwner && activity.lifecycle.currentState != Lifecycle.State.RESUMED) { player.pause() }
                 }
             }
             pipHandler!!.post(pipRunnable!!)

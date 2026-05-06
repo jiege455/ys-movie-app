@@ -38,7 +38,7 @@ export const MovieDetail: React.FC = () => {
       if (isMountedRef.current) {
         setMovieData(data)
       }
-    } catch (err) {
+    } catch {
       if (isMountedRef.current) {
         setError('加载电影信息失败')
       }
@@ -62,7 +62,7 @@ export const MovieDetail: React.FC = () => {
   const getAllEpisodes = (): VodEpisode[] => {
     if (!movieData?.vod_play_list) return []
     const episodes: VodEpisode[] = []
-    movieData.vod_play_list.forEach(source => {
+    movieData.vod_play_list.forEach((source: { urls?: VodEpisode[] }) => {
       if (source.urls) {
         episodes.push(...source.urls)
       }

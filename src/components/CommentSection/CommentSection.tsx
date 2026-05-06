@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getComments, addComment, checkLoggedIn } from '../../api'
-import type { Comment } from '../../api'
+import type { MovieComment } from '../../api'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -13,7 +13,7 @@ interface CommentSectionProps {
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<MovieComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)

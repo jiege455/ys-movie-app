@@ -5,23 +5,10 @@
  */
 
 import { api } from './index'
+import type { AppPageSetting } from '../types'
 
-// ============================================================
-// 类型定义
-// ============================================================
+export type { AppPageSetting }
 
-export interface AppPageSetting {
-  app_tab_topic: number | boolean
-  app_tab_topic_name: string
-}
-
-// ============================================================
-// API 函数
-// ============================================================
-
-/**
- * 获取APP页面设置
- */
 export const getAppPageSetting = async (): Promise<AppPageSetting | null> => {
   try {
     const res: any = await api.get('/app/page_setting')

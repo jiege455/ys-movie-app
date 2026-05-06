@@ -720,7 +720,7 @@ class _HomePageState extends State<HomePage>
     final hasMore = _hasMoreCache[index] ?? true;
     // 只有当前分类正在加载时才显示加载状态
     final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
-    
+
     return RefreshIndicator(
       key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
       onRefresh: _onRefresh,
@@ -728,14 +728,20 @@ class _HomePageState extends State<HomePage>
           ? _buildContentShimmer()
           : contentList.isEmpty
               ? _buildEmptyView()
-              : ListView.builder(
+              : GridView.builder(
                   padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.65,
+                  ),
                   itemCount: contentList.length + (hasMore ? 1 : 0),
                   itemBuilder: (context, i) {
                     if (i >= contentList.length) {
                       return _buildLoadMoreIndicator();
                     }
-                    return _buildContentCard(contentList[i]);
+                    return _buildGridItem(contentList[i]);
                   },
                 ),
     );
