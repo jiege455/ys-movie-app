@@ -1,9 +1,5 @@
-/// 文件名：home_page.dart
-/// 作者：杰哥（by：杰哥 / qq：2711793818）
-/// 创建日期：2025-12-16
-/// 作用：首页（顶部分类菜单 + Banner + 热门推荐 + 继续观看 + 内容网格）
-/// 解释：你打开 App 第一眼看到的页面，顶部能切分类，下面是内容。
 /// 开发者：杰哥网络科技 (qq: 2711793818)
+/// 作用：首页（顶部分类菜单 + Banner + 热门推荐 + 继续观看 + 内容网格）
 
 import 'dart:async';
 import 'dart:convert';
@@ -20,7 +16,6 @@ import '../pages/detail_page.dart';
 import '../pages/search_page.dart';
 import '../services/api.dart';
 import '../services/store.dart';
-import '../services/theme_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../utils/keep_alive_wrapper.dart';
@@ -527,13 +522,13 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.slate50,
-      body: SafeArea(
-        child: NestedScrollView(
+      body: TexturedBackground(
+        child: SafeArea(
+          child: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
@@ -584,6 +579,7 @@ class _HomePageState extends State<HomePage>
                     );
                   }).toList(),
                 ),
+          ),
         ),
       ),
     );
@@ -600,22 +596,22 @@ class _HomePageState extends State<HomePage>
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.slate50,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? AppColors.slate700 : AppColors.slate200,
+            color: Theme.of(context).dividerColor,
           ),
         ),
         child: Row(
           children: [
-            Icon(Icons.search, color: AppColors.slate400, size: 20),
+            Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 _hotWords.isNotEmpty
                     ? '搜索: ${_hotWords[Random().nextInt(_hotWords.length)]}'
                     : '搜索你想看的视频...',
-                style: TextStyle(color: AppColors.slate400, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 14),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -647,7 +643,7 @@ class _HomePageState extends State<HomePage>
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         labelColor: Theme.of(context).colorScheme.primary,
-        unselectedLabelColor: isDark ? AppColors.slate400 : AppColors.slate500,
+        unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
         labelStyle: TextStyle(fontSize: _homeTypeFontSize, fontWeight: FontWeight.bold),
         unselectedLabelStyle: TextStyle(
           fontSize: (_homeTypeFontSize - 2).clamp(10, 30),
@@ -667,8 +663,8 @@ class _HomePageState extends State<HomePage>
   // ── Tab 骨架屏 ──
   Widget _buildTabShimmer() {
     return Shimmer.fromColors(
-      baseColor: AppColors.slate300,
-      highlightColor: AppColors.slate100,
+      baseColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+      highlightColor: Theme.of(context).colorScheme.surface,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         height: 40,
@@ -678,7 +674,7 @@ class _HomePageState extends State<HomePage>
           itemBuilder: (_, __) => Container(
             width: 60,
             margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
           ),
         ),
       ),
@@ -786,9 +782,9 @@ class _HomePageState extends State<HomePage>
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.slate50,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? AppColors.slate700 : AppColors.slate200),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
@@ -797,7 +793,7 @@ class _HomePageState extends State<HomePage>
           Expanded(
             child: Text(
               _announcements.isNotEmpty ? _announcements[0]['title'].toString() : '',
-              style: TextStyle(color: isDark ? AppColors.slate300 : AppColors.slate700, fontSize: 13),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 13),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -871,8 +867,8 @@ class _HomePageState extends State<HomePage>
                   imageUrl: item['poster'] ?? '',
                   width: 110,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(color: AppColors.slate200),
-                  errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
+                  placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                  errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                 ),
               ),
             ),
@@ -963,8 +959,8 @@ class _HomePageState extends State<HomePage>
                     CachedNetworkImage(
                       imageUrl: item['poster'] ?? '',
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: AppColors.slate200),
-                      errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
+                      placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                      errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                     ),
                     // 播放按钮
                     Center(
@@ -986,7 +982,7 @@ class _HomePageState extends State<HomePage>
                         right: 0,
                         child: LinearProgressIndicator(
                           value: progressVal,
-                          backgroundColor: Colors.black.withOpacity(0.3),
+                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                           valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                           minHeight: 3,
                         ),
@@ -1100,8 +1096,8 @@ class _HomePageState extends State<HomePage>
   // ── 骨架屏 ──
   Widget _buildContentShimmer() {
     return Shimmer.fromColors(
-      baseColor: AppColors.slate300,
-      highlightColor: AppColors.slate100,
+      baseColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+      highlightColor: Theme.of(context).colorScheme.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1112,7 +1108,7 @@ class _HomePageState extends State<HomePage>
         ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(
-          decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
@@ -1124,9 +1120,9 @@ class _HomePageState extends State<HomePage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox, size: 64, color: AppColors.slate400),
+          Icon(Icons.inbox, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
           const SizedBox(height: 16),
-          Text('暂无内容', style: TextStyle(color: AppColors.slate600, fontSize: 16)),
+          Text('暂无内容', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), fontSize: 16)),
         ],
       ),
     );

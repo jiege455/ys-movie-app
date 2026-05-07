@@ -1,4 +1,5 @@
 /// 开发者：杰哥网络科技 (qq: 2711793818)
+/// 作用：我的页面，个人中心
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,8 +21,7 @@ import 'find_page.dart';
 import 'settings_page.dart';
 
 /// 开发者：杰哥网络科技 (qq: 2711793818)
-/// 作用：我的页面，个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
-/// 小白解释：个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
+/// 作用：我的页面，个人中心
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
   @override
@@ -75,9 +75,6 @@ class ProfilePageState extends State<ProfilePage> {
     } catch (_) {}
   }
 
-  /// 开发者：杰哥
-  /// 作用：读取 App 版本号并显示在“我的”页底部
-  /// 小白解释：方便你看当前装的是哪个版本，升级后也能确认是否生效。
   Future<void> _loadVersionLabel() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -89,9 +86,6 @@ class ProfilePageState extends State<ProfilePage> {
     } catch (_) {}
   }
 
-  /// 开发者：杰哥
-  /// 作用：检查版本更新并提示下载
-  /// 小白解释：去后台问一下有没有新版本，有就弹窗告诉你下载地址。
   Future<void> _checkUpdate() async {
     if (_checkingUpdate) return;
     setState(() => _checkingUpdate = true);
@@ -211,9 +205,6 @@ class ProfilePageState extends State<ProfilePage> {
     if (mounted) setState(() {});
   }
 
-  /// 开发者：杰哥
-  /// 作用：加载我的页所需的数据（优先本地，其次云端）
-  /// 小白解释：先把本地的收藏和历史读出来，如果你登录了再去试一下服务器那边。
   Future<void> _loadData() async {
     // 本地数据始终加载，保证即便云端失败功能也可用
     favs = await StoreService.getFavorites();
@@ -324,15 +315,13 @@ class ProfilePageState extends State<ProfilePage> {
             if (isSelected)
               Icon(Icons.check_circle, color: primaryColor, size: 20)
             else
-              Icon(Icons.radio_button_unchecked, color: AppColors.slate400.withOpacity(0.5), size: 20),
+              Icon(Icons.radio_button_unchecked, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3), size: 20),
           ],
         ),
       ),
     );
   }
 
-  /// 开发者：杰哥
-  /// 作用：格式化播放时长为 HH:MM:SS 或 MM:SS
   String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
@@ -392,15 +381,10 @@ class ProfilePageState extends State<ProfilePage> {
     }).toList();
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // 纹理背景
-          if (isDark)
-            const TexturedBackground(child: SizedBox.expand()),
-          
-          SingleChildScrollView(
-            child: Column(
-              children: [
+      body: TexturedBackground(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
                 // 顶部头部
                 Container(
                   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: 30, left: 24, right: 24),
@@ -410,7 +394,7 @@ class ProfilePageState extends State<ProfilePage> {
                           gradient: LinearGradient(
                             colors: isDark 
                                 ? [primaryColor.withAlpha(60), Theme.of(context).scaffoldBackgroundColor]
-                                : [primaryColor.withAlpha(35), AppColors.slate50],
+                                : [primaryColor.withAlpha(35), Theme.of(context).scaffoldBackgroundColor],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -578,8 +562,8 @@ class ProfilePageState extends State<ProfilePage> {
                                                   CachedNetworkImage(
                                                     imageUrl: item['poster'],
                                                     fit: BoxFit.cover,
-                                                    placeholder: (_, __) => Container(color: AppColors.slate200),
-                                                    errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.broken_image)),
+                                                    placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                                                    errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                                                   ),
                                                   // 进度条
                                                   if ((item['progressVal'] as double? ?? 0) > 0)
@@ -739,9 +723,8 @@ class ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-    ],
-   ),
-);
+    ),
+  );
   }
 
   Widget _buildStatItem(String count, String label, {VoidCallback? onTap}) {

@@ -6,7 +6,6 @@ import '../theme/app_theme.dart';
 import 'detail_page.dart';
 /// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 作用：排行榜页面，实现日榜、周榜、月榜切换，按分类排序
-/// 小白解释：这里看大家都在看什么，分今天、这周、这月最火的。
 class RankingPage extends StatefulWidget {
   const RankingPage({super.key});
 
@@ -121,8 +120,6 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final tabCtrl = _tabController;
     final primaryColor = Theme.of(context).colorScheme.primary;
-    // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：使用天空蓝主题渐变背景 + 装饰图案
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
@@ -177,8 +174,6 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   child: Row(
                     children: [
-                      // 开发者：杰哥网络科技 (qq: 2711793818)
-                      // 修复：使用主题色，避免硬编码白色
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -187,9 +182,7 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                             color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDark
-                                  ? AppColors.slate700.withOpacity(0.1)
-                                  : Theme.of(context).dividerColor,
+                              color: Theme.of(context).dividerColor,
                               width: 1,
                             ),
                           ),
@@ -217,17 +210,13 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // 开发者：杰哥网络科技 (qq: 2711793818)
-                      // 修复：使用主题色，避免硬编码白色
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
                           color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isDark
-                                ? AppColors.slate700.withOpacity(0.1)
-                                : Theme.of(context).dividerColor,
+                            color: Theme.of(context).dividerColor,
                             width: 1,
                           ),
                         ),
@@ -353,7 +342,7 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.sentiment_dissatisfied, size: 48, color: AppColors.slate400),
+            Icon(Icons.sentiment_dissatisfied, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
             const SizedBox(height: 16),
             Text('暂无数据', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
             const SizedBox(height: 16),
@@ -398,8 +387,8 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                       width: 90,
                       height: 130,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: AppColors.slate200),
-                      errorWidget: (_, __, ___) => Container(color: AppColors.slate200, child: const Icon(Icons.movie)),
+                      placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
+                      errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.movie)),
                     ),
                   ),
                   const SizedBox(width: 12),
