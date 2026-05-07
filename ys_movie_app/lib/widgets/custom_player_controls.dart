@@ -1507,7 +1507,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                               borderRadius: BorderRadius.circular(barHeight / 2),
                               boxShadow: _isDragging ? [
                                 BoxShadow(
-                                  color: const AppColors.success.withOpacity(0.5),
+                                  color: AppColors.success.withOpacity(0.5),
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
@@ -1531,7 +1531,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                                   ),
                                   if (_isDragging)
                                     BoxShadow(
-                                      color: const AppColors.success.withOpacity(0.4),
+                                      color: AppColors.success.withOpacity(0.4),
                                       blurRadius: 8,
                                       spreadRadius: 2,
                                     ),
