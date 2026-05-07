@@ -89,7 +89,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         title: const Text('反馈报错'),
         // 使用主题默认配色
       ),
-      body: SingleChildScrollView(
+      body: TexturedBackground(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +236,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
         title: const Text('求片找片'),
         // 使用主题默认配色
       ),
-      body: SingleChildScrollView(
+      body: TexturedBackground(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,7 +371,7 @@ class _MessageCenterPageState extends State<MessageCenterPage>
           ],
         ),
       ),
-      body: TabBarView(
+      body: TexturedBackground(child: TabBarView(
         controller: _tabCtrl,
         children: const [
           _NoticeListTab(),
@@ -927,7 +927,7 @@ class FeedbackCenterPage extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('帮助与反馈')),
-      body: ListView(
+      body: TexturedBackground(child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _buildCard(
