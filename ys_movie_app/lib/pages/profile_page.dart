@@ -562,8 +562,8 @@ class ProfilePageState extends State<ProfilePage> {
                                                   CachedNetworkImage(
                                                     imageUrl: item['poster'],
                                                     fit: BoxFit.cover,
-                                                    placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
-                                                    errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                                                    placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                                                    errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                                                   ),
                                                   // 进度条
                                                   if ((item['progressVal'] as double? ?? 0) > 0)

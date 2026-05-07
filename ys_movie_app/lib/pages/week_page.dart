@@ -117,8 +117,6 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_items.isEmpty) {
       return Center(
@@ -127,7 +125,7 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
           children: [
             const Icon(Icons.calendar_today_outlined, size: 48, color: AppColors.slate400),
             const SizedBox(height: 12),
-            const Text('暂无排期数据', style: TextStyle(color: AppColors.slate400)),
+            Text('暂无排期数据', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
             const SizedBox(height: 12),
             ElevatedButton(onPressed: _load, child: const Text('刷新')),
           ],
@@ -172,8 +170,8 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
                         CachedNetworkImage(
                           imageUrl: poster,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
-                          errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                          placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                          errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                         ),
                         if (remarks.isNotEmpty)
                           Positioned(
@@ -205,7 +203,7 @@ class _WeekListState extends State<_WeekList> with AutomaticKeepAliveClientMixin
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                 ),
               ],
             ),

@@ -317,8 +317,8 @@ class _VodListPageState extends State<VodListPage> {
                                   width: 70,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
-                                  errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.movie)),
+                                  placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                                  errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.movie)),
                                 ),
                               ),
                               Expanded(

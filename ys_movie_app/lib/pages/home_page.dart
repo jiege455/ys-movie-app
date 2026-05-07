@@ -288,8 +288,8 @@ class _HomePageState extends State<HomePage>
       final list = initData['type_list'] as List<dynamic>? ?? [];
       
       if (list.isNotEmpty) {
-        _tabs = ['推荐', ...list.map((e) => e['type_name'].toString())];
-        _tabIds = [0, ...list.map((e) => int.tryParse('${e['type_id']}') ?? 0)];
+        _tabs = ['推荐', ...list.where((e) => e['type_name'].toString() != '全部').map((e) => e['type_name'].toString())];
+        _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
 
         _tabController = TabController(length: _tabs.length, vsync: this);
         _tabController.addListener(_onTabChanged);
@@ -1062,8 +1062,8 @@ class _HomePageState extends State<HomePage>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200),
-                    errorWidget: (_, __, ___) => Container(color: isDark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                    placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                                errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                   ),
                 ),
                 Positioned(
