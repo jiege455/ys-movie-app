@@ -1,4 +1,4 @@
-/// 文件名：custom_player_controls.dart
+﻿/// 文件名：custom_player_controls.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2026-01-17
 /// 作用：BetterPlayer 自定义控制器 UI 实现
@@ -280,7 +280,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? const AppColors.success : AppColors.slate300, // 选中绿色
+            color: isSelected ? AppColors.success : AppColors.slate300, // 选中绿色
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 16,
           ),
@@ -471,7 +471,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                         onSelected: (v) {
                           if (v) setStateSheet(() => currentPage = p);
                         },
-                        selectedColor: const AppColors.success,
+                        selectedColor: AppColors.success,
                         backgroundColor: AppColors.slate700.withOpacity(0.1),
                         labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.slate300, fontSize: 12),
                         padding: EdgeInsets.zero,
@@ -515,7 +515,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isSelected ? const AppColors.success : AppColors.slate700.withOpacity(0.12), // 选中绿色背景
+                        color: isSelected ? AppColors.success : AppColors.slate700.withOpacity(0.12), // 选中绿色背景
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -587,10 +587,10 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const AppColors.success,
+                    activeTrackColor: AppColors.success,
                     inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
                     thumbColor: Colors.white,
-                    overlayColor: const AppColors.success.withOpacity(0.2),
+                    overlayColor: AppColors.success.withOpacity(0.2),
                   ),
                   child: Slider(
                     value: settings.danmakuArea,
@@ -613,10 +613,10 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const AppColors.success,
+                    activeTrackColor: AppColors.success,
                     inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
                     thumbColor: Colors.white,
-                    overlayColor: const AppColors.success.withOpacity(0.2),
+                    overlayColor: AppColors.success.withOpacity(0.2),
                   ),
                   child: Slider(
                     value: settings.danmakuOpacity,
@@ -661,12 +661,12 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         decoration: BoxDecoration(
           color: isSel ? AppColors.slate700.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
-          border: isSel ? Border.all(color: const AppColors.success) : null,
+          border: isSel ? Border.all(color: AppColors.success) : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSel ? const AppColors.success : AppColors.slate300,
+            color: isSel ? AppColors.success : AppColors.slate300,
             fontSize: displaySize,
             fontWeight: FontWeight.bold,
           ),
@@ -740,7 +740,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                       value: settings.enableSkip,
                       onChanged: (v) => setStateInner(() => settings.setEnableSkip(v)),
                       activeColor: Colors.white,
-                      activeTrackColor: const AppColors.success,
+                      activeTrackColor: AppColors.success,
                     ),
                   ],
                 ),
@@ -1317,13 +1317,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                           border: Border.all(color: PlayerSettings().danmakuEnabled ? const AppColors.success : AppColors.slate500),
+                           border: Border.all(color: PlayerSettings().danmakuEnabled ? AppColors.success : AppColors.slate500),
                            borderRadius: BorderRadius.circular(16),
-                           color: PlayerSettings().danmakuEnabled ? const AppColors.success.withOpacity(0.2) : Colors.transparent,
+                           color: PlayerSettings().danmakuEnabled ? AppColors.success.withOpacity(0.2) : Colors.transparent,
                         ),
                         child: Text('弹', style: TextStyle(
                           color: PlayerSettings().danmakuEnabled 
-                            ? const AppColors.success 
+                            ? AppColors.success 
                             : (PlayerSettings().danmakuUserEnabled == false && PlayerSettings().danmakuEnabled == false)
                               ? AppColors.error
                               : Colors.white, 
@@ -1503,7 +1503,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                             height: barHeight,
                             width: constraints.maxWidth * (_isDragging && _draggingValue != null ? _draggingValue! : displayProgress),
                             decoration: BoxDecoration(
-                              color: _isDragging ? const AppColors.success : const AppColors.success,
+                              color: _isDragging ? AppColors.success : AppColors.success,
                               borderRadius: BorderRadius.circular(barHeight / 2),
                               boxShadow: _isDragging ? [
                                 BoxShadow(
