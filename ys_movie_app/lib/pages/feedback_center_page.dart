@@ -161,6 +161,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
           ],
         ),
       ),
+          ),
     );
   }
 }
@@ -326,6 +327,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
           ],
         ),
       ),
+          ),
     );
   }
 }
@@ -910,6 +912,7 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
                 ),
               ),
             ),
+              ),
     );
   }
 }
@@ -958,6 +961,7 @@ class FeedbackCenterPage extends StatelessWidget {
           ),
         ],
       ),
+          ),
     );
   }
 
