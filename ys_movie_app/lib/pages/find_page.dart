@@ -61,7 +61,8 @@ class _FindPageState extends State<FindPage> {
       appBar: AppBar(
         title: const Text('求片找片'),
       ),
-      body: SingleChildScrollView(
+      body: TexturedBackground(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,6 +151,7 @@ class _FindPageState extends State<FindPage> {
           ],
         ),
       ),
+        ),
     );
   }
 }

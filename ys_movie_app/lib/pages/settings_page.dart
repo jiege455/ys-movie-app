@@ -98,6 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+        ),
     );
   }
 
@@ -405,7 +406,8 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('设置'),
         centerTitle: true,
       ),
-      body: ListView(
+      body: TexturedBackground(
+        child: ListView(
         children: [
           const SizedBox(height: 10),
           _buildSectionHeader('常规'),

@@ -269,7 +269,8 @@ class _DownloadPageState extends State<DownloadPage> {
           ),
         ],
       ),
-      body: _loading
+      body: TexturedBackground(
+        child: _loading
           ? const Center(child: CircularProgressIndicator())
           : _tasks.isEmpty
               ? const Center(
@@ -465,6 +466,7 @@ class _DownloadPageState extends State<DownloadPage> {
                     },
                   ),
                 ),
+          ),
     );
   }
 }

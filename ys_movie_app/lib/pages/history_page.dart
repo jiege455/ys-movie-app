@@ -93,7 +93,8 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ],
       ),
-      body: _history.isEmpty
+      body: TexturedBackground(
+        child: _history.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -156,6 +157,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 );
               },
             ),
+          ),
     );
   }
 }

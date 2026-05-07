@@ -78,7 +78,8 @@ class _TopicPageState extends State<TopicPage> {
     
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: _loading
+      body: TexturedBackground(
+        child: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
@@ -172,6 +173,7 @@ class _TopicPageState extends State<TopicPage> {
                       },
                     ),
             ),
+          ),
     );
   }
 }

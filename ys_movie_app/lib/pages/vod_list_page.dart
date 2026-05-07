@@ -223,9 +223,10 @@ class _VodListPageState extends State<VodListPage> {
             ),
         ],
       ),
-      body: _items.isEmpty
-          ? const Center(child: Text('暂无数据', style: TextStyle(color: AppColors.slate400)))
-          : Column(
+      body: TexturedBackground(
+        child: _items.isEmpty
+            ? const Center(child: Text('暂无数据', style: TextStyle(color: AppColors.slate400)))
+            : Column(
               children: [
                 if (_isCachePage && rootPath.isNotEmpty)
                   Container(
@@ -362,6 +363,7 @@ class _VodListPageState extends State<VodListPage> {
                 ),
               ],
             ),
+          ),
     );
   }
 }

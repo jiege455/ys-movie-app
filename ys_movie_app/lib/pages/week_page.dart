@@ -72,10 +72,12 @@ class _WeekPageState extends State<WeekPage> with SingleTickerProviderStateMixin
           ),
         ),
       ),
-      body: TabBarView(
+      body: TexturedBackground(
+        child: TabBarView(
         controller: _tabCtrl,
         children: _weeks.map((w) => _WeekList(week: w)).toList(),
       ),
+          ),
     );
   }
 }

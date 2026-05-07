@@ -138,7 +138,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: TexturedBackground(child: _buildBody()),
     );
   }
 
