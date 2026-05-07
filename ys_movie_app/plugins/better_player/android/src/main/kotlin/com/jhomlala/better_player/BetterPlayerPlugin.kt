@@ -18,7 +18,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
-import android.util.Rational
+
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
@@ -203,13 +203,13 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             if (aspectRatio != null) {
                 val ratioValue = aspectRatio.toFloat()
                 val clampedRatio = when {
-                    ratioValue > 16f/9f -> Rational(16, 9)
-                    ratioValue < 4f/3f -> Rational(4, 3)
+                    ratioValue > 16f/9f -> android.util.Rational(16, 9)
+                    ratioValue < 4f/3f -> android.util.Rational(4, 3)
                     else -> aspectRatio
                 }
                 builder.setAspectRatio(clampedRatio)
             } else {
-                builder.setAspectRatio(Rational(16, 9))
+                builder.setAspectRatio(android.util.Rational(16, 9))
             }
             builder.setActions(actions)
             activity!!.setPictureInPictureParams(builder.build())
@@ -555,17 +555,15 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             // 修复：使用16:9比例，避免视频比例导致PiP窗口过大或变形
             val aspectRatio = player.getAspectRatio()
             if (aspectRatio != null) {
-                // 限制宽高比在 16:9 到 4:3 之间，避免极端比例
                 val ratioValue = aspectRatio.toFloat()
                 val clampedRatio = when {
-                    ratioValue > 16f/9f -> Rational(16, 9)
-                    ratioValue < 4f/3f -> Rational(4, 3)
+                    ratioValue > 16f/9f -> android.util.Rational(16, 9)
+                    ratioValue < 4f/3f -> android.util.Rational(4, 3)
                     else -> aspectRatio
                 }
                 builder.setAspectRatio(clampedRatio)
             } else {
-                // 默认16:9
-                builder.setAspectRatio(Rational(16, 9))
+                builder.setAspectRatio(android.util.Rational(16, 9))
             }
 
             // 开发者：杰哥网络科技

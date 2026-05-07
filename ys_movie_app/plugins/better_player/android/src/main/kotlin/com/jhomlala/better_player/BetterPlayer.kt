@@ -41,7 +41,7 @@ import androidx.work.OneTimeWorkRequest
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaDescriptionCompat
-import android.util.Rational
+
 import android.util.Log
 import android.view.Surface
 import androidx.lifecycle.Observer
@@ -574,7 +574,7 @@ internal class BetterPlayer(
             return exoPlayer?.currentPosition ?: 0L
         }
 
-    fun getAspectRatio(): Rational? {
+    fun getAspectRatio(): android.util.Rational? {
         val videoFormat = exoPlayer?.videoFormat ?: return null
         var width = videoFormat.width
         var height = videoFormat.height
@@ -584,7 +584,7 @@ internal class BetterPlayer(
             height = videoFormat.width
         }
         if (width == 0 || height == 0) return null
-        return Rational(width, height)
+        return android.util.Rational(width, height)
     }
 
     private fun sendInitialized() {
