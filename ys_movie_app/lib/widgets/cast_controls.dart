@@ -1,4 +1,4 @@
-/// 开发者：杰哥网络科技 (qq: 2711793818)
+﻿/// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 投屏播放控制条
 /// 说明：投屏状态下显示在播放器上方，提供播放/暂停/进度/音量控制
 
@@ -124,7 +124,7 @@ class _CastControlsState extends State<CastControls> {
       children: [
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const AppColors.success,
+            activeTrackColor: AppColors.success,
             inactiveTrackColor: AppColors.slate700.withOpacity(0.24),
             thumbColor: AppColors.primaryLight,
             trackHeight: 3,
@@ -303,7 +303,7 @@ class _CastControlsState extends State<CastControls> {
   Color _getStatusColor(CastStatus status) {
     switch (status) {
       case CastStatus.playing:
-        return const AppColors.success;
+        return AppColors.success;
       case CastStatus.paused:
         return AppColors.warning;
       case CastStatus.buffering:

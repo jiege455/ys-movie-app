@@ -870,7 +870,7 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
       final api = context.read<MacApi>();
       final data = await api.getNoticeDetail(widget.noticeId);
       if (!mounted) return;
-      setState(() => _content = data);
+      setState(() => _content = (data?['content'] ?? '').toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
