@@ -678,7 +678,7 @@ class _HomePageState extends State<HomePage>
           itemBuilder: (_, __) => Container(
             width: 60,
             margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(20)),
           ),
         ),
       ),

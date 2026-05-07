@@ -21,8 +21,7 @@ import 'settings_page.dart';
 
 /// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 作用：我的页面，个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
- * 小白解释：个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
- */
+/// 小白解释：个人中心，上面是头像积分，中间是历史记录，下面是常用功能。
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
   @override
