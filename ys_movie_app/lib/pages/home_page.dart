@@ -97,6 +97,7 @@ class _HomePageState extends State<HomePage>
       if (_tabs.isEmpty) {
         _loadTabs();
       } else {
+        setState(() => _isLoadingTabs = false);
         _tabController = TabController(
           length: _tabs.length,
           vsync: this,
