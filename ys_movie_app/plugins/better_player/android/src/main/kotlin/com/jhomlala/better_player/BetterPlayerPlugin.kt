@@ -18,6 +18,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
+import android.util.Rational
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
