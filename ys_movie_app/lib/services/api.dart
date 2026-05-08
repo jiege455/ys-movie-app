@@ -2148,13 +2148,18 @@ class MacApi {
           }
 
           // 直接从 dataMap 顶层提取
-          if (result['years'].isEmpty) result['years'] = _parseCommaList(dataMap['year'] ?? dataMap['years']);
-          if (result['areas'].isEmpty) result['areas'] = _parseCommaList(dataMap['area'] ?? dataMap['areas']);
-          if (result['classes'].isEmpty) result['classes'] = _parseCommaList(dataMap['class'] ?? dataMap['classes']);
+          final yrs = result['years'] ?? [];
+          final ars = result['areas'] ?? [];
+          final cls = result['classes'] ?? [];
+          if (yrs.isEmpty) result['years'] = _parseCommaList(dataMap['year'] ?? dataMap['years']);
+          if (ars.isEmpty) result['areas'] = _parseCommaList(dataMap['area'] ?? dataMap['areas']);
+          if (cls.isEmpty) result['classes'] = _parseCommaList(dataMap['class'] ?? dataMap['classes']);
         }
 
         // 确保至少有一项数据才返回
-        if (result['areas'].isNotEmpty || result['years'].isNotEmpty || result['classes'].isNotEmpty) {
+        if ((result['areas'] ?? const []).isNotEmpty ||
+            (result['years'] ?? const []).isNotEmpty ||
+            (result['classes'] ?? const []).isNotEmpty) {
           return result;
         }
       }
