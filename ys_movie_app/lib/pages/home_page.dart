@@ -101,7 +101,6 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _loadCachedData().then((_) {
-      // 显示缓存数据（如果有的话）
       if (_tabs.isNotEmpty) {
         setState(() => _isLoadingTabs = false);
         _tabController = TabController(
@@ -111,7 +110,6 @@ class _HomePageState extends State<HomePage>
         );
         _tabController.addListener(_onTabChanged);
       }
-      // 始终从 CMS 加载最新数据
       _loadTabs();
     });
     _scrollController.addListener(_onScroll);
@@ -121,7 +119,6 @@ class _HomePageState extends State<HomePage>
   Future<void> _loadCachedData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Tabs
     final tabsJson = prefs.getString(_cacheKeyTabs);
     if (tabsJson != null) {
       try {
@@ -135,7 +132,6 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
-    // Banner
     final bannerJson = prefs.getString(_cacheKeyBanner);
     if (bannerJson != null) {
       try {
@@ -147,7 +143,6 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
-    // HotWords
     final hotWordsJson = prefs.getString(_cacheKeyHotWords);
     if (hotWordsJson != null) {
       try {
@@ -159,7 +154,6 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
-    // Announcements
     final announcementsJson = prefs.getString(_cacheKeyAnnouncements);
     if (announcementsJson != null) {
       try {
@@ -171,7 +165,6 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
-    // HotRecommend
     final hotRecommendJson = prefs.getString(_cacheKeyHotRecommend);
     if (hotRecommendJson != null) {
       try {
@@ -183,7 +176,6 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
-    // Content cache for each tab
     for (int i = 0; i < _tabIds.length; i++) {
       final contentJson = prefs.getString('$_cacheKeyContentPrefix$_tabIds[i]');
       if (contentJson != null) {
@@ -199,7 +191,6 @@ class _HomePageState extends State<HomePage>
       }
     }
 
-    // 修复：确保 _currentTabIndex 不超出范围
     if (_tabs.isNotEmpty && _currentTabIndex >= _tabs.length) {
       _currentTabIndex = 0;
     }
@@ -208,7 +199,6 @@ class _HomePageState extends State<HomePage>
   Future<void> _saveCache() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Tabs
     if (_tabs.isNotEmpty) {
       await prefs.setString(
         _cacheKeyTabs,
@@ -221,7 +211,6 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // Banner
     if (_bannerList.isNotEmpty) {
       await prefs.setString(
         _cacheKeyBanner,
@@ -232,7 +221,6 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // HotWords
     if (_hotWords.isNotEmpty) {
       await prefs.setString(
         _cacheKeyHotWords,
@@ -243,7 +231,6 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // Announcements
     if (_announcements.isNotEmpty) {
       await prefs.setString(
         _cacheKeyAnnouncements,
@@ -254,7 +241,6 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // HotRecommend
     if (_hotRecommendList.isNotEmpty) {
       await prefs.setString(
         _cacheKeyHotRecommend,
@@ -265,7 +251,6 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    // Content cache
     for (final entry in _contentCache.entries) {
       final tabId = _tabIds[entry.key];
       await prefs.setString(
@@ -294,7 +279,6 @@ class _HomePageState extends State<HomePage>
       final initData = await api.getAppInit();
       final list = initData['type_list'] as List<dynamic>? ?? [];
 
-      // 从 CMS 读取分类字体大小
       final fontSize = double.tryParse('${initData['home_type_font_size'] ?? 14}') ?? 14;
       if (fontSize > 0) {
         _homeTypeFontSize = fontSize.clamp(10, 30);
@@ -309,7 +293,6 @@ class _HomePageState extends State<HomePage>
         _tabController = TabController(length: _tabs.length, vsync: this);
         _tabController.addListener(_onTabChanged);
 
-        // 加载推荐内容
         _loadContent(0, refresh: true);
         _loadBanner();
         _loadHotWords();
@@ -318,7 +301,6 @@ class _HomePageState extends State<HomePage>
         _loadHotRecommend();
         _loadContinueWatching();
 
-        // 预加载前几个分类的内容
         for (int i = 1; i < _tabs.length && i <= 3; i++) {
           _loadContent(i, refresh: true);
         }
@@ -480,7 +462,6 @@ class _HomePageState extends State<HomePage>
     _tabDebounce = Timer(const Duration(milliseconds: 150), () {
       setState(() => _currentTabIndex = index);
       _loadContent(index, refresh: true);
-      // 切换分类时，重新加载该分类的扩展筛选数据（年份/地区/类型/语言）
       if (index > 0 && _tabIds.length > index) {
         _loadFacets(_tabIds[index]);
       }
@@ -596,29 +577,24 @@ class _HomePageState extends State<HomePage>
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
-              // ── 搜索栏 ──
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
               ),
 
-              // ── 分类 Tab ──
               SliverToBoxAdapter(
                 child: _isLoadingTabs
                     ? _buildTabShimmer()
                     : _buildTabBar(isDark),
               ),
 
-              // ── 筛选栏（非推荐页显示） ──
               if (_currentTabIndex > 0)
                 SliverToBoxAdapter(child: _buildFilterBar(isDark)),
 
-              // ── 轮播图（仅在推荐页显示） ──
               if (_currentTabIndex == 0 && _bannerList.isNotEmpty)
                 SliverToBoxAdapter(
                   child: _buildBanner(),
                 ),
 
-              // ── 通知栏 ──
               if (_announcements.isNotEmpty)
                 SliverToBoxAdapter(
                   child: _buildAnnouncementBar(isDark),
@@ -705,9 +681,10 @@ class _HomePageState extends State<HomePage>
           fontSize: (_homeTypeFontSize - 2).clamp(10, 30),
           fontWeight: FontWeight.normal,
         ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        animationDuration: const Duration(milliseconds: 250),
         indicator: UnderlineTabIndicator(
           borderSide: BorderSide(width: 3, color: Theme.of(context).colorScheme.primary),
-          insets: const EdgeInsets.symmetric(horizontal: 12),
         ),
         dividerColor: Colors.transparent,
         labelPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -915,7 +892,6 @@ class _HomePageState extends State<HomePage>
                 Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
               },
             ),
-            // 底部渐变遮罩
             Positioned(
               bottom: 0,
               left: 0,
@@ -931,7 +907,6 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
             ),
-            // 文字内容
             Positioned(
               bottom: 16,
               left: 16,
@@ -1023,7 +998,6 @@ class _HomePageState extends State<HomePage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 标题栏
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Row(
@@ -1031,9 +1005,7 @@ class _HomePageState extends State<HomePage>
               Text('热门推荐', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
               const Spacer(),
               GestureDetector(
-                onTap: () {
-                  // 跳转到更多热门推荐
-                },
+                onTap: () {},
                 child: Row(
                   children: [
                     Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
@@ -1044,7 +1016,6 @@ class _HomePageState extends State<HomePage>
             ],
           ),
         ),
-        // 横向滚动列表
         SizedBox(
           height: 180,
           child: ListView.separated(
@@ -1113,7 +1084,6 @@ class _HomePageState extends State<HomePage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 标题栏
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Row(
@@ -1121,9 +1091,7 @@ class _HomePageState extends State<HomePage>
               Text('继续观看', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
               const Spacer(),
               GestureDetector(
-                onTap: () {
-                  // 跳转到历史记录页
-                },
+                onTap: () {},
                 child: Row(
                   children: [
                     Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
@@ -1134,7 +1102,6 @@ class _HomePageState extends State<HomePage>
             ],
           ),
         ),
-        // 横向滚动列表
         SizedBox(
           height: 140,
           child: ListView.separated(
@@ -1179,7 +1146,6 @@ class _HomePageState extends State<HomePage>
                       placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                       errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                     ),
-                    // 播放按钮
                     Center(
                       child: Container(
                         width: 40,
@@ -1191,7 +1157,6 @@ class _HomePageState extends State<HomePage>
                         child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
                       ),
                     ),
-                    // 进度条
                     if (progressVal > 0)
                       Positioned(
                         bottom: 0,
@@ -1232,7 +1197,6 @@ class _HomePageState extends State<HomePage>
     final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // 推荐页用 CustomScrollView 展示热门推荐 + 继续观看 + 网格
     if (index == 0) {
       return RefreshIndicator(
         key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
@@ -1325,7 +1289,7 @@ class _HomePageState extends State<HomePage>
                     height: double.infinity,
                     fit: BoxFit.cover,
                     placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
-                                errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                    errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                   ),
                 ),
                 Positioned(
