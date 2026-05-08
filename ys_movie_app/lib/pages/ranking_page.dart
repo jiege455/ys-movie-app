@@ -38,12 +38,9 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
   }
 
   void _onTabChanged() {
-    if (_tabController == null || _tabController!.indexIsChanging) return;
+    if (_tabController == null) return;
     final idx = _tabController!.index;
-    if (idx >= 0 && idx < _tabLoaded.length && !_tabLoaded[idx]) {
-      _tabLoaded[idx] = true;
-      _listKeys[idx].currentState?.triggerLoad();
-    }
+    _listKeys[idx].currentState?.triggerLoad();
   }
 
   void _resetTabLoaded() {

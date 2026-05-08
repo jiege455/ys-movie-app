@@ -492,36 +492,32 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   }
 
   Future<void> _initPlayer({Duration startPosition = Duration.zero}) async {
-    if (_episodes.isEmpty) return;
-    
-    setState(() {
-       _hasError = false;
-       _errorMsg = '';
-    });
+    if (_episodes.isEmpty) {
+      _isSwitchingEpisode = false;
+      return;
+    }
 
     final ep = _episodes[_currentEpisodeIndex];
     String url = ep['url'] ?? '';
     final parseApi = ep['parse_api'] ?? '';
-    // 若有解析接口，进行解析得到直链
     if (parseApi.isNotEmpty) {
       try {
         final api = context.read<MacApi>();
         url = await api.resolvePlayUrl(url, parseApi: parseApi);
       } catch (e) {
         debugPrint("Parse Error: $e");
+        _isSwitchingEpisode = false;
         _handleLoadError("解析地址失败: $e", startPosition);
         return;
       }
     }
-    
-    // 应用跳过片头设置
+
     if (_playerSettings.enableSkip && _playerSettings.skipIntro > 0) {
-       if (startPosition.inSeconds < _playerSettings.skipIntro) {
-          startPosition = Duration(seconds: _playerSettings.skipIntro);
-       }
+      if (startPosition.inSeconds < _playerSettings.skipIntro) {
+        startPosition = Duration(seconds: _playerSettings.skipIntro);
+      }
     }
-    
-    // 配置 BetterPlayer
+
     BetterPlayerConfiguration betterPlayerConfiguration = BetterPlayerConfiguration(
       aspectRatio: 16 / 9,
       fit: BoxFit.contain,
@@ -529,8 +525,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       looping: false,
       fullScreenByDefault: false,
       allowedScreenSleep: false,
-      // betterPlayerGlobalKey: _playerGlobalKey, // 该参数在当前版本不存在
-      autoDetectFullscreenDeviceOrientation: false, // 开发者：杰哥网络科技 - 关闭自动检测，防止起播崩溃
+      autoDetectFullscreenDeviceOrientation: false,
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp,
       ],
@@ -567,7 +562,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             onControlsVisibilityChanged: onVisibilityChanged,
             title: "${detail['vod_name'] ?? ''} ${_episodes.isNotEmpty ? _episodes[_currentEpisodeIndex]['name'] : ''}",
             onNextEpisode: _onNextEpisode,
-            // 传递数据给 CustomPlayerControls
             episodes: _episodes,
             currentEpisodeIndex: _currentEpisodeIndex,
             sources: _sources,
@@ -581,43 +575,43 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             onShowSkip: _showSkipSettingsDialog,
             onDanmakuToggle: () {
               _checkLoginAndRun(() {
-                 _showDanmakuInputDialog();
+                _showDanmakuInputDialog();
               });
             },
             onShowSpeed: () {
-               showModalBottomSheet(
-                  context: context, 
-                  backgroundColor: Colors.transparent,
-                  builder: (ctx) {
-                    final scheme = Theme.of(context).colorScheme;
-                    return Container(
-                     decoration: BoxDecoration(
-                       gradient: LinearGradient(
-                         begin: Alignment.topCenter,
-                         end: Alignment.bottomCenter,
-                         colors: [
-                           Theme.of(context).colorScheme.surface.withOpacity(0.95),
-                           Theme.of(context).scaffoldBackgroundColor,
-                         ],
-                       ),
-                       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                     ),
-                     child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [0.5, 1.0, 1.25, 1.5, 2.0].map((speed) => ListTile(
-                           title: Text('${speed}x', style: TextStyle(color: scheme.primary), textAlign: TextAlign.center),
-                           onTap: () {
-                              _betterPlayerController?.setSpeed(speed);
-                              _playerSettings.setSpeed(speed);
-                              setState(() {});
-                              Navigator.pop(ctx);
-                           },
-                           trailing: _betterPlayerController?.videoPlayerController?.value.speed == speed ? Icon(Icons.check, color: scheme.primary) : null,
-                        )).toList(),
-                     ),
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) {
+                  final scheme = Theme.of(context).colorScheme;
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Theme.of(context).colorScheme.surface.withOpacity(0.95),
+                          Theme.of(context).scaffoldBackgroundColor,
+                        ],
+                      ),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [0.5, 1.0, 1.25, 1.5, 2.0].map((speed) => ListTile(
+                        title: Text('${speed}x', style: TextStyle(color: scheme.primary), textAlign: TextAlign.center),
+                        onTap: () {
+                          _betterPlayerController?.setSpeed(speed);
+                          _playerSettings.setSpeed(speed);
+                          setState(() {});
+                          Navigator.pop(ctx);
+                        },
+                        trailing: _betterPlayerController?.videoPlayerController?.value.speed == speed ? Icon(Icons.check, color: scheme.primary) : null,
+                      )).toList(),
+                    ),
                   );
-                  }
-               );
+                },
+              );
             },
           );
         },
@@ -632,78 +626,85 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         enableRetry: true,
         enablePlaybackSpeed: true,
         enableQualities: true,
-        // 禁用 BetterPlayer 默认的加载 Loading，完全由 CustomPlayerControls 接管
         loadingWidget: const SizedBox.shrink(),
       ),
-      // 占位符修改：移除 CachedNetworkImage，仅保留黑色背景
       placeholder: Container(
         color: Theme.of(context).scaffoldBackgroundColor,
       ),
     );
 
-    // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 优化：启用缓存、优化缓冲配置、支持后台播放通知
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       url,
-      // videoFormat: BetterPlayerVideoFormat.hls, // 移除强制HLS
-      // pipKey: 'pip_${url.hashCode}', // 该参数在当前版本不存在
-      // userAgent: 'ys_movie_app/1.0', // 该参数在当前版本不存在
       notificationConfiguration: const BetterPlayerNotificationConfiguration(
         showNotification: true,
         title: "正在播放",
         author: "狐狸影视",
         imageUrl: "",
       ),
-      // 开发者：杰哥网络科技
-      // 优化：调整缓冲策略，平衡加载速度和流畅度
       bufferingConfiguration: const BetterPlayerBufferingConfiguration(
-        minBufferMs: 15000,        // 最小缓冲 15秒，保证流畅
-        maxBufferMs: 50000,        // 最大缓冲 50秒
-        bufferForPlaybackMs: 2500, // 起播缓冲 2.5秒，加快首帧
-        bufferForPlaybackAfterRebufferMs: 5000, // 重缓冲 5秒
+        minBufferMs: 15000,
+        maxBufferMs: 50000,
+        bufferForPlaybackMs: 2500,
+        bufferForPlaybackAfterRebufferMs: 5000,
       ),
-      // 开发者：杰哥网络科技
-      // 优化：启用缓存，提升二次播放速度
       cacheConfiguration: const BetterPlayerCacheConfiguration(
         useCache: true,
-        maxCacheSize: 200 * 1024 * 1024, // 200MB 缓存
-        maxCacheFileSize: 50 * 1024 * 1024, // 50MB 单文件
+        maxCacheSize: 200 * 1024 * 1024,
+        maxCacheFileSize: 50 * 1024 * 1024,
       ),
     );
 
-    // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：安全的控制器复用逻辑，先完全释放再重建，避免状态冲突导致崩溃
-    if (_betterPlayerController != null) {
+    _retryCount = 0;
+    _hasError = false;
+    _errorMsg = '';
+
+    final newController = BetterPlayerController(betterPlayerConfiguration);
+    newController.setBetterPlayerGlobalKey(_playerGlobalKey);
+
+    try {
+      await newController.setupDataSource(dataSource);
+    } catch (e) {
+      debugPrint("Setup DataSource Error: $e");
+      try { newController.dispose(); } catch (_) {}
+      _isSwitchingEpisode = false;
+      _handleLoadError("加载失败: $e", startPosition);
+      return;
+    }
+
+    if (_playerSettings.speed != 1.0) {
       try {
-        _safeDisposePlayer();
+        await newController.setSpeed(_playerSettings.speed);
+      } catch (_) {}
+    }
+
+    if (startPosition > Duration.zero) {
+      try {
+        newController.seekTo(startPosition);
+      } catch (_) {}
+    }
+
+    final wasFullScreen = _betterPlayerController?.isFullScreen ?? false;
+    final oldController = _betterPlayerController;
+    _betterPlayerController = newController;
+    _addControllerListeners();
+
+    if (wasFullScreen) {
+      try {
+        newController.enterFullScreen();
+      } catch (_) {}
+    }
+    _isSwitchingEpisode = false;
+
+    if (oldController != null) {
+      try {
+        oldController.pause();
+        oldController.dispose();
       } catch (e) {
-        debugPrint("Controller Reuse Error: $e");
+        debugPrint("Dispose Old Controller Error: $e");
       }
     }
 
-    // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：await setupDataSource 确保视频初始化完成后再 seek，避免恢复进度失败
-    _retryCount = 0;
-    _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
-    // 开发者：杰哥网络科技 (qq: 2711793818)
-    // 修复：设置 GlobalKey，画中画功能必需
-    _betterPlayerController!.setBetterPlayerGlobalKey(_playerGlobalKey);
-    _addControllerListeners();
-    await _betterPlayerController!.setupDataSource(dataSource);
-    
-    if (_playerSettings.speed != 1.0) {
-      try {
-        await _betterPlayerController!.setSpeed(_playerSettings.speed);
-      } catch (_) {}
-    }
-    
-    if (startPosition > Duration.zero) {
-      try {
-        _betterPlayerController!.seekTo(startPosition);
-      } catch (_) {}
-    }
-    
     if (mounted) setState(() {});
   }
 
@@ -729,6 +730,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         });
      } else {
         if (mounted) {
+           _isSwitchingEpisode = false;
            setState(() {
               _hasError = true;
               _errorMsg = msg;
@@ -1068,17 +1070,43 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   color: Colors.black,
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
-                    child: _betterPlayerController != null
-                        ? BetterPlayer(
-                            key: _playerGlobalKey, // 画中画功能必需的 GlobalKey
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (_betterPlayerController != null)
+                          BetterPlayer(
+                            key: _playerGlobalKey,
                             controller: _betterPlayerController!,
                           )
-                        : Container(
+                        else
+                          Container(
                             color: Colors.black,
                             child: Center(
                               child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
+                        if (_isSwitchingEpisode)
+                          Container(
+                            color: Colors.black54,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '正在切换...',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 
