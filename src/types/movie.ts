@@ -54,3 +54,12 @@ export interface TypeRecommendSection {
   type_name: string
   list: Movie[]
 }
+
+/** 分类视频筛选参数 */
+export interface CategoryFilter {
+  class?: string
+  area?: string
+  year?: string
+  lang?: string
+  by?: string
+}

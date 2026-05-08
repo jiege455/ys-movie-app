@@ -6,9 +6,9 @@
  */
 
 import { jgappApi } from './index'
-import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category, TypeRecommendSection } from '../types'
+import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category, TypeRecommendSection, CategoryFilter } from '../types'
 
-export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, TypeRecommendSection }
+export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, TypeRecommendSection, CategoryFilter }
 
 const mapVodToMovie = (v: any): Movie => ({
   id: String(v.vod_id),
@@ -103,8 +103,8 @@ export const getHotMovies = async (page: number = 1): Promise<Movie[]> => {
 }
 
 /**
- * 获取Banner轮播图数据（推荐级别9）
- * 插件接口: ac=init 已包含，单独调时用 ac=list 带 level 参数
+ * 获取Banner轮播图数据
+ * 插件接口: ac=init 已包含，单独调时复用 getHomeData
  */
 export const getBannerMovies = async (): Promise<BannerMovie[]> => {
   try {
@@ -117,15 +117,29 @@ export const getBannerMovies = async (): Promise<BannerMovie[]> => {
 }
 
 /**
- * 按分类获取视频列表（支持分页）
- * 插件接口: ac=list&t=type_id
+ * 按分类获取视频列表（支持筛选和分页）
+ * 插件接口: ac=list&t=type_id&class=&area=&year=&by=
  */
-export const getCategoryMovies = async (categoryId: string, page: number = 1): Promise<Movie[]> => {
+export const getCategoryMovies = async (
+  categoryId: string,
+  page: number = 1,
+  filter: CategoryFilter = {}
+): Promise<Movie[]> => {
   try {
     const limit = 20
-    const res: any = await jgappApi.get('', {
-      params: { ac: 'list', t: categoryId, pg: page, pagesize: limit, by: 'time' }
-    })
+    const params: Record<string, string | number> = {
+      ac: 'list',
+      t: categoryId,
+      pg: page,
+      pagesize: limit,
+      by: filter.by || 'time'
+    }
+    if (filter.class) params.class = filter.class
+    if (filter.area) params.area = filter.area
+    if (filter.year) params.year = filter.year
+    if (filter.lang) params.lang = filter.lang
+
+    const res: any = await jgappApi.get('', { params })
     const list = res?.list || []
     return list.map(mapVodToMovie)
   } catch (error) {
@@ -150,7 +164,7 @@ export const getCategories = async (): Promise<Category[]> => {
 
 /**
  * 按名称搜索视频（优先使用Xunsearch，失败降级到数据库搜索）
- * 插件接口: ac=search（app_api.php 内部自动处理降级）
+ * 插件接口: ac=search
  */
 export const searchMovies = async (keyword: string): Promise<Movie[]> => {
   try {
