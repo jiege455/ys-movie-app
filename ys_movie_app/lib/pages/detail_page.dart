@@ -534,6 +534,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         DeviceOrientation.portraitUp,
       ],
       errorBuilder: (context, errorMessage) {
+        final scheme = Theme.of(context).colorScheme;
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -586,7 +587,9 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                showModalBottomSheet(
                   context: context, 
                   backgroundColor: Colors.transparent,
-                  builder: (ctx) => Container(
+                  builder: (ctx) {
+                    final scheme = Theme.of(context).colorScheme;
+                    return Container(
                      decoration: BoxDecoration(
                        gradient: LinearGradient(
                          begin: Alignment.topCenter,
@@ -611,7 +614,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                            trailing: _betterPlayerController?.videoPlayerController?.value.speed == speed ? Icon(Icons.check, color: scheme.primary) : null,
                         )).toList(),
                      ),
-                  )
+                  );
+                  }
                );
             },
           );
@@ -882,7 +886,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
           child: CachedNetworkImage(
             imageUrl: ad['poster'],
             fit: BoxFit.cover,
-            placeholder: (_, __) => Container(color: AppColors.slate200),
+            placeholder: (_, __) => Container(color: Theme.of(context).cardColor),
             errorWidget: (_, __, ___) => const SizedBox.shrink(),
           ),
         ),
@@ -977,7 +981,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   hintText: '友善评论，理性发言...',
                   hintStyle: TextStyle(color: Theme.of(context).hintColor),
                   filled: true,
-                  fillColor: isDark ? AppColors.slate700.withOpacity(0.12) : AppColors.slate200, // 更好的背景色
+                  fillColor: dividerColor,
                   prefixIcon: null, // 移除不协调的图标
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20), // 圆角更大
@@ -1045,7 +1049,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: Stack(
+      body: TexturedBackground(
+        child: Stack(
         fit: StackFit.expand, // 确保 Stack 填满屏幕，使 Column 内的 Expanded 生效
         children: [
           SafeArea(
@@ -1062,7 +1067,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                           controller: _betterPlayerController!,
                         )
                       : Container(
-                          color: AppColors.darkBackground,
+                          color: bgColor,
                           child: Center(
                             child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                           ),
@@ -1481,8 +1486,9 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                     ),
                   ),
                 ),
-              ),
+          ),
         ],
+        ),
       ),
     );
   }
@@ -1490,7 +1496,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   // 构建选集按钮
   Widget _buildEpisodeBtn(int i, Color primary, Color card) {
     final isSel = i == _currentEpisodeIndex;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
     final defaultColor = scheme.onSurface;
     
     return ElevatedButton(
@@ -1580,7 +1586,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   // 辅助方法：显示跳过设置弹窗
   void _showSkipSettingsDialog() {
     final bgColor = Theme.of(context).cardColor;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Theme.of(context).colorScheme.onSurface;
     
     showModalBottomSheet(
       context: context,
@@ -1644,6 +1650,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   // 辅助方法：显示简介弹窗
   void _showIntroSheet(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final bgColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? scheme.onSurface;
     final subTextColor = Theme.of(context).textTheme.bodySmall?.color ?? scheme.onSurface.withOpacity(0.6);
@@ -1782,10 +1789,11 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   // 辅助方法：显示选集弹窗
   void _showEpisodeSheet() {
+    final scheme = Theme.of(context).colorScheme;
     final bgColor = Theme.of(context).cardColor;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final subTextColor = Theme.of(context).textTheme.bodySmall?.color ?? AppColors.slate400;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? scheme.onSurface;
+    final primaryColor = scheme.primary;
+    final subTextColor = Theme.of(context).textTheme.bodySmall?.color ?? scheme.onSurface.withOpacity(0.6);
 
     showModalBottomSheet(
       context: context,
@@ -1860,8 +1868,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                               final actualIndex = _isEpisodeAscending ? i : _episodes.length - 1 - i;
                               
                               final isSel = actualIndex == currentIdx;
-                              final isDark = Theme.of(context).brightness == Brightness.dark;
-                              final defaultColor = isDark ? AppColors.slate300 : AppColors.slate900;
+                              final defaultColor = scheme.onSurface;
                               
                               return ElevatedButton(
                                 onPressed: () {
@@ -1870,7 +1877,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: isSel ? primaryColor : Theme.of(context).scaffoldBackgroundColor,
-                                  foregroundColor: isSel ? Colors.white : defaultColor,
+                                  foregroundColor: isSel ? scheme.onPrimary : defaultColor,
                                   padding: EdgeInsets.zero,
                                   elevation: 0,
                                   side: BorderSide(color: isSel ? Colors.transparent : subTextColor.withOpacity(0.2)),
@@ -1900,9 +1907,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   // 开始下载任务
   void _showDownloadSheet() {
+    final scheme = Theme.of(context).colorScheme;
     final bgColor = Theme.of(context).cardColor;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final subTextColor = Theme.of(context).textTheme.bodySmall?.color ?? AppColors.slate400;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? scheme.onSurface;
+    final subTextColor = Theme.of(context).textTheme.bodySmall?.color ?? scheme.onSurface.withOpacity(0.6);
 
     showModalBottomSheet(
       context: context,
@@ -2101,4 +2109,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             });
           });
     } catch (e) {
-      print('Start download error: $e'
+      print('Start download error: $e');
+    }
+  }
+}

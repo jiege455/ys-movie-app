@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api.dart';
+import '../theme/app_theme.dart';
 
 /// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 登录页面
@@ -62,7 +63,8 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text('登录'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
+      body: TexturedBackground(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,6 +169,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 16),
           ],
+        ),
         ),
       ),
     );
