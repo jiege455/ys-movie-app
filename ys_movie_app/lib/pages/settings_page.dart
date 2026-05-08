@@ -450,14 +450,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   context: context,
                   builder: (_) => AlertDialog(
                     title: const Text('发现新版本'),
-                    content: Text('鐗堟湰鍙凤細$vName\n\n$desc${isForce ? '\n\n姝ょ増鏈负寮哄埗鏇存柊' : ''}'),
+                    content: Text('版本号：$vName\n\n$desc${isForce ? '\n\n此版本为强制更新' : ''}'),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('绋嶅悗鍐嶈')),
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('稍后再说')),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          // 閫氱煡 HomePage 寮瑰嚭涓嬭浇瀵硅瘽妗?                        },
-                        child: const Text('绔嬪嵆鏇存柊'),
+                          // 通知 HomePage 弹出下载对话框
+                        },
+                        child: const Text('立即更新'),
                       ),
                     ],
                   ),
@@ -468,7 +469,7 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           ),
           ListTile(
-            title: const Text('鑱旂郴瀹㈡湇'),
+            title: const Text('联系客服'),
             subtitle: context.read<MacApi>().contactText.isNotEmpty ? Text(context.read<MacApi>().contactText) : null,
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _contactService,
