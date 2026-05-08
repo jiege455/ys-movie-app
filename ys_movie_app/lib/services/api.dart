@@ -1830,6 +1830,15 @@ class MacApi {
               finalPlayList.add({'show': source['show'], 'urls': eps});
            }
 
+           final seenNames = <String>{};
+           final dedupedPlayList = <Map<String, dynamic>>[];
+           for (final src in finalPlayList) {
+             final name = (src['show'] ?? '').toString();
+             if (seenNames.contains(name)) continue;
+             seenNames.add(name);
+             dedupedPlayList.add(src);
+           }
+
            return {
              'id': '${info['vod_id']}',
              'title': info['vod_name'] ?? '',
@@ -1842,7 +1851,7 @@ class MacApi {
              'director': info['vod_director'] ?? '',
              'actor': info['vod_actor'] ?? '',
              'overview': info['vod_blurb'] ?? info['vod_remarks'] ?? info['vod_content'] ?? '',
-             'play_list': finalPlayList,
+             'play_list': dedupedPlayList,
              'official_comment': data['official_comment'],
              'vod_name': info['vod_name'] ?? '',
              'vod_pic': _fixUrl(info['vod_pic']),
@@ -1851,7 +1860,7 @@ class MacApi {
              'type_name': info['type_name'] ?? (info['vod_class'] ?? ''),
              'vod_actor': info['vod_actor'] ?? '',
              'vod_content': info['vod_content'] ?? (info['vod_blurb'] ?? info['vod_remarks'] ?? ''),
-             'vod_play_list': finalPlayList,
+             'vod_play_list': dedupedPlayList,
            };
          }
       }
@@ -1883,7 +1892,16 @@ class MacApi {
                 }).toList() ?? [],
               };
             }).toList();
-            
+
+            final seenNames2 = <String>{};
+            final dedupedPlayList2 = <Map<String, dynamic>>[];
+            for (final src in playList) {
+              final name = (src['show'] ?? '').toString();
+              if (seenNames2.contains(name)) continue;
+              seenNames2.add(name);
+              dedupedPlayList2.add(src);
+            }
+
             return {
               'id': '${info['vod_id']}',
               'title': info['vod_name'] ?? '',
@@ -1896,7 +1914,7 @@ class MacApi {
               'director': info['vod_director'] ?? '',
               'actor': info['vod_actor'] ?? '',
               'overview': info['vod_blurb'] ?? info['vod_remarks'] ?? info['vod_content'] ?? '',
-              'play_list': playList,
+              'play_list': dedupedPlayList2,
               'vod_name': info['vod_name'] ?? '',
               'vod_pic': _fixUrl(info['vod_pic'] ?? ''),
               'vod_year': '${info['vod_year'] ?? ''}',
@@ -1904,7 +1922,7 @@ class MacApi {
               'type_name': info['type_name'] ?? (info['vod_class'] ?? ''),
               'vod_actor': info['vod_actor'] ?? '',
               'vod_content': info['vod_content'] ?? (info['vod_blurb'] ?? info['vod_remarks'] ?? ''),
-              'vod_play_list': playList,
+              'vod_play_list': dedupedPlayList2,
             };
          }
       }
