@@ -6,9 +6,9 @@
  */
 
 import { jgappApi } from './index'
-import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category } from '../types'
+import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category, TypeRecommendSection } from '../types'
 
-export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode }
+export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, TypeRecommendSection }
 
 const mapVodToMovie = (v: any): Movie => ({
   id: String(v.vod_id),
@@ -22,6 +22,7 @@ const mapVodToMovie = (v: any): Movie => ({
 export interface HomeData {
   banners: BannerMovie[]
   hotMovies: Movie[]
+  typeRecommendList: TypeRecommendSection[]
   categories: Category[]
   hotSearchList: string[]
 }
@@ -53,6 +54,14 @@ export const getHomeData = async (): Promise<HomeData | null> => {
 
     const hotMovies: Movie[] = (res.recommend_list || []).map(mapVodToMovie)
 
+    const typeRecommendList: TypeRecommendSection[] = (res.type_recommend_list || []).map(
+      (section: any) => ({
+        type_id: String(section.type_id || ''),
+        type_name: section.type_name || '',
+        list: (section.list || []).map(mapVodToMovie)
+      })
+    )
+
     const categories: Category[] = (res.type_list || []).map((v: any) => ({
       type_id: String(v.type_id || ''),
       type_name: v.type_name || '',
@@ -65,6 +74,7 @@ export const getHomeData = async (): Promise<HomeData | null> => {
     return {
       banners,
       hotMovies,
+      typeRecommendList,
       categories,
       hotSearchList: res.hot_search_list || []
     }

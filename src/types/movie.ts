@@ -47,3 +47,10 @@ export interface Category {
   type_en?: string
   children?: Category[]
 }
+
+/** 首页分类推荐区块（电影/电视剧/动漫/综艺各自的热播列表） */
+export interface TypeRecommendSection {
+  type_id: string
+  type_name: string
+  list: Movie[]
+}

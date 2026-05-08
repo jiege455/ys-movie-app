@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Carousel } from '../../components/Carousel/Carousel'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getHomeData } from '../../api'
-import type { BannerMovie, Movie, Category } from '../../types'
+import type { BannerMovie, Movie, Category, TypeRecommendSection } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
@@ -35,7 +35,8 @@ export const Home: React.FC = () => {
   const isMountedRef = useRef(true)
 
   const [banners, setBanners] = useState<BannerMovie[]>([])
-  const [movies, setMovies] = useState<Movie[]>([])
+  const [hotMovies, setHotMovies] = useState<Movie[]>([])
+  const [typeRecommendList, setTypeRecommendList] = useState<TypeRecommendSection[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -55,7 +56,8 @@ export const Home: React.FC = () => {
       if (!isMountedRef.current) return
       if (data) {
         setBanners(data.banners)
-        setMovies(data.hotMovies)
+        setHotMovies(data.hotMovies)
+        setTypeRecommendList(data.typeRecommendList)
         setCategories(data.categories)
       } else {
         setError('加载数据失败，请检查网络连接')
@@ -94,15 +96,15 @@ export const Home: React.FC = () => {
   const displayCategories = categories.slice(0, CATEGORY_DISPLAY_LIMIT)
 
   return (
-    <div className="min-h-screen">
-      <div className="px-4 pt-4 pb-2 sticky top-0 z-10 glass">
+    <div className="min-h-screen scroll-container">
+      <div className="px-4 pt-4 pb-2 sticky top-0 z-20 bg-slate-950/90 backdrop-blur-md border-b border-cyan-500/20">
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
             type="text"
             placeholder="搜影视、演员..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none glass-light text-cyan-100 placeholder-cyan-400/50 border border-cyan-500/20 focus:border-cyan-400/50"
+            className="w-full px-4 py-2 pl-10 pr-4 rounded-full focus:outline-none bg-slate-800/60 text-cyan-100 placeholder-cyan-400/50 border border-cyan-500/20 focus:border-cyan-400/50"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,23 +128,25 @@ export const Home: React.FC = () => {
         )}
 
         {banners.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">热门推荐</h2>
-            <Carousel
-              movies={banners}
-              onMovieClick={handleMovieClick}
-              autoPlay={true}
-              interval={6000}
-            />
+          <section className="mb-8 scroll-section">
+            <h2 className="text-3xl font-bold mb-4 text-cyan-400">热门推荐</h2>
+            <div className="overflow-hidden rounded-xl">
+              <Carousel
+                movies={banners}
+                onMovieClick={handleMovieClick}
+                autoPlay={true}
+                interval={6000}
+              />
+            </div>
           </section>
         )}
 
-        <section>
-          <div className="flex items-center justify-between mb-6">
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-cyan-400">热播精选</h2>
-            {displayCategories.length > 0 && (
+            {typeRecommendList.length > 0 && (
               <button
-                onClick={() => handleCategoryClick(displayCategories[0].type_id, displayCategories[0].type_name)}
+                onClick={() => handleCategoryClick(typeRecommendList[0].type_id, typeRecommendList[0].type_name)}
                 className="text-cyan-400 hover:text-cyan-300 text-sm"
               >
                 查看更多 →
@@ -162,7 +166,7 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
-              {movies.map((movie) => (
+              {hotMovies.map((movie) => (
                 <MovieCard
                   key={movie.id}
                   id={movie.id}
@@ -177,12 +181,40 @@ export const Home: React.FC = () => {
             </div>
           )}
 
-          {!loading && movies.length === 0 && (
+          {!loading && hotMovies.length === 0 && (
             <div className="text-center py-12">
               <p className="text-lg text-cyan-400/60">暂无电影数据</p>
             </div>
           )}
         </section>
+
+        {typeRecommendList.map((section) => (
+          <section key={section.type_id} className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-cyan-400">{section.type_name}</h2>
+              <button
+                onClick={() => handleCategoryClick(section.type_id, section.type_name)}
+                className="text-cyan-400 hover:text-cyan-300 text-sm"
+              >
+                更多 →
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {section.list.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  id={movie.id}
+                  title={movie.title}
+                  poster_path={movie.poster_path}
+                  vote_average={movie.vote_average}
+                  release_date={movie.release_date}
+                  overview={movie.overview}
+                  onClick={handleMovieClick}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
 
         <section className="mt-8">
           <div className="flex items-center justify-between mb-4">
