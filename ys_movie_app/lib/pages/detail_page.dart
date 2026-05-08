@@ -1165,10 +1165,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                           child: Row(
                             children: [
                               _buildTabItem('详情', 0, primaryColor, iconColor),
-                              if (api.isCommentOpen) ...[
-                                const SizedBox(width: 24),
-                                _buildTabItem('评论', 1, primaryColor, iconColor),
-                              ],
+                              const SizedBox(width: 24),
+                              _buildTabItem('评论', 1, primaryColor, iconColor),
                               const Spacer(),
                               // 竖屏弹幕发送入口
                               InkWell(

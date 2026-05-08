@@ -1096,6 +1096,7 @@ class MacApi {
         // 仅使用插件返回的分类，不再使用标准接口兜底
 
         _initData = {
+          'config': dataMap['config'],
           'type_list': typeList.whereType<Map>().map((m) {
             final dynamic enabledRaw = m['enabled'] ?? m['is_enabled'] ?? m['status'] ?? m['type_status'] ?? m['is_open'];
             final bool enabled = enabledRaw == null
@@ -1231,6 +1232,7 @@ class MacApi {
         final typeList = (data['type_list'] as List?) ?? const [];
         if (typeList.isNotEmpty) {
           _initData = {
+            'config': data['config'],
             'type_list': typeList.map((m) {
               final dynamic enabledRaw = m['enabled'] ?? m['is_enabled'] ?? m['status'] ?? m['type_status'] ?? m['is_open'];
               final bool enabled = enabledRaw == null
