@@ -57,6 +57,39 @@ routes/    ← 路由配置（导航管理）
 - 类型检查：npx tsc -b --noEmit
 - 代码检查：npm run lint
 
+## ⚠️ 编码安全铁律（血的教训，必须遵守！）
+
+### 背景
+历史上多次因为编码损坏导致 CI 编译失败，损失大量时间。根本原因是 AI 编辑工具在 Windows 上可能以错误编码写入文件。
+
+### 铁律 1：严禁修改包含中文的文件时不验证编码
+- **每次修改 `.dart`/`.tsx`/`.ts`/`.php` 文件后，必须执行以下验证**：
+  1. 检查文件是否为纯 UTF-8（无 BOM）：`python -c "open('file.dart','rb').read()[:3]"` 不应输出 `efbbbf`
+  2. 全仓库扫描破损字符串：执行 `python scan_broken_strings.py` 确保输出 `SCAN COMPLETE` 且无问题
+  3. 全仓库扫描注释吞代码：确保 `///` 或 `//` 行不含 Dart/TS 关键字
+
+### 铁律 2：编码损坏的三大症状
+1. **注释吞代码**：`// 中文?  void myMethod()` — 方法声明和注释在同一行，被编译器忽略
+2. **字符串引号丢失**：`Text('乱码中文?)` — 闭合单引号 `'` (0x27) 被损坏为 `?` (0x3F)
+3. **UTF-8 BOM 残留**：文件头三个字节是 `EF BB BF`，导致部分编译器报错
+
+### 铁律 3：修复方法
+- **禁止**用 SearchReplace 修编码问题（乱码文本无法精准匹配）
+- **必须**用 Python 字节级脚本操作：读 `rb` → 定位 `0x27` 位置 → 替换为正确中文 → 写 `wb`
+- 备用文件（如 `api_backup.dart`）可不修，但不能被 import
+
+### 铁律 4：提交前检查
+```bash
+# Flutter 文件检查
+cd ys_movie_app
+python scan_broken_strings.py   # 应输出 "SCAN COMPLETE" 且无其他
+
+# 前端文件检查  
+cd ..
+npx tsc -b --noEmit 2>&1 | head -20
+npm run build 2>&1 | tail -5
+```
+
 ## 添加新功能流程
 1. 先在 types/ 定义所需类型
 2. 在 api/ 封装新接口
@@ -64,4 +97,5 @@ routes/    ← 路由配置（导航管理）
 4. 在 components/ 创建新组件（如需要）
 5. 在 pages/ 创建新页面
 6. 在 routes/ 注册路由
-7. 验证类型检查和构建
+7. 执行编码安全检查（见上方铁律）
+8. 验证类型检查和构建
