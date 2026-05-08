@@ -1,20 +1,17 @@
-/**
-/// 鏂囦欢鍚嶏細feedback_center_page.dart
-/// 浣滆€咃細鏉板摜
-/// 鍒涘缓鏃ユ湡锛?025-12-28
-/// 璇存槑锛氬弽棣堟姤閿欍€佹眰鐗囨壘鐗囥€佹秷鎭腑蹇冿紙绯荤粺鍏憡涓庝釜浜烘秷鎭級椤甸潰鍚堥泦
-/// by锛氭澃鍝? qq锛?711793818
- */
+/// 文件名：feedback_center_page.dart
+/// 作者：杰哥
+/// 创建日期：2025-12-28
+/// 说明：反馈报错、求片找片、消息中心（系统公告与个人消息）页面合集
+/// by：杰哥  qq：2711793818
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../services/api.dart';
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氬寘鍚弽棣堛€佹眰鐗囧拰娑堟伅涓績鐨勯〉闈㈤泦鍚?/// 瑙ｉ噴锛氳繖閲屾墦鍖呬簡"鍙嶉鎶ラ敊"銆?姹傜墖鎵剧墖"銆?娑堟伅涓績"涓変釜鍔熻兘椤甸潰
- */
+/// 开发者：杰哥
+/// 作用：包含反馈、求片和消息中心的页面集合
+/// 解释：这里打包了"反馈报错"、"求片找片"、"消息中心"三个功能页面
 class FeedbackPage extends StatefulWidget {
   final String? vodId;
   final String? vodName;
@@ -36,9 +33,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
     }
   }
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氭彁浜ゅ弽棣堝埌鍚庣
-/// 瑙ｉ噴锛氱偣"鎻愪氦鍙嶉"鏃舵妸鍐呭鍙戠粰鏈嶅姟鍣?
+  /// 开发者：杰哥
+  /// 作用：提交反馈到后端
+  /// 解释：点"提交反馈"时把内容发给服务器
   Future<void> _submit() async {
     final text = _contentCtrl.text.trim();
     if (text.isEmpty) {
@@ -48,8 +45,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
     }
 
     final api = context.read<MacApi>();
-    
-// 妫€鏌ョ櫥褰?
+
+    // 检查登录
     final isLogin = await api.checkLogin();
     if (!isLogin) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
@@ -86,14 +83,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('反馈报错'),
-        // 浣跨敤涓婚榛樿閰嶈壊
+        // 使用主题默认配色
       ),
       body: TexturedBackground(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 椤堕儴鎻愮ず鍗＄墖
+            // 顶部提示卡片
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -165,10 +162,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氭眰鐗囬〉闈紝鎶婃壘涓嶅埌鐨勫奖鐗囧悕绉版彁浜ょ粰鍚庡彴
-/// 瑙ｉ噴锛氭兂鐪嬬殑鐗囧瓙杩欓噷鎶ョ粰鍚庡彴锛岃绔欓暱甯綘鎵? */
+/// 开发者：杰哥
+/// 作用：求片页面，把找不到的影片名称提交给后台
+/// 解释：想看的片子这里报给后台，让站长帮你找
 class RequestMoviePage extends StatefulWidget {
   const RequestMoviePage({super.key});
 
@@ -181,9 +177,9 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
   final TextEditingController _remarkCtrl = TextEditingController();
   bool _submitting = false;
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氭彁浜ゆ眰鐗囪姹傚埌鍚庣
-  /// 瑙ｉ噴锛氭妸鐗囧悕鍜屽娉ㄥ彂鍒版湇鍔″櫒
+  /// 开发者：杰哥
+  /// 作用：提交求片请求到后端
+  /// 解释：把片名和备注发到服务器
   Future<void> _submit() async {
     final name = _nameCtrl.text.trim();
     final remark = _remarkCtrl.text.trim();
@@ -195,7 +191,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
 
     final api = context.read<MacApi>();
 
-// 妫€鏌ョ櫥褰?
+    // 检查登录
     final isLogin = await api.checkLogin();
     if (!isLogin) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录后提交求片')));
@@ -233,14 +229,14 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('求片找片'),
-        // 浣跨敤涓婚榛樿閰嶈壊
+        // 使用主题默认配色
       ),
       body: TexturedBackground(child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 椤堕儴鎻愮ず
+            // 顶部提示
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -254,7 +250,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '想看的片子找不到？告诉我片名，站长帮你找！\n提交后请留意消息中心的“求片回复”',
+                      '想看的片子找不到？告诉我片名，站长帮你找！\n提交后请留意消息中心的"求片回复"',
                       style: TextStyle(fontSize: 14, color: scheme.onSurface.withOpacity(0.8)),
                     ),
                   ),
@@ -330,10 +326,9 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氭秷鎭腑蹇冿紝鍖呮嫭绯荤粺鍏憡鍜屼釜浜烘秷鎭?/// 瑙ｉ噴锛氳繖閲岃兘鐪嬪埌鍚庡彴鍙戠殑鍏憡鍜屽浣犲弽棣堛€佹眰鐗囩殑鍥炲
- */
+/// 开发者：杰哥
+/// 作用：消息中心，包括系统公告和个人消息
+/// 解释：这里能看到后台发的公告和对反馈、求片的回复
 class MessageCenterPage extends StatefulWidget {
   const MessageCenterPage({super.key});
 
@@ -382,11 +377,9 @@ class _MessageCenterPageState extends State<MessageCenterPage>
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氱郴缁熷叕鍛奣ab
-/// 瑙ｉ噴锛氬睍绀虹珯闀垮湪鍚庡彴鍙戠殑鍏憡
- */
+/// 开发者：杰哥
+/// 作用：系统公告Tab
+/// 解释：展示站长在后台发的公告
 class _NoticeListTab extends StatefulWidget {
   const _NoticeListTab();
 
@@ -398,9 +391,9 @@ class _NoticeListTabState extends State<_NoticeListTab> {
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氫粠鎺ュ彛鍔犺浇鍏憡鍒楄〃
-/// 瑙ｉ噴锛氬悜鏈嶅姟鍣ㄦ媺鍙栧叕鍛婃暟鎹?
+  /// 开发者：杰哥
+  /// 作用：从接口加载公告列表
+  /// 解释：向服务器拉取公告数据
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
@@ -513,11 +506,9 @@ class _NoticeListTabState extends State<_NoticeListTab> {
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氫釜浜烘秷鎭疶ab锛堝弽棣堛€佹眰鐗囧洖澶嶏級
-/// 瑙ｉ噴锛氬悗鍙板浣犳彁浜ょ殑鍙嶉銆佹眰鐗囩殑鍥炲閮藉湪杩欓噷
- */
+/// 开发者：杰哥
+/// 作用：个人消息Tab（反馈、求片的回复）
+/// 解释：后台对你提交的反馈、求片回复都在这里
 class _UserNoticeTab extends StatefulWidget {
   const _UserNoticeTab();
 
@@ -531,7 +522,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
   List<Map<String, dynamic>> _suggestList = [];
   List<Map<String, dynamic>> _findList = [];
   bool _loading = true;
-// 鍒嗛〉涓庢粴鍔ㄦ帶鍒?
+
+  // 分页与滚动控制
   final ScrollController _suggestCtrl = ScrollController();
   final ScrollController _findCtrl = ScrollController();
   int _suggestPage = 1;
@@ -545,7 +537,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
   void initState() {
     super.initState();
     _innerCtrl = TabController(length: 2, vsync: this);
-// 鐩戝惉婊氬姩锛岄潬杩戝簳閮ㄨ嚜鍔ㄥ姞杞芥洿澶?
+
+    // 监听滚动，靠近底部自动加载更多
     _suggestCtrl.addListener(() {
       if (_suggestHasMore &&
           !_loadingMoreSuggest &&
@@ -572,13 +565,15 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
     super.dispose();
   }
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氬悓鏃舵媺鍙栧弽棣堝拰姹傜墖鐨勬秷鎭?  /// 瑙ｉ噴锛氫竴娆℃€т粠鏈嶅姟鍣ㄦ妸涓ょ被娑堟伅閮藉彇鍥炴潵
+  /// 开发者：杰哥
+  /// 作用：同时拉取反馈和求片的消息
+  /// 解释：一次性从服务器把两类消息都取回来
   Future<void> _loadAll() async {
     setState(() => _loading = true);
     try {
       final api = context.read<MacApi>();
-      // 閲嶇疆鍒嗛〉鐘舵€?      _suggestPage = 1;
+      // 重置分页状态
+      _suggestPage = 1;
       _findPage = 1;
       _suggestHasMore = true;
       _findHasMore = true;
@@ -594,9 +589,9 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
     }
   }
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氬姞杞芥洿澶?鍙嶉鍥炲"
-/// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤靛弽棣堝洖澶嶅苟杩藉姞鍒板垪琛?
+  /// 开发者：杰哥
+  /// 作用：加载更多"反馈回复"
+  /// 解释：向后端请求下一页反馈回复并追加到列表
   Future<void> _loadMoreSuggest() async {
     if (_loadingMoreSuggest || !_suggestHasMore) return;
     setState(() => _loadingMoreSuggest = true);
@@ -618,9 +613,9 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
     }
   }
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氬姞杞芥洿澶?姹傜墖鍥炲"
-/// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤垫眰鐗囧洖澶嶅苟杩藉姞鍒板垪琛?
+  /// 开发者：杰哥
+  /// 作用：加载更多"求片回复"
+  /// 解释：向后端请求下一页求片回复并追加到列表
   Future<void> _loadMoreFind() async {
     if (_loadingMoreFind || !_findHasMore) return;
     setState(() => _loadingMoreFind = true);
@@ -684,8 +679,9 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
     );
   }
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氭覆鏌撲竴绫绘秷鎭垪琛?  /// 瑙ｉ噴锛氭妸鏌愪竴绫绘秷鎭寜鍒楄〃鏂瑰紡鏄剧ず鍑烘潵
+  /// 开发者：杰哥
+  /// 作用：渲染一类消息列表
+  /// 解释：把某一类消息按列表方式显示出来
   Widget _buildList(
     List<Map<String, dynamic>> list, {
     required String emptyText,
@@ -733,7 +729,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
           }
           final item = list[i];
           final hasReply = (item['reply_content'] ?? '').toString().isNotEmpty;
-          
+
           return Container(
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
@@ -755,7 +751,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                       child: Text(
                         hasReply ? '管理员已回复' : '待处理',
                         style: TextStyle(
-                          fontSize: 10, 
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: hasReply ? AppColors.error : scheme.primary
                         ),
@@ -809,7 +805,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                             Icon(Icons.admin_panel_settings, size: 14, color: AppColors.success),
                             const SizedBox(width: 4),
                             Text(
-                               '管理员回复',
+                              '管理员回复',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -840,11 +836,9 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氬叕鍛婅鎯呴〉
-/// 瑙ｉ噴锛氱偣涓€鏉″叕鍛婂悗鏄剧ず瀹屾暣鍐呭
- */
+/// 开发者：杰哥
+/// 作用：公告详情页面
+/// 解释：点一条公告后显示完整内容
 class NoticeDetailPage extends StatefulWidget {
   final int noticeId;
   final String title;
@@ -858,8 +852,9 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   String _content = '';
   bool _loading = true;
 
-  /// 寮€鍙戣€咃細鏉板摜
-  /// 浣滅敤锛氬姞杞藉叕鍛婅鎯?  /// 瑙ｉ噴锛氭牴鎹甀D鍚戞湇鍔″櫒绱㈠彇瀹屾暣鍏憡鍐呭
+  /// 开发者：杰哥
+  /// 作用：加载公告详情
+  /// 解释：根据ID向服务器索取完整公告内容
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
@@ -911,9 +906,9 @@ class _NoticeDetailPageState extends State<NoticeDetailPage> {
   }
 }
 
-/**
-/// 寮€鍙戣€咃細鏉板摜
-/// 浣滅敤锛氬弽棣堜腑蹇冨叆鍙ｉ〉闈紝鎻愪緵涓変釜鍔熻兘鐨勫垏鎹㈠叆鍙?/// 瑙ｉ噴锛氱粺涓€鍏ュ彛锛屾柟渚跨敤鎴峰垏鎹㈠姛鑳? */
+/// 开发者：杰哥
+/// 作用：反馈中心入口页面，提供三个功能的切换入口
+/// 解释：统一入口，方便用户切换功能
 class FeedbackCenterPage extends StatelessWidget {
   const FeedbackCenterPage({super.key});
 

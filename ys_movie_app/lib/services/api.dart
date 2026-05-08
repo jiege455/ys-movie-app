@@ -816,7 +816,7 @@ class MacApi {
         }).toList();
       }
     } catch (e) {
-      print('Banner fallback failed: \$e');
+      print('Banner fallback failed: $e');
     }
     return [];
   }

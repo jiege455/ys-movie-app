@@ -1571,6 +1571,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     required VoidCallback onTap,
     Color? color,
   }) {
+    final subTextColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
     return InkWell(
       onTap: onTap,
       child: Column(
