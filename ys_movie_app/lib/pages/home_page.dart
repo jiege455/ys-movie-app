@@ -1202,6 +1202,87 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  // ── 视频分类快捷入口 ──
+  IconData _iconForCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('电影')) return Icons.movie;
+    if (lower.contains('电视') || lower.contains('剧')) return Icons.tv;
+    if (lower.contains('动漫') || lower.contains('动画')) return Icons.animation;
+    if (lower.contains('综艺')) return Icons.mic;
+    if (lower.contains('纪录')) return Icons.videocam;
+    if (lower.contains('短剧')) return Icons.play_circle;
+    if (lower.contains('体育')) return Icons.sports_soccer;
+    if (lower.contains('少儿')) return Icons.child_care;
+    if (lower.contains('音乐')) return Icons.music_note;
+    return Icons.category;
+  }
+
+  Widget _buildCategoryGrid(bool isDark) {
+    final categories = _tabs.length > 1 ? _tabs.sublist(1) : <String>[];
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Text(
+            '视频分类',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 90,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) {
+              final name = categories[i];
+              final icon = _iconForCategory(name);
+              return GestureDetector(
+                onTap: () => _tabController.animateTo(i + 1),
+                child: Container(
+                  width: 72,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200.withOpacity(0.6),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 6),
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? AppColors.slate300 : AppColors.slate600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   // ── 内容列表 ──
   Widget _buildContentList(int index) {
     final contentList = _contentCache[index] ?? [];
@@ -1219,6 +1300,8 @@ class _HomePageState extends State<HomePage>
               SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
             if (_continueWatchingList.isNotEmpty)
               SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
+            if (_tabs.length > 1)
+              SliverToBoxAdapter(child: _buildCategoryGrid(isDark)),
             if (contentList.isEmpty && isLoadingThisCategory)
               SliverPadding(
                 padding: const EdgeInsets.all(16),

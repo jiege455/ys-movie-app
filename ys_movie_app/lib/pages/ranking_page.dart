@@ -160,9 +160,9 @@ class _RankingPageState extends State<RankingPage> with SingleTickerProviderStat
                   child: TabBarView(
                     controller: tabCtrl,
                     children: [
-                      _RankingList(key: _listKeys[0], orderBy: 'hits_day', autoLoad: false),
-                      _RankingList(key: _listKeys[1], orderBy: 'hits_week', autoLoad: false),
-                      _RankingList(key: _listKeys[2], orderBy: 'hits_month', autoLoad: false),
+                      _RankingList(key: _listKeys[0], orderBy: 'hits_day', autoLoad: true),
+                      _RankingList(key: _listKeys[1], orderBy: 'hits_week', autoLoad: true),
+                      _RankingList(key: _listKeys[2], orderBy: 'hits_month', autoLoad: true),
                     ],
                   ),
                 ),
