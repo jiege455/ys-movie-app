@@ -275,14 +275,14 @@ class ProfilePageState extends State<ProfilePage> {
         children: [
           _buildThemeOption(
             context: context,
-            label: '🌤️ 天空蓝',
+            label: '☁️ 云白',
             value: 'light',
             currentValue: currentTheme,
             themeProvider: themeProvider,
           ),
           _buildThemeOption(
             context: context,
-            label: '🌙 暗夜蓝',
+            label: '🌙 墨夜',
             value: 'dark',
             currentValue: currentTheme,
             themeProvider: themeProvider,

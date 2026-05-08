@@ -222,9 +222,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _getThemeName(String style) {
     switch (style) {
-      case 'light': return '天空蓝';
-      case 'dark': return '暗夜蓝';
-      default: return '暗夜蓝';
+      case 'light': return '云白';
+      case 'dark': return '墨夜';
+      default: return '墨夜';
     }
   }
 
@@ -268,11 +268,11 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('当前主题: ${_getThemeName(themeProvider.themeStyle)}', style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6))),
               const SizedBox(height: 20),
               
-              // 澶╃┖钃濅富棰橀€夐」
+              // 云白主题选项
               _buildThemeOption(
                 context: ctx,
-                title: '天空蓝',
-              subtitle: '明亮清新',
+                title: '云白',
+              subtitle: '明亮清爽，适合日间观看',
                 icon: Icons.wb_sunny,
                 iconColor: AppColors.primary,
                 bgColor: Theme.of(context).cardColor,
@@ -285,11 +285,11 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 12),
               
-              // 鏆楀钃濅富棰橀€夐」
+              // 墨夜主题选项
               _buildThemeOption(
                 context: ctx,
-                title: '暗夜蓝',
-              subtitle: '深邃护眼',
+                title: '墨夜',
+              subtitle: '深邃沉浸，护眼观影体验',
                 icon: Icons.nights_stay,
                 iconColor: Theme.of(context).colorScheme.primary,
                 bgColor: Theme.of(context).scaffoldBackgroundColor,
