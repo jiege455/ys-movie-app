@@ -1262,7 +1262,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     final double fullscreenBtnSize = isPortrait ? 32 : 28;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(12, 8, 12, isFullScreen ? 16 : 4),
+      padding: EdgeInsets.fromLTRB(isFullScreen ? 12 : 8, 8, isFullScreen ? 12 : 8, isFullScreen ? 16 : 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
@@ -1421,12 +1421,12 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
           children: [
             if (!isFullScreen) ...[
               _buildPlayPauseBtn(playBtnSize),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
             ],
 
             // 当前时间 - 拖动时显示预览时间，有气泡时隐藏避免重复
             SizedBox(
-              width: showHours ? 58 : 40,
+              width: isFullScreen ? (showHours ? 58 : 40) : (showHours ? 54 : 36),
               child: _isDragging
                   ? const SizedBox.shrink() // 拖动时有气泡显示，隐藏左侧时间
                   : Text(
@@ -1439,13 +1439,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                       textAlign: TextAlign.right,
                     ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
 
             // 进度条 - 使用 GestureDetector 实现更精确的点击和拖动
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final double barHeight = isFullScreen ? 4.0 : 3.0;
+                  final double barHeight = isFullScreen ? 4.0 : 4.0;
                   final double thumbRadius = isFullScreen ? 8.0 : 6.0;
 
                   return GestureDetector(
@@ -1546,11 +1546,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 },
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
 
             // 总时长 - 拖动时隐藏，保持界面简洁
             SizedBox(
-              width: showHours ? 58 : 40,
+              width: isFullScreen ? (showHours ? 58 : 40) : (showHours ? 54 : 36),
               child: _isDragging
                   ? const SizedBox.shrink()
                   : Text(
