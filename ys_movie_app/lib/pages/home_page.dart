@@ -311,6 +311,11 @@ class _HomePageState extends State<HomePage>
         _loadHotRecommend();
         _loadContinueWatching();
 
+        // 预加载前几个分类的内容
+        for (int i = 1; i < _tabs.length && i <= 3; i++) {
+          _loadContent(i, refresh: true);
+        }
+
         _saveCache();
       } else {
         _tabs = ['推荐'];
@@ -471,6 +476,9 @@ class _HomePageState extends State<HomePage>
   // ── 加载内容（refresh=刷新页, loadMore=加载下一页） ──
   Future<void> _loadContent(int index, {bool refresh = false, bool loadMore = false}) async {
     if (_isLoadingContent && _loadingIndex == index && !loadMore) return;
+
+    final hasCache = _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty;
+
     setState(() {
       _isLoadingContent = true;
       _loadingIndex = index;
@@ -482,7 +490,7 @@ class _HomePageState extends State<HomePage>
         _pageCache[index] = 1;
         _hasMoreCache[index] = true;
       }
-      if (!refresh && !loadMore && _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty) {
+      if (!refresh && !loadMore && hasCache) {
         setState(() {});
         return;
       }
@@ -731,245 +739,144 @@ class _HomePageState extends State<HomePage>
     final hasFilter = _selectedYear != null || _selectedArea != null || _selectedClass != null || _currentOrderby != 'time';
     final primary = Theme.of(context).colorScheme.primary;
 
-    final orderbyLabel = {
-      'time': '最新', 'hits': '最热', 'score': '最赞',
-    }[_currentOrderby] ?? '最新';
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildFilterChip(
-              label: '排序: $orderbyLabel',
-              isActive: _currentOrderby != 'time',
-              primary: primary,
-              isDark: isDark,
-              onTap: () => _showOrderbyPicker(primary, isDark),
-            ),
-            const SizedBox(width: 8),
-            _buildFilterChip(
-              label: _selectedYear ?? '年份',
-              isActive: _selectedYear != null,
-              primary: primary,
-              isDark: isDark,
-              onTap: () => _showDropdownPicker(
-                title: '选择年份',
-                items: ['全部', ..._facets['years'] ?? []],
-                selected: _selectedYear,
-                onSelected: (v) {
-                  setState(() => _selectedYear = v == '全部' ? null : v);
-                  _onFilterChanged();
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            _buildFilterChip(
-              label: _selectedArea ?? '地区',
-              isActive: _selectedArea != null,
-              primary: primary,
-              isDark: isDark,
-              onTap: () => _showDropdownPicker(
-                title: '选择地区',
-                items: ['全部', ..._facets['areas'] ?? []],
-                selected: _selectedArea,
-                onSelected: (v) {
-                  setState(() => _selectedArea = v == '全部' ? null : v);
-                  _onFilterChanged();
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            _buildFilterChip(
-              label: _selectedClass ?? '类型',
-              isActive: _selectedClass != null,
-              primary: primary,
-              isDark: isDark,
-              onTap: () => _showDropdownPicker(
-                title: '选择类型',
-                items: ['全部', ..._facets['classes'] ?? []],
-                selected: _selectedClass,
-                onSelected: (v) {
-                  setState(() => _selectedClass = v == '全部' ? null : v);
-                  _onFilterChanged();
-                },
-              ),
-            ),
-            if (hasFilter) ...[              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _clearFilters,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: primary.withOpacity(0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.close, size: 14, color: primary),
-                      const SizedBox(width: 4),
-                      Text('重置', style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFilterRow(
+            label: '排序',
+            items: const ['最新', '最热', '最赞'],
+            selected: {'time': '最新', 'hits': '最热', 'score': '最赞'}[_currentOrderby] ?? '最新',
+            primary: primary,
+            isDark: isDark,
+            onChanged: (v) {
+              final m = {'最新': 'time', '最热': 'hits', '最赞': 'score'};
+              setState(() => _currentOrderby = m[v] ?? 'time');
+              _onFilterChanged();
+            },
+          ),
+          const SizedBox(height: 6),
+          _buildFilterRow(
+            label: '年份',
+            items: ['全部', ..._facets['years'] ?? []],
+            selected: _selectedYear ?? '全部',
+            primary: primary,
+            isDark: isDark,
+            onChanged: (v) {
+              setState(() => _selectedYear = v == '全部' ? null : v);
+              _onFilterChanged();
+            },
+          ),
+          const SizedBox(height: 6),
+          _buildFilterRow(
+            label: '地区',
+            items: ['全部', ..._facets['areas'] ?? []],
+            selected: _selectedArea ?? '全部',
+            primary: primary,
+            isDark: isDark,
+            onChanged: (v) {
+              setState(() => _selectedArea = v == '全部' ? null : v);
+              _onFilterChanged();
+            },
+          ),
+          const SizedBox(height: 6),
+          _buildFilterRow(
+            label: '类型',
+            items: ['全部', ..._facets['classes'] ?? []],
+            selected: _selectedClass ?? '全部',
+            primary: primary,
+            isDark: isDark,
+            onChanged: (v) {
+              setState(() => _selectedClass = v == '全部' ? null : v);
+              _onFilterChanged();
+            },
+          ),
+          if (hasFilter) ...[            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _clearFilters,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: primary.withOpacity(0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.close, size: 14, color: primary),
+                    const SizedBox(width: 4),
+                    Text('重置筛选', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w500)),
+                  ],
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFilterChip({
+  Widget _buildFilterRow({
     required String label,
-    required bool isActive,
+    required List<String> items,
+    required String selected,
     required Color primary,
     required bool isDark,
-    required VoidCallback onTap,
+    required Function(String) onChanged,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? primary.withOpacity(0.12) : (isDark ? AppColors.darkCard : AppColors.slate50),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? primary : (isDark ? AppColors.slate700.withOpacity(0.5) : AppColors.slate300.withOpacity(0.5)),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 36,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.slate400 : AppColors.slate500,
+            ),
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? primary : (isDark ? AppColors.slate300 : AppColors.slate600),
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 16,
-              color: isActive ? primary : (isDark ? AppColors.slate400 : AppColors.slate500),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showOrderbyPicker(Color primary, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('选择排序', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-            const SizedBox(height: 16),
-            ...['time', 'hits', 'score'].map((v) {
-              final labels = {'time': '最新', 'hits': '最热', 'score': '最赞'};
-              final isSel = _currentOrderby == v;
-              return GestureDetector(
-                onTap: () {
-                  setState(() => _currentOrderby = v);
-                  Navigator.pop(context);
-                  _onFilterChanged();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: isSel ? primary.withOpacity(0.1) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isSel ? primary : Colors.transparent),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text(labels[v]!, style: TextStyle(fontSize: 15, color: isSel ? primary : Theme.of(context).colorScheme.onSurface))),
-                      if (isSel) Icon(Icons.check, color: primary, size: 20),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDropdownPicker({
-    required String title,
-    required List<String> items,
-    required String? selected,
-    required Function(String) onSelected,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        final isDS = Theme.of(context).brightness == Brightness.dark;
-        return Container(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-              const SizedBox(height: 16),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 2.5,
-                  children: items.map((item) {
-                    final isSel = (item == selected) || (item == '全部' && selected == null);
-                    final p = Theme.of(context).colorScheme.primary;
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        onSelected(item);
-                      },
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isSel ? p.withOpacity(0.12) : (isDS ? AppColors.darkElevated : AppColors.slate50),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: isSel ? p : (isDS ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200)),
-                        ),
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
-                            color: isSel ? p : Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            child: Row(
+              children: items.map((item) {
+                final isSel = item == selected;
+                return GestureDetector(
+                  onTap: () => onChanged(item),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isSel
+                          ? primary.withOpacity(0.15)
+                          : (isDark ? AppColors.darkCard : AppColors.slate50),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSel ? primary : (isDark ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200.withOpacity(0.6)),
+                        width: isSel ? 1.5 : 1,
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
+                    ),
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
+                        color: isSel ? primary : (isDark ? AppColors.slate300 : AppColors.slate600),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -1126,6 +1033,7 @@ class _HomePageState extends State<HomePage>
           height: 180,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _hotRecommendList.length.clamp(0, 10),
             separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -1215,6 +1123,7 @@ class _HomePageState extends State<HomePage>
           height: 140,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _continueWatchingList.length.clamp(0, 10),
             separatorBuilder: (_, __) => const SizedBox(width: 12),
