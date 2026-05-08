@@ -682,7 +682,6 @@ class _HomePageState extends State<HomePage>
           fontWeight: FontWeight.normal,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        animationDuration: const Duration(milliseconds: 250),
         indicator: UnderlineTabIndicator(
           borderSide: BorderSide(width: 3, color: Theme.of(context).colorScheme.primary),
         ),
