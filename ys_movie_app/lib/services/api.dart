@@ -2944,4 +2944,3 @@ class MacApi {
     return [];
   }
 }
-}

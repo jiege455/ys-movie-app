@@ -944,6 +944,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     final TextEditingController ctrl = TextEditingController();
     // 增加一个辅助变量
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    final dividerColor = Theme.of(context).dividerColor;
 
     showModalBottomSheet(
       context: context,
