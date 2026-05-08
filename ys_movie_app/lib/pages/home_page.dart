@@ -280,8 +280,14 @@ class _HomePageState extends State<HomePage>
   }
 
   // ── 加载分类 ──
+  bool _isLoadingTabsActive = false;
   Future<void> _loadTabs() async {
-    setState(() => _isLoadingTabs = true);
+    if (_isLoadingTabsActive) return;
+    _isLoadingTabsActive = true;
+    final hasExistingTabs = _tabs.isNotEmpty;
+    if (!hasExistingTabs) {
+      setState(() => _isLoadingTabs = true);
+    }
     try {
       final api = context.read<MacApi>();
       final initData = await api.getAppInit();
@@ -510,7 +516,7 @@ class _HomePageState extends State<HomePage>
         list = await api.getFiltered(
           typeId: typeId == 0 ? null : typeId,
           page: currentPage,
-          limit: 20,
+          limit: 9,
           orderby: _currentOrderby,
           year: _selectedYear,
           area: _selectedArea,
@@ -521,7 +527,7 @@ class _HomePageState extends State<HomePage>
         setState(() {
           final existingList = refresh ? [] : (_contentCache[index] ?? []);
           _contentCache[index] = [...existingList, ...list];
-          _hasMoreCache[index] = list.length >= 20;
+          _hasMoreCache[index] = list.length >= 9;
           _pageCache[index] = (_pageCache[index] ?? 1) + 1;
         });
         _saveCache();
@@ -608,18 +614,6 @@ class _HomePageState extends State<HomePage>
               if (_announcements.isNotEmpty)
                 SliverToBoxAdapter(
                   child: _buildAnnouncementBar(isDark),
-                ),
-
-              // ── 热门推荐（仅在推荐页显示） ──
-              if (_currentTabIndex == 0 && _hotRecommendList.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _buildHotRecommendSection(isDark),
-                ),
-
-              // ── 继续观看（仅在推荐页显示） ──
-              if (_currentTabIndex == 0 && _continueWatchingList.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _buildContinueWatchingSection(isDark),
                 ),
             ];
           },
@@ -1215,6 +1209,48 @@ class _HomePageState extends State<HomePage>
     final contentList = _contentCache[index] ?? [];
     final hasMore = _hasMoreCache[index] ?? true;
     final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // 推荐页用 CustomScrollView 展示热门推荐 + 继续观看 + 网格
+    if (index == 0) {
+      return RefreshIndicator(
+        key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
+        onRefresh: _onRefresh,
+        child: contentList.isEmpty && isLoadingThisCategory
+            ? _buildContentShimmer()
+            : CustomScrollView(
+                slivers: [
+                  if (_hotRecommendList.isNotEmpty)
+                    SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
+                  if (_continueWatchingList.isNotEmpty)
+                    SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
+                  if (contentList.isEmpty)
+                    SliverFillRemaining(child: _buildEmptyView())
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 0.65,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            if (i >= contentList.length) {
+                              return _buildLoadMoreIndicator();
+                            }
+                            return _buildGridItem(contentList[i]);
+                          },
+                          childCount: contentList.length + (hasMore ? 1 : 0),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+      );
+    }
 
     return RefreshIndicator(
       key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
