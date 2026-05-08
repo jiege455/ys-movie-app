@@ -290,6 +290,10 @@ class _HomePageState extends State<HomePage>
         _tabs = ['推荐', ...list.where((e) => e['type_name'].toString() != '全部').map((e) => e['type_name'].toString())];
         _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
 
+        if (hasExistingTabs) {
+          _tabController.removeListener(_onTabChanged);
+          _tabController.dispose();
+        }
         _tabController = TabController(length: _tabs.length, vsync: this);
         _tabController.addListener(_onTabChanged);
 
@@ -309,6 +313,10 @@ class _HomePageState extends State<HomePage>
       } else {
         _tabs = ['推荐'];
         _tabIds = [0];
+        if (hasExistingTabs) {
+          _tabController.removeListener(_onTabChanged);
+          _tabController.dispose();
+        }
         _tabController = TabController(length: _tabs.length, vsync: this);
         _tabController.addListener(_onTabChanged);
         _loadContent(0, refresh: true);
@@ -317,6 +325,10 @@ class _HomePageState extends State<HomePage>
       debugPrint('加载分类失败: $e');
       _tabs = ['推荐'];
       _tabIds = [0];
+      if (hasExistingTabs) {
+        _tabController.removeListener(_onTabChanged);
+        _tabController.dispose();
+      }
       _tabController = TabController(length: _tabs.length, vsync: this);
       _tabController.addListener(_onTabChanged);
       _loadContent(0, refresh: true);
@@ -471,6 +483,7 @@ class _HomePageState extends State<HomePage>
   // ── 加载内容（refresh=刷新页, loadMore=加载下一页） ──
   Future<void> _loadContent(int index, {bool refresh = false, bool loadMore = false}) async {
     if (_isLoadingContent && _loadingIndex == index && !loadMore) return;
+    if (index >= _tabIds.length) return;
 
     final hasCache = _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty;
 
