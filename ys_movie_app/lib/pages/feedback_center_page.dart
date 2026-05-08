@@ -52,7 +52,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
 // 妫€鏌ョ櫥褰?
     final isLogin = await api.checkLogin();
     if (!isLogin) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
       return;
     }
 
@@ -69,10 +69,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
       if (ok) {
         _contentCtrl.clear();
         ScaffoldMessenger.of(context)
-            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('反馈已提交，感谢支持')));
+            .showSnackBar(const SnackBar(content: Text('反馈已提交，感谢支持')));
       } else {
         ScaffoldMessenger.of(context)
-            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
+            .showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -107,7 +107,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-            const Text('如遇播放卡顿、资源失效或有功能建议，请在此留言，我们会尽快处理'),
+                      '如遇播放卡顿、资源失效或有功能建议，请在此留言，我们会尽快处理',
                       style: TextStyle(fontSize: 14, color: scheme.onSurface.withOpacity(0.8)),
                     ),
                   ),
@@ -116,7 +116,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             const SizedBox(height: 24),
             Text(
-            decoration: const InputDecoration(labelText: '问题描述'),
+              '问题描述',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface),
             ),
             const SizedBox(height: 8),
@@ -135,7 +135,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
-            '请详细描述您遇到的问题，例如：\n1. 某部影片第几集无法播放\n2. 画面卡顿或声音不同步\n3. 希望增加的新功能...',
+                  hintText: '请详细描述您遇到的问题，例如：\n1. 某部影片第几集无法播放\n2. 画面卡顿或声音不同步\n3. 希望增加的新功能...',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                 ),
               ),
@@ -154,7 +154,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 child: _submitting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                child: const Text('提交反馈'),
+                    : const Text('提交反馈', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -216,10 +216,10 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
         _nameCtrl.clear();
         _remarkCtrl.clear();
         ScaffoldMessenger.of(context)
-            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('求片已提交，耐心等待处理')));
+            .showSnackBar(const SnackBar(content: Text('求片已提交，耐心等待处理')));
       } else {
         ScaffoldMessenger.of(context)
-            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
+            .showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -254,7 +254,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-            const Text('想看的片子找不到？告诉我片名，站长帮你找！\n提交后请留意消息中心的“求片回复”'),
+                      '想看的片子找不到？告诉我片名，站长帮你找！\n提交后请留意消息中心的“求片回复”',
                       style: TextStyle(fontSize: 14, color: scheme.onSurface.withOpacity(0.8)),
                     ),
                   ),
@@ -262,7 +262,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
               ),
             ),
             const SizedBox(height: 24),
-            hintText: '影片名称（必填）',
+            Text('影片名称（必填）', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -276,7 +276,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              hintText: '准确的片名更容易找到',
+                  hintText: '准确的片名更容易找到',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                   prefixIcon: Icon(Icons.search, color: scheme.onSurface.withOpacity(0.4)),
                 ),
@@ -300,7 +300,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
-            '例如：希望能有4K画质、国语配音、或者具体哪一集。',
+                  hintText: '例如：希望能有4K画质、国语配音、或者具体哪一集。',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                 ),
               ),
@@ -319,7 +319,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 ),
                 child: _submitting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                child: const Text('提交求片'),
+                    : const Text('提交求片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -665,14 +665,14 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
             children: [
               _buildList(
                 _suggestList,
-        child: const Center(child: Text('暂无反馈回复')),
+                emptyText: '暂无反馈回复',
                 controller: _suggestCtrl,
                 hasMore: _suggestHasMore,
                 loadingMore: _loadingMoreSuggest,
               ),
               _buildList(
                 _findList,
-        child: const Center(child: Text('暂无求片回复')),
+                emptyText: '暂无求片回复',
                 controller: _findCtrl,
                 hasMore: _findHasMore,
                 loadingMore: _loadingMoreFind,
@@ -928,7 +928,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.feedback,
-              title: '反馈报错',
+            title: '反馈报错',
             subtitle: '遇到问题？告诉我们',
             color: scheme.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackPage())),
@@ -937,7 +937,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.movie_filter,
-              title: '求片找片',
+            title: '求片找片',
             subtitle: '找不到想看的影片？',
             color: AppColors.warning,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestMoviePage())),
@@ -946,7 +946,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.message,
-              title: '消息中心',
+            title: '消息中心',
             subtitle: '查看公告和回复',
             color: AppColors.success,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessageCenterPage())),
