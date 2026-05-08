@@ -65,6 +65,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   bool _isCollected = false;
   String _collectId = ''; // 云端收藏ID
   bool _isEpisodeAscending = true; // 选集排序
+  bool _isSwitchingEpisode = false; // 选集切换中，防止卡顿
   
   // 猜你喜欢
   List<Map<String, dynamic>> _relatedList = [];
@@ -795,9 +796,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   }
 
   void _changeSource(int index) async {
-    if (index == _currentSourceIndex) return;
+    if (index == _currentSourceIndex || _isSwitchingEpisode) return;
 
     setState(() {
+      _isSwitchingEpisode = true;
       _currentSourceIndex = index;
       final urls = _sources[index]['urls'] as List?;
       if (urls != null) {
@@ -807,17 +809,18 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     });
     _sourceIndexNotifier.value = _currentSourceIndex;
     _episodeIndexNotifier.value = 0;
-    _initPlayer();
+    await _initPlayer();
   }
 
   void _changeEpisode(int index) async {
-    if (index == _currentEpisodeIndex) return;
+    if (index == _currentEpisodeIndex || _isSwitchingEpisode) return;
     
     setState(() {
+      _isSwitchingEpisode = true;
       _currentEpisodeIndex = index;
     });
     _episodeIndexNotifier.value = index;
-    _initPlayer();
+    await _initPlayer();
   }
 
   void _onNextEpisode() {

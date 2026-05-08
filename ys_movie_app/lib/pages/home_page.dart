@@ -421,19 +421,18 @@ class _HomePageState extends State<HomePage>
 
   // ── Tab 切换 ──
   void _onTabChanged() {
-    if (!_tabController.indexIsChanging) return;
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
     _tabDebounce?.cancel();
-    _tabDebounce = Timer(const Duration(milliseconds: 300), () {
+    _tabDebounce = Timer(const Duration(milliseconds: 150), () {
       setState(() => _currentTabIndex = index);
       _loadContent(index, refresh: true);
     });
   }
 
-  // ── 加载内容 ──
-  Future<void> _loadContent(int index, {bool refresh = false}) async {
-    if (_isLoadingContent && _loadingIndex == index) return;
+  // ── 加载内容（refresh=刷新页, loadMore=加载下一页） ──
+  Future<void> _loadContent(int index, {bool refresh = false, bool loadMore = false}) async {
+    if (_isLoadingContent && _loadingIndex == index && !loadMore) return;
     setState(() {
       _isLoadingContent = true;
       _loadingIndex = index;
@@ -445,12 +444,12 @@ class _HomePageState extends State<HomePage>
         _pageCache[index] = 1;
         _hasMoreCache[index] = true;
       }
-      if (!refresh && _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty) {
+      if (!refresh && !loadMore && _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty) {
         setState(() {});
         return;
       }
       List<dynamic> list = [];
-      if (index == 0) {
+      if (index == 0 && !loadMore) {
         try {
           final initData = await api.getAppInit();
           final recommendList = initData['recommend_list'] as List<dynamic>? ?? [];
@@ -497,7 +496,7 @@ class _HomePageState extends State<HomePage>
         _scrollController.position.maxScrollExtent - 200) {
       final hasMore = _hasMoreCache[_currentTabIndex] ?? true;
       if (!_isLoadingContent && hasMore) {
-        _loadContent(_currentTabIndex);
+        _loadContent(_currentTabIndex, loadMore: true);
       }
     }
   }
