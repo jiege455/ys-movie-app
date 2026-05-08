@@ -75,6 +75,13 @@ class _HomePageState extends State<HomePage>
   // ── 分类菜单字体大小 ──
   double _homeTypeFontSize = 14;
 
+  // ── 筛选状态 ──
+  Map<String, List<String>> _facets = {'years': [], 'areas': [], 'classes': []};
+  String _currentOrderby = 'time';
+  String? _selectedYear;
+  String? _selectedArea;
+  String? _selectedClass;
+
   // ── 防抖 ──
   Timer? _tabDebounce;
 
@@ -299,6 +306,7 @@ class _HomePageState extends State<HomePage>
         _loadContent(0, refresh: true);
         _loadBanner();
         _loadHotWords();
+        _loadFacets();
         _loadAnnouncements(initData['notice']);
         _loadHotRecommend();
         _loadContinueWatching();
@@ -369,6 +377,36 @@ class _HomePageState extends State<HomePage>
     } catch (e) {
       debugPrint('加载通知失败: $e');
     }
+  }
+
+  // ── 加载筛选项 ──
+  Future<void> _loadFacets() async {
+    try {
+      final api = context.read<MacApi>();
+      final typeId = _tabIds.isNotEmpty && _tabIds.length > 1 ? _tabIds[1] : 1;
+      final facets = await api.getFacets(typeId1: typeId);
+      if (facets['years'] != null || facets['areas'] != null || facets['classes'] != null) {
+        setState(() => _facets = facets);
+      }
+    } catch (e) {
+      debugPrint('加载筛选项失败: $e');
+    }
+  }
+
+  // ── 清除筛选 ──
+  void _clearFilters() {
+    setState(() {
+      _selectedYear = null;
+      _selectedArea = null;
+      _selectedClass = null;
+      _currentOrderby = 'time';
+      _loadContent(_currentTabIndex, refresh: true);
+    });
+  }
+
+  // ── 筛选变化回调 ──
+  void _onFilterChanged() {
+    _loadContent(_currentTabIndex, refresh: true);
   }
 
   // ── 加载热门推荐 ──
@@ -464,7 +502,10 @@ class _HomePageState extends State<HomePage>
           typeId: typeId == 0 ? null : typeId,
           page: currentPage,
           limit: 20,
-          orderby: 'time',
+          orderby: _currentOrderby,
+          year: _selectedYear,
+          area: _selectedArea,
+          clazz: _selectedClass,
         );
       }
       if (list.isNotEmpty) {
@@ -543,6 +584,10 @@ class _HomePageState extends State<HomePage>
                     ? _buildTabShimmer()
                     : _buildTabBar(isDark),
               ),
+
+              // ── 筛选栏（非推荐页显示） ──
+              if (_currentTabIndex > 0)
+                SliverToBoxAdapter(child: _buildFilterBar(isDark)),
 
               // ── 轮播图（仅在推荐页显示） ──
               if (_currentTabIndex == 0 && _bannerList.isNotEmpty)
@@ -678,6 +723,253 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ),
+    );
+  }
+
+  // ── 筛选栏 ──
+  Widget _buildFilterBar(bool isDark) {
+    final hasFilter = _selectedYear != null || _selectedArea != null || _selectedClass != null || _currentOrderby != 'time';
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final orderbyLabel = {
+      'time': '最新', 'hits': '最热', 'score': '最赞',
+    }[_currentOrderby] ?? '最新';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterChip(
+              label: '排序: $orderbyLabel',
+              isActive: _currentOrderby != 'time',
+              primary: primary,
+              isDark: isDark,
+              onTap: () => _showOrderbyPicker(primary, isDark),
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: _selectedYear ?? '年份',
+              isActive: _selectedYear != null,
+              primary: primary,
+              isDark: isDark,
+              onTap: () => _showDropdownPicker(
+                title: '选择年份',
+                items: ['全部', ..._facets['years'] ?? []],
+                selected: _selectedYear,
+                onSelected: (v) {
+                  setState(() => _selectedYear = v == '全部' ? null : v);
+                  _onFilterChanged();
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: _selectedArea ?? '地区',
+              isActive: _selectedArea != null,
+              primary: primary,
+              isDark: isDark,
+              onTap: () => _showDropdownPicker(
+                title: '选择地区',
+                items: ['全部', ..._facets['areas'] ?? []],
+                selected: _selectedArea,
+                onSelected: (v) {
+                  setState(() => _selectedArea = v == '全部' ? null : v);
+                  _onFilterChanged();
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: _selectedClass ?? '类型',
+              isActive: _selectedClass != null,
+              primary: primary,
+              isDark: isDark,
+              onTap: () => _showDropdownPicker(
+                title: '选择类型',
+                items: ['全部', ..._facets['classes'] ?? []],
+                selected: _selectedClass,
+                onSelected: (v) {
+                  setState(() => _selectedClass = v == '全部' ? null : v);
+                  _onFilterChanged();
+                },
+              ),
+            ),
+            if (hasFilter) ...[              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _clearFilters,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: primary.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.close, size: 14, color: primary),
+                      const SizedBox(width: 4),
+                      Text('重置', style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isActive,
+    required Color primary,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? primary.withOpacity(0.12) : (isDark ? AppColors.darkCard : AppColors.slate50),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? primary : (isDark ? AppColors.slate700.withOpacity(0.5) : AppColors.slate300.withOpacity(0.5)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? primary : (isDark ? AppColors.slate300 : AppColors.slate600),
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 16,
+              color: isActive ? primary : (isDark ? AppColors.slate400 : AppColors.slate500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOrderbyPicker(Color primary, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('选择排序', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+            const SizedBox(height: 16),
+            ...['time', 'hits', 'score'].map((v) {
+              final labels = {'time': '最新', 'hits': '最热', 'score': '最赞'};
+              final isSel = _currentOrderby == v;
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _currentOrderby = v);
+                  Navigator.pop(context);
+                  _onFilterChanged();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isSel ? primary.withOpacity(0.1) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isSel ? primary : Colors.transparent),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(labels[v]!, style: TextStyle(fontSize: 15, color: isSel ? primary : Theme.of(context).colorScheme.onSurface))),
+                      if (isSel) Icon(Icons.check, color: primary, size: 20),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDropdownPicker({
+    required String title,
+    required List<String> items,
+    required String? selected,
+    required Function(String) onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        final isDS = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  shrinkWrap: true,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 2.5,
+                  children: items.map((item) {
+                    final isSel = (item == selected) || (item == '全部' && selected == null);
+                    final p = Theme.of(context).colorScheme.primary;
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSelected(item);
+                      },
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isSel ? p.withOpacity(0.12) : (isDS ? AppColors.darkElevated : AppColors.slate50),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: isSel ? p : (isDS ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200)),
+                        ),
+                        child: Text(
+                          item,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
+                            color: isSel ? p : Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
