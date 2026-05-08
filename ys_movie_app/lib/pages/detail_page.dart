@@ -713,29 +713,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     _betterPlayerController = newController;
     _addControllerListeners();
 
-    if (wasFullScreen) {
-      try {
-        newController.enterFullScreen();
-      } catch (_) {}
-    }
-
-    Timer? fallbackTimer;
-    void hideOverlay() {
-      if (mounted) {
-        setState(() {
-          _isSwitchingEpisode = false;
-        });
-      }
-      fallbackTimer?.cancel();
-    }
-
-    newController.addEventsListener((event) {
-      if (event.betterPlayerEventType == BetterPlayerEventType.play) {
-        hideOverlay();
-      }
-    });
-
-    fallbackTimer = Timer(const Duration(seconds: 3), hideOverlay);
+    if (mounted) setState(() {});
 
     if (oldController != null) {
       try {
@@ -746,7 +724,14 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       }
     }
 
-    if (mounted) setState(() {});
+    if (wasFullScreen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          newController.enterFullScreen();
+        } catch (_) {}
+      });
+    }
+    _isSwitchingEpisode = false;
   }
 
   void _addControllerListeners() {
@@ -1111,43 +1096,17 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   color: Colors.black,
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (_betterPlayerController != null)
-                          BetterPlayer(
+                    child: _betterPlayerController != null
+                        ? BetterPlayer(
                             key: _playerGlobalKey,
                             controller: _betterPlayerController!,
                           )
-                        else
-                          Container(
+                        : Container(
                             color: Colors.black,
                             child: Center(
                               child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
-                        if (_isSwitchingEpisode)
-                          Container(
-                            color: Colors.black54,
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    '正在切换...',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
                   ),
                 ),
                 

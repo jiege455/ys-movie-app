@@ -99,11 +99,9 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _loadCachedData().then((_) {
-      if (_tabs.isEmpty) {
-        _loadTabs();
-      } else {
+      // 显示缓存数据（如果有的话）
+      if (_tabs.isNotEmpty) {
         setState(() => _isLoadingTabs = false);
         _tabController = TabController(
           length: _tabs.length,
@@ -111,17 +109,11 @@ class _HomePageState extends State<HomePage>
           initialIndex: _currentTabIndex,
         );
         _tabController.addListener(_onTabChanged);
-        _loadContent(_currentTabIndex, refresh: true);
       }
+      // 始终从 CMS 加载最新数据
+      _loadTabs();
     });
     _scrollController.addListener(_onScroll);
-  }
-
-  void _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _homeTypeFontSize = prefs.getDouble('home_type_font_size') ?? 14;
-    });
   }
 
   // ── 缓存读写 ──
@@ -294,7 +286,15 @@ class _HomePageState extends State<HomePage>
       final api = context.read<MacApi>();
       final initData = await api.getAppInit();
       final list = initData['type_list'] as List<dynamic>? ?? [];
-      
+
+      // 从 CMS 读取分类字体大小
+      final fontSize = double.tryParse('${initData['home_type_font_size'] ?? 14}') ?? 14;
+      if (fontSize > 0) {
+        _homeTypeFontSize = fontSize.clamp(10, 30);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setDouble('home_type_font_size', _homeTypeFontSize);
+      }
+
       if (list.isNotEmpty) {
         _tabs = ['推荐', ...list.where((e) => e['type_name'].toString() != '全部').map((e) => e['type_name'].toString())];
         _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
@@ -332,6 +332,7 @@ class _HomePageState extends State<HomePage>
       _tabController.addListener(_onTabChanged);
       _loadContent(0, refresh: true);
     } finally {
+      _isLoadingTabsActive = false;
       setState(() => _isLoadingTabs = false);
     }
   }

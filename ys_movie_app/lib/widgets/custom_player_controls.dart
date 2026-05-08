@@ -472,12 +472,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                           if (v) setStateSheet(() => currentPage = p);
                         },
                         selectedColor: AppColors.success,
-                        backgroundColor: AppColors.slate700.withOpacity(0.1),
+                        backgroundColor: Colors.white.withOpacity(0.06),
                         labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.slate300, fontSize: 12),
-                        padding: EdgeInsets.zero,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
                       ),
                     );
                   }),
@@ -515,8 +517,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.success : AppColors.slate700.withOpacity(0.12), // 选中绿色背景
-                        borderRadius: BorderRadius.circular(4),
+                        color: isSelected ? AppColors.success : Colors.white.withOpacity(0.04),
+                        borderRadius: BorderRadius.circular(6),
+                        border: isSelected ? null : Border.all(color: Colors.white.withOpacity(0.08)),
                       ),
                       child: Text(
                         ep['name'] ?? '${originalIndex + 1}',
@@ -1584,15 +1587,19 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         onTap: () {
           onTap?.call();
           cancelAndRestartTimer();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 增加点击区域
-          margin: const EdgeInsets.only(left: 8),
-          child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          margin: const EdgeInsets.only(left: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
         ),
       ),
     );
