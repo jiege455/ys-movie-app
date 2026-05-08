@@ -139,16 +139,15 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
     },
     requestPictureInPicture: async () => {
       const video = videoRef.current
-      if (video && document.pictureInPictureEnabled) {
-        try {
-          if (document.pictureInPictureElement) {
-            await document.exitPictureInPicture()
-          } else {
-            await video.requestPictureInPicture()
-          }
-        } catch (err) {
-          console.error('画中画切换失败:', err)
+      if (!video || !document.pictureInPictureEnabled) return
+      try {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture()
+        } else {
+          await video.requestPictureInPicture()
         }
+      } catch (err) {
+        console.error('画中画切换失败:', err)
       }
     }
   }))
@@ -180,7 +179,8 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   /**
    * 切换画中画
    * 开发者：杰哥网络科技 (qq: 2711793818)
-   * 修复：增加状态同步和桌面窗口交互优化
+   * 修复：禁用Video.js内置按钮，统一由自定义逻辑控制
+   * 添加Media Session API支持，修复桌面PiP窗口控制按钮
    */
   const togglePictureInPicture = useCallback(async () => {
     const video = videoRef.current
@@ -332,7 +332,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
         progressControl: true,
         fullscreenToggle: true,
         remainingTimeDisplay: false,
-        pictureInPictureToggle: document.pictureInPictureEnabled || false
+        pictureInPictureToggle: false
       },
       userActions: {
         click: true,
@@ -457,23 +457,71 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
-   * 画中画状态同步
+   * 画中画状态同步 + Media Session API
    * 开发者：杰哥网络科技 (qq: 2711793818)
-   * 修复：监听 enter/leave 事件，确保状态同步
+   * 修复：使用player内部video元素绑定事件，注册Media Session让桌面PiP窗口按钮可用
    */
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    const player = playerRef.current
+    if (!player) return
 
-    const handleEnterPiP = () => setIsInPiP(true)
-    const handleLeavePiP = () => setIsInPiP(false)
+    const getVideoEl = (): HTMLVideoElement | null => {
+      try {
+        const tech = player.tech({ IWillNotUseThisInPlugins: true })
+        return tech?.el() || videoRef.current
+      } catch {
+        return videoRef.current
+      }
+    }
 
-    video.addEventListener('enterpictureinpicture', handleEnterPiP)
-    video.addEventListener('leavepictureinpicture', handleLeavePiP)
+    const handleEnterPiP = () => {
+      setIsInPiP(true)
+      const video = getVideoEl()
+      if (!video || !('mediaSession' in navigator)) return
+
+      const title = player.mediainfo?.name || document.title || '视频播放'
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: '杰哥网络科技',
+        album: 'YS影视'
+      })
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (player.paused()) player.play()
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (!player.paused()) player.pause()
+      })
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        const offset = details.seekOffset || 10
+        player.currentTime(Math.max((player.currentTime() || 0) - offset, 0))
+      })
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        const offset = details.seekOffset || 10
+        const dur = player.duration() || 0
+        player.currentTime(Math.min((player.currentTime() || 0) + offset, dur))
+      })
+    }
+
+    const handleLeavePiP = () => {
+      setIsInPiP(false)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', null)
+        navigator.mediaSession.setActionHandler('pause', null)
+        navigator.mediaSession.setActionHandler('seekbackward', null)
+        navigator.mediaSession.setActionHandler('seekforward', null)
+      }
+    }
+
+    const playerEl = player.el()
+    playerEl.addEventListener('enterpictureinpicture', handleEnterPiP)
+    playerEl.addEventListener('leavepictureinpicture', handleLeavePiP)
 
     return () => {
-      video.removeEventListener('enterpictureinpicture', handleEnterPiP)
-      video.removeEventListener('leavepictureinpicture', handleLeavePiP)
+      playerEl.removeEventListener('enterpictureinpicture', handleEnterPiP)
+      playerEl.removeEventListener('leavepictureinpicture', handleLeavePiP)
+      handleLeavePiP()
     }
   }, [])
 
@@ -700,20 +748,31 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       {isPiPSupported && !hasError && (
         <button
           onClick={togglePictureInPicture}
-          className={`absolute top-4 z-30 glass-light text-white p-2 rounded hover:bg-cyan-500/30 transition-colors ${isInPiP ? 'bg-cyan-500' : ''}`}
-          title={isInPiP ? '退出画中画' : '画中画'}
-          style={{ right: qualities.length > 1 ? '100px' : '16px' }}
+          className={`absolute top-4 z-30 p-2 rounded-lg transition-all duration-200 ${
+            isInPiP
+              ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30 scale-105'
+              : 'glass-light text-white hover:bg-cyan-500/30'
+          }`}
+          title={isInPiP ? '退出画中画' : '画中画模式'}
+          aria-label={isInPiP ? '退出画中画' : '进入画中画'}
+          style={{ right: '16px' }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
+          {isInPiP ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          )}
         </button>
       )}
 
       {/* 画中画桌面窗口提示 */}
       {isInPiP && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 glass text-white px-4 py-2 rounded-lg text-sm">
-          画中画模式 - 按 ESC 或点击视频退出
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 glass text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap">
+          画中画模式 - 桌面窗口可使用播放控制按钮
         </div>
       )}
 
