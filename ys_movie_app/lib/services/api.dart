@@ -2107,12 +2107,76 @@ class MacApi {
    * 获取筛选项：年份/地区/类型（依赖后端 get_year/get_area/get_class）
    */
   Future<Map<String, List<String>>> getFacets({int typeId1 = 1}) async {
-    // 暂时返回常用年份和地区
+    // 从 CMS 获取真实的扩展分类数据
+    try {
+      await init();
+      final resp = await _dio.get('jgappapi.index/extendClass', queryParameters: {
+        'typeid': typeId1,
+      });
+      if (resp.statusCode == 200) {
+        dynamic data = resp.data;
+        if (data is String) {
+          try {
+            data = jsonDecode(data);
+          } catch (_) {}
+        }
+
+        Map<String, List<String>> result = {
+          'years': [],
+          'areas': [],
+          'classes': [],
+        };
+
+        // 解析扩展分类数据
+        Map? dataMap;
+        if (data is Map) {
+          dataMap = (data['data'] is Map) ? data['data'] : data;
+        }
+
+        if (dataMap != null) {
+          // 尝试多种可能的字段名
+          dynamic extendData = dataMap['type_extend'] ?? dataMap['extend'] ?? dataMap['vod_extend'];
+
+          // 从 type_extend 中提取
+          if (extendData is Map) {
+            result['years'] = _parseCommaList(extendData['year']);
+            result['areas'] = _parseCommaList(extendData['area']);
+            result['classes'] = _parseCommaList(extendData['class']);
+            // 语言筛选项
+            final langs = _parseCommaList(extendData['lang']);
+            if (langs.isNotEmpty) result['langs'] = langs;
+          }
+
+          // 直接从 dataMap 顶层提取
+          if (result['years'].isEmpty) result['years'] = _parseCommaList(dataMap['year'] ?? dataMap['years']);
+          if (result['areas'].isEmpty) result['areas'] = _parseCommaList(dataMap['area'] ?? dataMap['areas']);
+          if (result['classes'].isEmpty) result['classes'] = _parseCommaList(dataMap['class'] ?? dataMap['classes']);
+        }
+
+        // 确保至少有一项数据才返回
+        if (result['areas'].isNotEmpty || result['years'].isNotEmpty || result['classes'].isNotEmpty) {
+          return result;
+        }
+      }
+    } catch (_) {
+      // API 调用失败，降级处理
+    }
+
+    // 兜底：从本地缓存或默认值
     return {
       'years': ['2025','2024','2023','2022','2021','2020','2019','2018','2017'],
       'areas': ['大陆','香港','台湾','美国','韩国','日本','泰国','英国','法国'],
       'classes': ['动作','喜剧','爱情','科幻','恐怖','剧情','战争','纪录'],
     };
+  }
+
+  /// 解析逗号分隔的字符串列表
+  List<String> _parseCommaList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) return value.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
+    final str = value.toString().trim();
+    if (str.isEmpty) return [];
+    return str.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
   }
 
   final _LruCache<List<Map<String, dynamic>>> _categoryCache = _LruCache(
