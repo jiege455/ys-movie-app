@@ -193,7 +193,6 @@ class _SettingsPageState extends State<SettingsPage> {
         return;
       }
     }
-    // 濡傛灉娌℃湁URL浣嗘湁鏂囨湰锛屾垨鑰呮棤娉曟墦寮€URL锛屾樉绀烘枃鏈?
     if (contactText.isNotEmpty) {
        showDialog(
          context: context,
@@ -228,8 +227,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // 寮€鍙戣€咃細鏉板摜缃戠粶绉戞妧 (qq: 2711793818)
-  // 淇锛氫紭鍖栦富棰橀€夋嫨鐣岄潰锛屽鍔犲彲瑙嗗寲鎸囩ず锛堝嬀閫夋爣璁?楂樹寒鑳屾櫙+涓婚棰勮锛?
   void _showThemePicker() {
     final themeProvider = context.read<ThemeProvider>();
     showModalBottomSheet(
@@ -253,7 +250,6 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 鏍囬
               Row(
                 children: [
                   Text('选择主题', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
@@ -308,8 +304,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // 寮€鍙戣€咃細鏉板摜缃戠粶绉戞妧 (qq: 2711793818)
-  // 鏋勫缓涓婚閫夐」鍗＄墖
   Widget _buildThemeOption({
     required BuildContext context,
     required String title,
@@ -336,7 +330,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         child: Row(
           children: [
-            // 涓婚棰勮鍥炬爣
             Container(
               width: 56,
               height: 56,
@@ -348,7 +341,6 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Icon(icon, color: iconColor, size: 28),
             ),
             const SizedBox(width: 16),
-            // 涓婚淇℃伅
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,7 +364,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            // 閫変腑鐘舵€佹寚绀?
             if (isSelected)
               Container(
                 width: 28,
@@ -402,7 +393,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    // final isDark = themeProvider.isDark; // 涓嶅啀鍙渶瑕佽繖涓竷灏斿€?
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
@@ -460,7 +450,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          // 通知 HomePage 弹出下载对话框
                         },
                         child: const Text('立即更新'),
                       ),

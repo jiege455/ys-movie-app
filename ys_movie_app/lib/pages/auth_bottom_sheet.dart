@@ -193,11 +193,8 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 头部品牌区域
             _buildHeader(isDark, primary, onSurface),
-            // Tab 切换
             _buildTabBar(isDark, primary),
-            // 表单内容
             Flexible(
               child: TabBarView(
                 controller: _tabController,
@@ -229,7 +226,6 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
       ),
       child: Column(
         children: [
-          // 拖拽条
           Center(
             child: Container(
               width: 36,
@@ -243,7 +239,6 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             ),
           ),
           const SizedBox(height: 20),
-          // 品牌图标
           Container(
             width: 64,
             height: 64,
@@ -422,8 +417,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             isDark: isDark,
             isPassword: true,
           ),
-          if (_verifyCodeUrl.isNotEmpty) ...[
-            const SizedBox(height: 14),
+          if (_verifyCodeUrl.isNotEmpty) ...[            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
@@ -463,8 +457,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
             primary: primary,
             isDark: isDark,
           ),
-          if (_regClosed) ...[
-            const SizedBox(height: 12),
+          if (_regClosed) ...[            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(

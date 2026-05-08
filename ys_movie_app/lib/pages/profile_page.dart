@@ -1,6 +1,3 @@
-/// 开发者：杰哥网络科技 (qq: 2711793818)
-/// 作用：我的页面，个人中心
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -29,17 +26,15 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
-  // 本地数据
   List<String> favs = [];
   List<String> hist = [];
   
-  // 云端数据
   List<Map<String, dynamic>> cloudFavs = [];
   List<Map<String, dynamic>> cloudHist = [];
 
   bool loading = true;
   bool isLoggedIn = false;
-  Map<String, dynamic>? userInfo; // 用户信息缓存
+  Map<String, dynamic>? userInfo;
   String _versionLabel = 'V1.0.0';
   bool _checkingUpdate = false;
   bool _hideVersion = false;
@@ -55,8 +50,6 @@ class ProfilePageState extends State<ProfilePage> {
       _checkLogin();
     });
   }
-
-  // 添加 RouteAware 监听不太方便，直接在 build 中依赖状态，或者在 push 返回时 await
 
   Future<void> _loadPageSetting() async {
     try {
@@ -178,7 +171,6 @@ class ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// 检查登录状态并加载数据
   Future<void> _checkLogin() async {
     setState(() => loading = true);
     try {
@@ -193,9 +185,7 @@ class ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /// 公开的刷新方法，供外部（如 MainPage）调用
   Future<void> refresh() async {
-    // 刷新时顺便检查一下登录状态，确保同步
     try {
       final api = context.read<MacApi>();
       isLoggedIn = await api.checkLogin();
@@ -206,11 +196,9 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadData() async {
-    // 本地数据始终加载，保证即便云端失败功能也可用
     favs = await StoreService.getFavorites();
     hist = await StoreService.getHistory();
 
-    // 登录状态下再尝试云端接口，失败时自动降级到本地
     if (isLoggedIn) {
       try {
         final api = context.read<MacApi>();
@@ -242,7 +230,6 @@ class ProfilePageState extends State<ProfilePage> {
           userInfo = {'name': name, 'group': '普通会员', 'points': 0, 'is_vip': false};
         }
       } catch (e) {
-        // 降级：只获取用户名
         try {
           final api = context.read<MacApi>();
           final name = await api.getUserName();
@@ -258,7 +245,6 @@ class ProfilePageState extends State<ProfilePage> {
     showAuthBottomSheet(
       context,
       onLoginSuccess: () {
-        // 登录成功后刷新页面状态
         _checkLogin();
       },
     );
@@ -337,7 +323,6 @@ class ProfilePageState extends State<ProfilePage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
     
-    // 整理历史数据列表：优先云端历史（若有），否则使用本地
     final historyList = (isLoggedIn && cloudHist.isNotEmpty)
         ? cloudHist.map((v) {
             return {
@@ -365,7 +350,7 @@ class ProfilePageState extends State<ProfilePage> {
           final sec = int.parse(parts[5]);
           if (sec > 0) {
              progress = '观看至 ${_formatDuration(Duration(seconds: sec))}';
-             progressVal = 0.5; // 既然有进度，就给个模拟进度条显示
+             progressVal = 0.5;
           }
         } catch (_) {}
       }
@@ -385,7 +370,6 @@ class ProfilePageState extends State<ProfilePage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-                // 顶部头部
                 Container(
                   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, bottom: 30, left: 24, right: 24),
                   decoration: _hideMineBg
@@ -401,10 +385,8 @@ class ProfilePageState extends State<ProfilePage> {
                         ),
                         child: Column(
                           children: [
-                  // 顶部用户信息区域（包含设置按钮）
                   Row(
                     children: [
-                      // 头像
                       GestureDetector(
                         onTap: isLoggedIn ? null : _showLoginDialog,
                         child: Container(
@@ -428,7 +410,6 @@ class ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // 用户名与VIP
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +453,6 @@ class ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
-                      // 设置按钮
                       IconButton(
                         icon: const Icon(Icons.settings),
                         onPressed: () {
@@ -482,7 +462,6 @@ class ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // 统计数据
                   Row(
                     children: [
                       _buildStatItem('0', '邀请', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvitePage()))),
@@ -494,17 +473,12 @@ class ProfilePageState extends State<ProfilePage> {
               ),
             ),
             
-            // 主体内容
             Transform.translate(
               offset: const Offset(0, -20),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    // 登录卡片 (已移除，改用点击头像弹窗登录)
-                    // if (!isLoggedIn) ...
-
-                    // 观看历史卡片（整体缩小一点）
                     Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
@@ -539,7 +513,7 @@ class ProfilePageState extends State<ProfilePage> {
                             )
                           else
                             SizedBox(
-                              height: 110, // 缩略图高度（缩小）
+                              height: 110,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: historyList.length,
@@ -549,7 +523,7 @@ class ProfilePageState extends State<ProfilePage> {
                                   return GestureDetector(
                                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))).then((_) => refresh()),
                                     child: SizedBox(
-                                      width: 120, // 卡片宽度缩小
+                                      width: 120,
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
@@ -565,7 +539,6 @@ class ProfilePageState extends State<ProfilePage> {
                                                     placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                                                     errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                                                   ),
-                                                  // 进度条
                                                   if ((item['progressVal'] as double? ?? 0) > 0)
                                                     Positioned(
                                                       bottom: 0, left: 0, right: 0,
@@ -604,13 +577,11 @@ class ProfilePageState extends State<ProfilePage> {
                     
                     const SizedBox(height: 16),
                     
-                    // 常用功能标题
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 12),
                       child: Text('常用功能', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                     
-                    // 功能网格卡片（8个功能，跟参考图一致）
                     Container(
                       decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
@@ -733,21 +704,7 @@ class ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(count, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Removed hardcoded color
-          Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatIcon(IconData icon, String label, {VoidCallback? onTap}) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, size: 24, color: primaryColor),
-          const SizedBox(height: 4),
+          Text(count, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ],
       ),
