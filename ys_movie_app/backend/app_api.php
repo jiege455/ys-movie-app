@@ -306,10 +306,39 @@ if ($ac == 'detail') {
     $vod['vod_pic'] = mac_url_img($vod['vod_pic']);
     $vod['vod_pic_slide'] = mac_url_img($vod['vod_pic_slide']);
     
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 作用：获取后台插件解析管理中启用的播放器列表，只显示用户添加的播放源
+    $enabledParserNames = [];
+    $enabledParserCodes = [];
+    try {
+        $parserTable = \think\Db::name('parser')->where('parser_status', 1)->select();
+        if (!empty($parserTable)) {
+            foreach ($parserTable as $parserRow) {
+                if (!empty($parserRow['parser_name'])) {
+                    $enabledParserNames[] = $parserRow['parser_name'];
+                }
+                if (!empty($parserRow['parser_code'])) {
+                    $enabledParserCodes[] = $parserRow['parser_code'];
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        // 表不存在时不做过滤，保持向后兼容
+    }
+    
     $playList = [];
     if (!empty($vod['vod_play_url'])) {
         $arr = mac_play_list($vod['vod_play_url'], $vod['vod_play_from']);
         foreach ($arr as $playerCode => $eps) {
+            $showName = $eps['show'] ?? '播放源';
+            // 过滤逻辑：只有在插件解析管理中启用的播放器才显示
+            if (!empty($enabledParserNames)) {
+                $isEnabled = in_array($showName, $enabledParserNames) 
+                          || in_array($playerCode, $enabledParserCodes);
+                if (!$isEnabled) {
+                    continue;
+                }
+            }
             $urls = [];
             foreach ($eps['urls'] as $ep) {
                 $urls[] = [
@@ -318,7 +347,7 @@ if ($ac == 'detail') {
                 ];
             }
             $playList[] = [
-                'show' => $eps['show'] ?? '播放源',
+                'show' => $showName,
                 'urls' => $urls,
             ];
         }
@@ -450,9 +479,10 @@ if ($ac == 'search') {
                 ];
             }
             $used_xs = true;
-        } catch (\Exception $e) {
-            // XS 异常，静默失败，降级到 DB
-            // $error = $e->getMessage();
+        } catch (\Throwable $e) {
+            // XS 异常/错误，静默失败，降级到 DB
+            // 修复：使用 Throwable 捕获所有错误（含 PHP7+ 的 Error 类型）
+            // 原因：如果迅搜服务器未启动或配置错误，new XS() 可能抛出 Error 而非 Exception
         }
     }
 

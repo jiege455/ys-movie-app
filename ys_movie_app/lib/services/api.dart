@@ -1775,31 +1775,39 @@ class MacApi {
       // 忽略错误，降级处理
     }
 
-    // 2. 降级：使用 ac=detail 以获取图片
-    final resp = await _dio.get('provide/vod/', queryParameters: {
-      'ac': 'detail',
-      'wd': keyword,
-      'pagesize': 20,
-      'at': 'json',
-    });
-    final rows = (resp.data?['list'] as List?) ?? [];
-    final results = rows.map((v) => {
-      'id': '${v['vod_id'] ?? v['id'] ?? 0}',
-      'title': v['vod_name'] ?? v['title'] ?? '',
-      'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
-      'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
-      'year': '${v['vod_year'] ?? v['year'] ?? ''}',
-      // 修复：优先使用内容简介
-      'overview': v['vod_content'] ?? v['vod_blurb'] ?? v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
-      'area': v['vod_area'] ?? v['area'] ?? '',
-      'lang': v['vod_lang'] ?? v['lang'] ?? '',
-      'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
-      'actor': v['vod_actor'] ?? v['actor'] ?? '',
-    }).toList();
-    
-    // 存入缓存
-    _searchCache[keyword] = results;
-    return results;
+    // 2. 降级：使用 MacCMS 标准搜索接口 (ac=videolist)
+    try {
+      final resp = await _dio.get('provide/vod/', queryParameters: {
+        'ac': 'videolist',
+        'wd': keyword,
+        'pagesize': 20,
+        'at': 'json',
+      });
+      if (resp.statusCode == 200 && resp.data is Map) {
+        final rows = (resp.data['list'] as List?) ?? [];
+        if (rows.isNotEmpty) {
+          final results = rows.map((v) => {
+            'id': '${v['vod_id'] ?? v['id'] ?? 0}',
+            'title': v['vod_name'] ?? v['title'] ?? '',
+            'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
+            'score': double.tryParse('${v['vod_score'] ?? v['score'] ?? 0}') ?? 0.0,
+            'year': '${v['vod_year'] ?? v['year'] ?? ''}',
+            'overview': v['vod_content'] ?? v['vod_blurb'] ?? v['vod_remarks'] ?? v['overview'] ?? v['blurb'] ?? '',
+            'area': v['vod_area'] ?? v['area'] ?? '',
+            'lang': v['vod_lang'] ?? v['lang'] ?? '',
+            'class': v['type_name'] ?? v['vod_class'] ?? v['class'] ?? '',
+            'actor': v['vod_actor'] ?? v['actor'] ?? '',
+          }).toList();
+          _searchCache[keyword] = results;
+          return results;
+        }
+      }
+    } catch (_) {
+      // 忽略错误
+    }
+
+    // 3. 最终降级：返回空列表
+    return [];
   }
 
   /// 获取详情与播放列表
