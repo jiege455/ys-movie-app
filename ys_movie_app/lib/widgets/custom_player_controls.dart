@@ -1,4 +1,4 @@
-﻿/// 文件名：custom_player_controls.dart
+/// 文件名：custom_player_controls.dart
 /// 作者：杰哥（by：杰哥 / qq：2711793818）
 /// 创建日期：2026-01-17
 /// 作用：BetterPlayer 自定义控制器 UI 实现

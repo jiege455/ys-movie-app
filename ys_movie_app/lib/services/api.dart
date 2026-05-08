@@ -1803,30 +1803,28 @@ class MacApi {
   }
 
   /// 获取详情与播放列表
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 作用：优先使用JgApp插件（已按插件解析管理过滤），回退使用app_api.php（也已过滤）
   Future<Map<String, dynamic>?> getDetail(String id) async {
     await init();
     
-    // 1. 尝试 JgApp 插件接口 (jgappapi.index/vodDetail)
+    // 1. 优先使用 JgApp 插件接口（已按后台插件解析管理过滤播放源）
     try {
       final resp = await _dio.get('jgappapi.index/vodDetail', queryParameters: {'vod_id': id});
       if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
          dynamic data = resp.data['data'];
          
-         // 尝试解密
          if (data is String) {
             try {
               final raw = data.trim();
-              // 尝试 Base64 解码
               try {
                 data = jsonDecode(utf8.decode(base64Decode(raw)));
               } catch (_) {
-                // 如果不是 Base64，可能是普通 JSON 字符串
                 data = jsonDecode(raw);
               }
             } catch (_) {}
          }
 
-         // 如果 data 是 Map，说明是明文或解密成功，直接使用
          if (data is Map) {
            final info = data['vod'];
            final playList = (data['vod_play_list'] as List).map((p) {
@@ -1850,7 +1848,7 @@ class MacApi {
                  eps.add({
                     'name': ep['name'], 
                     'url': _fixUrl(ep['url']),
-                    'parse_api': ep['parse_api'] // 修复：保留解析接口字段
+                    'parse_api': ep['parse_api']
                  });
               }
               finalPlayList.add({'show': source['show'], 'urls': eps});
@@ -1870,7 +1868,6 @@ class MacApi {
              'overview': info['vod_blurb'] ?? info['vod_remarks'] ?? info['vod_content'] ?? '',
              'play_list': finalPlayList,
              'official_comment': data['official_comment'],
-             // 兼容旧字段（保持原详情页UI）
              'vod_name': info['vod_name'] ?? '',
              'vod_pic': _fixUrl(info['vod_pic']),
              'vod_year': '${info['vod_year'] ?? ''}',
@@ -1879,13 +1876,12 @@ class MacApi {
              'vod_actor': info['vod_actor'] ?? '',
              'vod_content': info['vod_content'] ?? (info['vod_blurb'] ?? info['vod_remarks'] ?? ''),
              'vod_play_list': finalPlayList,
-             // ... 广告字段省略，防止解析错误 ...
            };
          }
       }
     } catch (_) {}
 
-    // 2. 尝试 app_api.php (明文接口，可能包含播放源名称)
+    // 2. 回退：app_api.php（也已按后台插件解析管理中启用的播放器过滤）
     final customApiUrl = '${rootUrl}app_api.php';
     try {
       final resp = await _dio.get(customApiUrl, queryParameters: {
@@ -1893,16 +1889,52 @@ class MacApi {
         'ids': id,
       });
       if (resp.statusCode == 200 && resp.data is Map && resp.data['code'] == 1) {
-         final info = resp.data['list'][0];
-         // 解析 app_api.php 返回的播放列表
-         // 结构可能与标准 API 类似，也可能不同，这里尝试通用解析
-         final playList = <Map<String, dynamic>>[];
-         // ... (解析逻辑同标准API，但可能包含 'player_info'?)
-         // 暂时跳过，直接用标准API解析，但加上映射
+         final list = resp.data['list'];
+         if (list is List && list.isNotEmpty) {
+            final info = list[0] as Map<String, dynamic>;
+            final rawPlayList = info['vod_play_list'] as List? ?? [];
+            final playList = rawPlayList.map((p) {
+              final pm = p as Map<String, dynamic>;
+              return {
+                'show': pm['show'] ?? '播放源',
+                'urls': (pm['urls'] as List?)?.map((u) {
+                  final um = u as Map<String, dynamic>;
+                  return {
+                    'name': um['name'] ?? '正片',
+                    'url': _fixUrl(um['url'] ?? ''),
+                    'parse_api': um['parse_api'] ?? '',
+                  };
+                }).toList() ?? [],
+              };
+            }).toList();
+            
+            return {
+              'id': '${info['vod_id']}',
+              'title': info['vod_name'] ?? '',
+              'poster': _fixUrl(info['vod_pic'] ?? ''),
+              'score': double.tryParse('${info['vod_score'] ?? 0}') ?? 0.0,
+              'year': '${info['vod_year'] ?? ''}',
+              'type_id': int.tryParse('${info['type_id'] ?? 0}') ?? 0,
+              'area': info['vod_area'] ?? '',
+              'class': info['vod_class'] ?? info['type_name'] ?? '',
+              'director': info['vod_director'] ?? '',
+              'actor': info['vod_actor'] ?? '',
+              'overview': info['vod_blurb'] ?? info['vod_remarks'] ?? info['vod_content'] ?? '',
+              'play_list': playList,
+              'vod_name': info['vod_name'] ?? '',
+              'vod_pic': _fixUrl(info['vod_pic'] ?? ''),
+              'vod_year': '${info['vod_year'] ?? ''}',
+              'vod_area': info['vod_area'] ?? '',
+              'type_name': info['type_name'] ?? (info['vod_class'] ?? ''),
+              'vod_actor': info['vod_actor'] ?? '',
+              'vod_content': info['vod_content'] ?? (info['vod_blurb'] ?? info['vod_remarks'] ?? ''),
+              'vod_play_list': playList,
+            };
+         }
       }
     } catch (_) {}
 
-    // 插件与自定义接口均不可用
+    // 均不可用
     return null;
   }
 

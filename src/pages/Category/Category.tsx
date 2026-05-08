@@ -1,43 +1,60 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { getCategoryMovies } from '../../api'
+import { useCategoryStore } from '../../store/categoryStore'
 import type { Movie } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 分类详情页
- * 展示指定分类下的视频列表
+ * 展示指定分类下的视频列表，数据来源：插件 API (app_api.php ac=list)
  */
 export const Category: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const categoryName = location.state?.name || '分类'
+  const { categories, loadCategories } = useCategoryStore()
+
+  const isMountedRef = useRef(true)
+
+  const categoryName = useMemo(() => {
+    if (location.state?.name) return location.state.name as string
+    const found = categories.find((c) => c.type_id === id)
+    return found?.type_name || '分类'
+  }, [location.state?.name, categories, id])
 
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    isMountedRef.current = true
+    loadCategories()
     if (id) {
       loadMovies(id)
     }
+    return () => { isMountedRef.current = false }
   }, [id])
 
-  const loadMovies = async (categoryId: string) => {
+  const loadMovies = useCallback(async (categoryId: string) => {
     try {
       setLoading(true)
       setError(null)
       const data = await getCategoryMovies(categoryId)
+      if (!isMountedRef.current) return
       setMovies(data)
     } catch (e) {
       console.error(e)
-      setError('加载分类数据失败，请稍后重试')
+      if (isMountedRef.current) {
+        setError('加载分类数据失败，请稍后重试')
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
-  }
+  }, [])
 
   const handleMovieClick = (movieId: string, vodLink?: string) => {
     if (vodLink && /^https?:\/\//i.test(vodLink)) {

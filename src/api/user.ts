@@ -1,10 +1,11 @@
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 模块：用户 API
- * 说明：登录、注册、退出、收藏相关接口
+ * 说明：登录、注册走插件 API (app_api.php)，收藏走 CMS 原生 API
+ *       注意：插件暂未提供收藏接口，收藏操作仍需 CMS 接口开关
  */
 
-import { api } from './index'
+import { api, jgappApi } from './index'
 import type { UserAuth, UserInfo, FavoriteItem } from '../types'
 
 export type { UserAuth, UserInfo, FavoriteItem }
@@ -48,9 +49,14 @@ export const checkLoggedIn = (): boolean => {
   return getUserAuth() !== null
 }
 
+/**
+ * 用户登录 —— 插件 API: ac=login
+ */
 export const userLogin = async (userName: string, userPwd: string): Promise<ApiResult<UserAuth>> => {
   try {
-    const res: any = await api.post('/user/login', { user_name: userName, user_pwd: userPwd })
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'login', user_name: userName, user_pwd: userPwd }
+    })
     if (res?.code === 1 && res?.info) {
       const auth: UserAuth = {
         user_id: String(res.info.user_id),
@@ -67,21 +73,16 @@ export const userLogin = async (userName: string, userPwd: string): Promise<ApiR
   }
 }
 
+/**
+ * 用户注册 —— 插件 API: ac=register
+ */
 export const userRegister = async (userName: string, userPwd: string, userPwd2: string): Promise<ApiResult<UserAuth>> => {
   try {
-    const res: any = await api.post('/user/reg', {
-      user_name: userName,
-      user_pwd: userPwd,
-      user_pwd2: userPwd2
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'register', user_name: userName, user_pwd: userPwd, user_pwd2: userPwd2 }
     })
-    if (res?.code === 1 && res?.info) {
-      const auth: UserAuth = {
-        user_id: String(res.info.user_id),
-        user_name: res.info.user_name,
-        user_check: res.info.user_check
-      }
-      saveUserAuth(auth)
-      return { success: true, data: auth, message: '注册成功' }
+    if (res?.code === 1) {
+      return await userLogin(userName, userPwd)
     }
     return { success: false, message: res?.msg || '注册失败，用户名可能已存在' }
   } catch (error) {
@@ -90,27 +91,23 @@ export const userRegister = async (userName: string, userPwd: string, userPwd2: 
   }
 }
 
+/**
+ * 用户退出 —— CMS 原生 API（清除登录态即可）
+ */
 export const userLogout = async (): Promise<ApiResult<null>> => {
   try {
-    const res: any = await api.post('/user/logout')
-    clearUserAuth()
-    if (res?.code === 1) {
-      return { success: true, message: '退出成功' }
-    }
-    return { success: true, message: '已退出登录' }
-  } catch {
-    clearUserAuth()
-    return { success: true, message: '已清除登录状态' }
-  }
+    await api.post('/user/logout')
+  } catch { /* 忽略 */ }
+  clearUserAuth()
+  return { success: true, message: '已退出登录' }
 }
 
+/**
+ * 添加收藏 —— CMS 原生 API（插件暂未提供收藏接口）
+ */
 export const addFavorite = async (rid: string | number, mid: number = 1): Promise<ApiResult<null>> => {
   try {
-    const res: any = await api.post('/user/ulog_add', {
-      mid: mid,
-      type: 4,
-      rid: rid
-    })
+    const res: any = await api.post('/user/ulog_add', { mid, type: 4, rid })
     if (res?.code === 1) {
       return { success: true, message: '收藏成功' }
     }
@@ -121,13 +118,12 @@ export const addFavorite = async (rid: string | number, mid: number = 1): Promis
   }
 }
 
+/**
+ * 取消收藏 —— CMS 原生 API（插件暂未提供收藏接口）
+ */
 export const removeFavorite = async (rid: string | number, mid: number = 1): Promise<ApiResult<null>> => {
   try {
-    const res: any = await api.post('/user/ulog_del', {
-      mid: mid,
-      type: 4,
-      rid: rid
-    })
+    const res: any = await api.post('/user/ulog_del', { mid, type: 4, rid })
     if (res?.code === 1) {
       return { success: true, message: '已取消收藏' }
     }
@@ -138,6 +134,9 @@ export const removeFavorite = async (rid: string | number, mid: number = 1): Pro
   }
 }
 
+/**
+ * 获取收藏列表 —— CMS 原生 API（插件暂未提供收藏接口）
+ */
 export const getFavorites = async (page: number = 1, limit: number = 20): Promise<FavoriteItem[]> => {
   try {
     const res: any = await api.get('/user/ulog_list', {
@@ -162,10 +161,13 @@ export const getFavorites = async (page: number = 1, limit: number = 20): Promis
   }
 }
 
+/**
+ * 检查收藏状态 —— CMS 原生 API（插件暂未提供收藏接口）
+ */
 export const checkFavoriteStatus = async (rid: string | number, mid: number = 1): Promise<boolean> => {
   try {
     const res: any = await api.get('/user/ulog_check', {
-      params: { type: 4, mid: mid, rid: rid }
+      params: { type: 4, mid, rid }
     })
     return res?.code === 1 && res?.info?.is_favorite === 1
   } catch (error) {

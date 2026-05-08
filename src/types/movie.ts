@@ -37,9 +37,13 @@ export interface VodSource {
   urls?: VodEpisode[]
 }
 
-/** 分类信息 */
+/** 分类信息（从 MacCMS 获取的真实分类数据） */
 export interface Category {
-  id: string
-  name: string
-  icon?: string
+  type_id: string
+  type_name: string
+  type_pid: string
+  type_sort: number
+  type_logo?: string
+  type_en?: string
+  children?: Category[]
 }

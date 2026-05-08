@@ -1,43 +1,76 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Carousel } from '../../components/Carousel/Carousel'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
-import { getHotMovies, getBannerMovies } from '../../api'
-import { useMovieStore } from '../../store/movieStore'
-import type { BannerMovie } from '../../types'
+import { getHomeData } from '../../api'
+import type { BannerMovie, Movie, Category } from '../../types'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 首页页面
- * 负责加载轮播与电影列表，支持搜索与分类跳转
+ * 通过插件 API (app_api.php ac=init) 一次请求获取轮播图+推荐+分类数据
  */
+
+const CATEGORY_ICONS: Record<string, string> = {
+  '1': '🎬', '2': '📺', '3': '🎭', '4': '🎵',
+  '5': '🔥', '6': '😄', '7': '💕', '8': '🚀',
+  '9': '👻', '10': '🎨', '11': '🔍', '12': '⚔️',
+  '13': '📖', '14': '🎤', '15': '🏃', '16': '🌍',
+  '17': '👶', '18': '🎪', '19': '📰', '20': '🎯'
+}
+
+const getIcon = (cat: Category): string => {
+  const idx = parseInt(cat.type_id, 10)
+  if (!isNaN(idx) && idx > 0 && idx <= 20) {
+    return CATEGORY_ICONS[String(idx)] || '🎬'
+  }
+  const icons = Object.values(CATEGORY_ICONS)
+  return icons[idx % icons.length] || '🎬'
+}
+
+const CATEGORY_DISPLAY_LIMIT = 8
+
 export const Home: React.FC = () => {
   const navigate = useNavigate()
-  const { movies, setMovies, loading, setLoading } = useMovieStore()
+  const isMountedRef = useRef(true)
 
-  const [hotMovies, setHotMovies] = useState<BannerMovie[]>([])
+  const [banners, setBanners] = useState<BannerMovie[]>([])
+  const [movies, setMovies] = useState<Movie[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadMovies()
+    isMountedRef.current = true
+    loadHomeData()
+    return () => { isMountedRef.current = false }
   }, [])
 
-  const loadMovies = async () => {
+  const loadHomeData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const banners = await getBannerMovies()
-      setHotMovies(banners)
-      const movieData = await getHotMovies(1)
-      setMovies(movieData)
+      const data = await getHomeData()
+      if (!isMountedRef.current) return
+      if (data) {
+        setBanners(data.banners)
+        setMovies(data.hotMovies)
+        setCategories(data.categories)
+      } else {
+        setError('加载数据失败，请检查网络连接')
+      }
     } catch (err) {
-      console.error('加载电影数据失败:', err)
-      setError('加载数据失败，请检查网络连接')
+      console.error('加载首页数据失败:', err)
+      if (isMountedRef.current) {
+        setError('加载数据失败，请检查网络连接')
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
-  }
+  }, [])
 
   const handleMovieClick = (movieId: string, vodLink?: string) => {
     if (vodLink && /^https?:\/\//i.test(vodLink)) {
@@ -54,13 +87,14 @@ export const Home: React.FC = () => {
     }
   }
 
-  const handleCategoryClick = (category: string) => {
-    navigate(`/category/${category}`)
+  const handleCategoryClick = (categoryId: string, categoryName: string) => {
+    navigate(`/category/${categoryId}`, { state: { name: categoryName } })
   }
+
+  const displayCategories = categories.slice(0, CATEGORY_DISPLAY_LIMIT)
 
   return (
     <div className="min-h-screen">
-      {/* 顶部搜索（移动端样式） */}
       <div className="px-4 pt-4 pb-2 sticky top-0 z-10 glass">
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
@@ -78,14 +112,12 @@ export const Home: React.FC = () => {
         </form>
       </div>
 
-      {/* 主要内容 */}
       <main className="px-4 pb-20">
-        {/* 错误提示 */}
         {error && (
           <div className="glass border border-cyan-500/20 rounded-lg p-4 mb-4">
             <p className="text-cyan-400 text-center">{error}</p>
             <button
-              onClick={loadMovies}
+              onClick={loadHomeData}
               className="mt-2 w-full bg-cyan-500 hover:bg-cyan-400 text-white py-2 rounded-lg transition-colors"
             >
               重新加载
@@ -93,12 +125,11 @@ export const Home: React.FC = () => {
           </div>
         )}
 
-        {/* 轮播图区域 */}
-        {hotMovies.length > 0 && (
+        {banners.length > 0 && (
           <section className="mb-12">
             <h2 className="text-3xl font-bold mb-6 text-cyan-400">热门推荐</h2>
             <Carousel
-              movies={hotMovies}
+              movies={banners}
               onMovieClick={handleMovieClick}
               autoPlay={true}
               interval={6000}
@@ -106,21 +137,28 @@ export const Home: React.FC = () => {
           </section>
         )}
 
-        {/* 视频列表 */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-cyan-400">热播精选</h2>
-            <button
-              onClick={() => handleCategoryClick('movie')}
-              className="text-cyan-400 hover:text-cyan-300 text-sm"
-            >
-              查看更多 →
-            </button>
+            {displayCategories.length > 0 && (
+              <button
+                onClick={() => handleCategoryClick(displayCategories[0].type_id, displayCategories[0].type_name)}
+                className="text-cyan-400 hover:text-cyan-300 text-sm"
+              >
+                查看更多 →
+              </button>
+            )}
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+            <div className="grid grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-slate-700/50 rounded-lg aspect-[2/3]" />
+                  <div className="mt-2 h-3 bg-slate-700/50 rounded w-3/4" />
+                  <div className="mt-1 h-3 bg-slate-700/50 rounded w-1/2" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
@@ -146,30 +184,43 @@ export const Home: React.FC = () => {
           )}
         </section>
 
-        {/* 分类导航（简洁移动样式） */}
         <section className="mt-8">
-          <h2 className="text-xl font-bold mb-4 text-cyan-400">分类浏览</h2>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { name: '动作', icon: '🔥', category: 'action' },
-              { name: '喜剧', icon: '😄', category: 'comedy' },
-              { name: '爱情', icon: '💕', category: 'romance' },
-              { name: '科幻', icon: '🚀', category: 'sci-fi' },
-              { name: '恐怖', icon: '👻', category: 'horror' },
-              { name: '动画', icon: '🎨', category: 'animation' },
-              { name: '悬疑', icon: '🔍', category: 'mystery' },
-              { name: '战争', icon: '⚔️', category: 'war' }
-            ].map((genre) => (
-              <button
-                key={genre.category}
-                onClick={() => handleCategoryClick(genre.category)}
-                className="rounded-lg p-3 text-center glass-card hover:bg-cyan-500/10 transition-colors"
-              >
-                <div className="text-xl mb-1">{genre.icon}</div>
-                <div className="text-sm text-cyan-300">{genre.name}</div>
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-cyan-400">分类浏览</h2>
+            <button
+              onClick={() => navigate('/categories')}
+              className="text-cyan-400 hover:text-cyan-300 text-sm"
+            >
+              全部分类 →
+            </button>
           </div>
+          {loading ? (
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-lg p-3 glass-card">
+                  <div className="h-8 bg-slate-700/50 rounded mb-2" />
+                  <div className="h-3 bg-slate-700/50 rounded w-2/3 mx-auto" />
+                </div>
+              ))}
+            </div>
+          ) : displayCategories.length > 0 ? (
+            <div className="grid grid-cols-4 gap-3">
+              {displayCategories.map((cat) => (
+                <button
+                  key={cat.type_id}
+                  onClick={() => handleCategoryClick(cat.type_id, cat.type_name)}
+                  className="rounded-lg p-3 text-center glass-card hover:bg-cyan-500/10 transition-colors"
+                >
+                  <div className="text-xl mb-1">{getIcon(cat)}</div>
+                  <div className="text-sm text-cyan-300 truncate">{cat.type_name}</div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-cyan-400/50 text-sm">暂无分类数据</p>
+            </div>
+          )}
         </section>
       </main>
     </div>

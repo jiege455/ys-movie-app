@@ -1,12 +1,12 @@
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 模块：视频(VOD) API
- * 说明：视频列表、详情、搜索相关接口
+ * 说明：所有视频接口统一走 杰哥插件 API (jgappApi → app_api.php)
+ *       插件内部通过 think\Db 直接查询 CMS 数据库，无需开启 CMS 接口开关
  */
 
-import axios from 'axios'
-import { api } from './index'
-import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode } from '../types'
+import { jgappApi } from './index'
+import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category } from '../types'
 
 export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode }
 
@@ -19,34 +19,28 @@ const mapVodToMovie = (v: any): Movie => ({
   overview: v.vod_remarks || ''
 })
 
-/**
- * 获取热门视频列表（按周热度）
- */
-export const getHotMovies = async (page: number = 1): Promise<Movie[]> => {
-  try {
-    const limit = 20
-    const offset = (page - 1) * limit
-    const res: any = await api.get('/vod/get_list', {
-      params: { offset, limit, orderby: 'hits_week' }
-    })
-    const rows = res?.info?.rows || []
-    return rows.map(mapVodToMovie)
-  } catch (error) {
-    console.error('获取热门视频失败:', error)
-    return []
-  }
+export interface HomeData {
+  banners: BannerMovie[]
+  hotMovies: Movie[]
+  categories: Category[]
+  hotSearchList: string[]
 }
 
 /**
- * 获取Banner轮播图数据（推荐级别9）
+ * 获取首页完整数据（一次请求返回轮播图+推荐+分类+热搜词）
+ * 插件接口: ac=init
  */
-export const getBannerMovies = async (): Promise<BannerMovie[]> => {
+export const getHomeData = async (): Promise<HomeData | null> => {
   try {
-    const res: any = await api.get('/vod/get_list', {
-      params: { limit: 5, orderby: 'hits_week', level: 9 }
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'init' }
     })
-    const rows = res?.info?.rows || []
-    return rows.map((v: any) => ({
+    if (res?.code !== 1) {
+      console.error('首页数据加载失败:', res?.msg)
+      return null
+    }
+
+    const banners: BannerMovie[] = (res.banner_list || []).map((v: any) => ({
       id: String(v.vod_id),
       title: v.vod_name,
       poster_path: v.vod_pic || '',
@@ -56,6 +50,56 @@ export const getBannerMovies = async (): Promise<BannerMovie[]> => {
       overview: v.vod_remarks || '',
       link: v.vod_link || ''
     }))
+
+    const hotMovies: Movie[] = (res.recommend_list || []).map(mapVodToMovie)
+
+    const categories: Category[] = (res.type_list || []).map((v: any) => ({
+      type_id: String(v.type_id || ''),
+      type_name: v.type_name || '',
+      type_pid: String(v.type_pid || '0'),
+      type_sort: Number(v.type_sort || 0),
+      type_logo: v.type_logo || '',
+      type_en: v.type_en || ''
+    }))
+
+    return {
+      banners,
+      hotMovies,
+      categories,
+      hotSearchList: res.hot_search_list || []
+    }
+  } catch (error) {
+    console.error('获取首页数据失败:', error)
+    return null
+  }
+}
+
+/**
+ * 获取热门视频列表（分页，用于发现页等场景）
+ * 插件接口: ac=list
+ */
+export const getHotMovies = async (page: number = 1): Promise<Movie[]> => {
+  try {
+    const limit = 20
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'list', pg: page, pagesize: limit, by: 'hits_week' }
+    })
+    const list = res?.list || []
+    return list.map(mapVodToMovie)
+  } catch (error) {
+    console.error('获取热门视频失败:', error)
+    return []
+  }
+}
+
+/**
+ * 获取Banner轮播图数据（推荐级别9）
+ * 插件接口: ac=init 已包含，单独调时用 ac=list 带 level 参数
+ */
+export const getBannerMovies = async (): Promise<BannerMovie[]> => {
+  try {
+    const homeData = await getHomeData()
+    return homeData?.banners || []
   } catch (error) {
     console.error('获取Banner失败:', error)
     return []
@@ -63,17 +107,17 @@ export const getBannerMovies = async (): Promise<BannerMovie[]> => {
 }
 
 /**
- * 按分类获取视频列表
+ * 按分类获取视频列表（支持分页）
+ * 插件接口: ac=list&t=type_id
  */
 export const getCategoryMovies = async (categoryId: string, page: number = 1): Promise<Movie[]> => {
   try {
     const limit = 20
-    const offset = (page - 1) * limit
-    const res: any = await api.get('/vod/get_list', {
-      params: { type_id: categoryId, offset, limit, orderby: 'time' }
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'list', t: categoryId, pg: page, pagesize: limit, by: 'time' }
     })
-    const rows = res?.info?.rows || []
-    return rows.map(mapVodToMovie)
+    const list = res?.list || []
+    return list.map(mapVodToMovie)
   } catch (error) {
     console.error('获取分类视频失败:', error)
     return []
@@ -81,36 +125,32 @@ export const getCategoryMovies = async (categoryId: string, page: number = 1): P
 }
 
 /**
- * 按名称搜索视频（优先使用Xunsearch，失败降级到MacCMS原生搜索）
+ * 获取全部分类列表
+ * 插件接口: ac=init 的 type_list 字段
+ */
+export const getCategories = async (): Promise<Category[]> => {
+  try {
+    const homeData = await getHomeData()
+    return homeData?.categories || []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    return []
+  }
+}
+
+/**
+ * 按名称搜索视频（优先使用Xunsearch，失败降级到数据库搜索）
+ * 插件接口: ac=search（app_api.php 内部自动处理降级）
  */
 export const searchMovies = async (keyword: string): Promise<Movie[]> => {
   try {
-    const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
-    const res: any = await axios.get(appApiBase, {
-      params: { ac: 'search', wd: keyword, page: 1, limit: 20 },
-      timeout: 10000
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'search', wd: keyword, page: 1, limit: 20 }
     })
-    if (res?.data?.code === 1 && res.data.list) {
-      return res.data.list.map((v: any) => ({
-        id: String(v.vod_id),
-        title: v.vod_name,
-        poster_path: v.vod_pic || '',
-        vote_average: Number(v.vod_score || 0),
-        release_date: String(v.vod_year || ''),
-        overview: v.vod_remarks || ''
-      }))
+    if (res?.code === 1 && res.list) {
+      return res.list.map(mapVodToMovie)
     }
-    console.warn('Xunsearch搜索失败，降级到数据库搜索')
-  } catch (error) {
-    console.warn('Xunsearch搜索异常，降级到数据库搜索:', error)
-  }
-
-  try {
-    const res: any = await api.get('/vod/get_list', {
-      params: { wd: keyword, limit: 20 }
-    })
-    const rows = res?.info?.rows || []
-    return rows.map(mapVodToMovie)
+    return []
   } catch (error) {
     console.error('搜索视频失败:', error)
     return []
@@ -118,64 +158,52 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
 }
 
 /**
- * 高级搜索（Xunsearch，返回完整信息包括总数和搜索来源）
+ * 高级搜索（返回完整信息包括总数和搜索来源）
+ * 插件接口: ac=search
  */
 export const searchMoviesAdvanced = async (keyword: string, page: number = 1, limit: number = 20): Promise<{ list: Movie[], total: number, source: string }> => {
   try {
-    const appApiBase = import.meta.env.VITE_APP_API_URL || '/app_api.php'
-    const res: any = await axios.get(appApiBase, {
-      params: { ac: 'search', wd: keyword, page, limit },
-      timeout: 10000
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'search', wd: keyword, page, limit }
     })
-    if (res?.data?.code === 1) {
-      const list = (res.data.list || []).map((v: any) => ({
-        id: String(v.vod_id),
-        title: v.vod_name,
-        poster_path: v.vod_pic || '',
-        vote_average: Number(v.vod_score || 0),
-        release_date: String(v.vod_year || ''),
-        overview: v.vod_remarks || ''
-      }))
+    if (res?.code === 1) {
       return {
-        list,
-        total: res.data.total || 0,
-        source: res.data.source || 'database'
+        list: (res.list || []).map(mapVodToMovie),
+        total: res.total || 0,
+        source: res.source || 'database'
       }
     }
-    console.warn('Xunsearch高级搜索失败，降级到数据库搜索')
+    return { list: [], total: 0, source: 'database' }
   } catch (error) {
-    console.warn('Xunsearch高级搜索异常，降级到数据库搜索:', error)
-  }
-
-  try {
-    const res: any = await api.get('/vod/get_list', {
-      params: { vod_name: keyword, limit }
-    })
-    const rows = res?.info?.rows || []
-    return {
-      list: rows.map(mapVodToMovie),
-      total: res?.info?.total || 0,
-      source: 'database'
-    }
-  } catch (error) {
-    console.error('高级搜索降级失败:', error)
+    console.error('高级搜索失败:', error)
     return { list: [], total: 0, source: 'database' }
   }
 }
 
 /**
  * 获取视频详情（含解析后的播放列表）
+ * 插件接口: ac=detail&ids=vod_id
  */
 export const getMovieDetail = async (id: string): Promise<MovieDetail | null> => {
   try {
-    const res: any = await api.get('/vod/get_detail', { params: { vod_id: id } })
-    const info = res?.info || {}
+    const res: any = await jgappApi.get('', {
+      params: { ac: 'detail', ids: id }
+    })
+    if (res?.code !== 1 || !res.list || res.list.length === 0) {
+      console.error('视频详情加载失败:', res?.msg)
+      return null
+    }
+    const info = res.list[0] || {}
 
     let playList: VodSource[] = []
     if (info.vod_play_list && Array.isArray(info.vod_play_list)) {
-      playList = info.vod_play_list
-    } else if (info.vod_play_url) {
-      playList = parseVodPlayUrl(info.vod_play_url)
+      playList = info.vod_play_list.map((src: any) => ({
+        name: src.show || src.name,
+        urls: (src.urls || []).map((ep: any) => ({
+          name: ep.name,
+          url: ep.url
+        }))
+      }))
     }
 
     return {
@@ -192,42 +220,4 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
     console.error('获取视频详情失败:', error)
     return null
   }
-}
-
-/**
- * 解析MacCMS的vod_play_url字符串为结构化播放列表
- * 格式："源1名称$$$第1集$url1#第2集$url2$$$源2名称$$$..."
- */
-function parseVodPlayUrl(playUrl: string): VodSource[] {
-  if (!playUrl) return []
-
-  const sources: VodSource[] = []
-  const sourceParts = playUrl.split('$$$')
-
-  for (let i = 0; i < sourceParts.length; i += 2) {
-    const sourceName = sourceParts[i] || '默认源'
-    const episodesStr = sourceParts[i + 1] || ''
-
-    if (!episodesStr) continue
-
-    const episodes: VodEpisode[] = []
-    const episodeParts = episodesStr.split('#')
-
-    for (const ep of episodeParts) {
-      const dollarIndex = ep.lastIndexOf('$')
-      if (dollarIndex > 0) {
-        const epName = ep.substring(0, dollarIndex)
-        const epUrl = ep.substring(dollarIndex + 1)
-        if (epUrl) {
-          episodes.push({ name: epName || undefined, url: epUrl })
-        }
-      }
-    }
-
-    if (episodes.length > 0) {
-      sources.push({ name: sourceName, urls: episodes })
-    }
-  }
-
-  return sources.length > 0 ? sources : [{ urls: [{ url: playUrl }] }]
 }

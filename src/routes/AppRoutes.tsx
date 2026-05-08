@@ -18,6 +18,8 @@ const MessageCenter = lazy(() => import('../pages/MessageCenter/MessageCenter'))
 const Search = lazy(() => import('../pages/Search/Search'))
 const Topic = lazy(() => import('../pages/Topic/Topic'))
 const Category = lazy(() => import('../pages/Category/Category'))
+const CategoriesPage = lazy(() => import('../pages/Categories/CategoriesPage'))
+const DiscoverPage = lazy(() => import('../pages/Discover/DiscoverPage'))
 
 const HIDDEN_TABBAR_PATHS = ['/player/', '/movie/', '/login', '/messages', '/search']
 
@@ -53,9 +55,9 @@ export const AppRoutes: React.FC = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/messages" element={<MessageCenter />} />
             <Route path="/search" element={<Search />} />
-            <Route path="/discover" element={<Home />} />
+            <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/topic" element={<Topic />} />
-            <Route path="/categories" element={<Home />} />
+            <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/category/:id" element={<Category />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

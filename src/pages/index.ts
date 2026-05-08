@@ -3,6 +3,8 @@
 
 export { Home } from './Home/Home'
 export { Category } from './Category/Category'
+export { CategoriesPage } from './Categories/CategoriesPage'
+export { DiscoverPage } from './Discover/DiscoverPage'
 export { MovieDetail } from './MovieDetail/MovieDetail'
 export { Player } from './Player/Player'
 export { Topic } from './Topic/Topic'

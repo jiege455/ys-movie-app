@@ -193,7 +193,8 @@ class _SettingsPageState extends State<SettingsPage> {
         return;
       }
     }
-    // 濡傛灉娌℃湁URL浣嗘湁鏂囨湰锛屾垨鑰呮棤娉曟墦寮€URL锛屾樉绀烘枃鏈?    if (contactText.isNotEmpty) {
+    // 濡傛灉娌℃湁URL浣嗘湁鏂囨湰锛屾垨鑰呮棤娉曟墦寮€URL锛屾樉绀烘枃鏈?
+    if (contactText.isNotEmpty) {
        showDialog(
          context: context,
          builder: (ctx) => AlertDialog(
@@ -218,7 +219,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // 寮€鍙戣€咃細鏉板摜缃戠粶绉戞妧 (qq: 2711793818)
-  // 淇锛氫紭鍖栦富棰橀€夋嫨鐣岄潰锛屽鍔犲彲瑙嗗寲鎸囩ず锛堝嬀閫夋爣璁?楂樹寒鑳屾櫙+涓婚棰勮锛?  void _showThemePicker() {
+  // 淇锛氫紭鍖栦富棰橀€夋嫨鐣岄潰锛屽鍔犲彲瑙嗗寲鎸囩ず锛堝嬀閫夋爣璁?楂樹寒鑳屾櫙+涓婚棰勮锛?
+  void _showThemePicker() {
     final themeProvider = context.read<ThemeProvider>();
     showModalBottomSheet(
       context: context,
@@ -366,7 +368,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            // 閫変腑鐘舵€佹寚绀?            if (isSelected)
+            // 閫変腑鐘舵€佹寚绀?
+            if (isSelected)
               Container(
                 width: 28,
                 height: 28,

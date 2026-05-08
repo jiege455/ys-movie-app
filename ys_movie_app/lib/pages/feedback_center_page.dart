@@ -38,7 +38,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   /// 寮€鍙戣€咃細鏉板摜
   /// 浣滅敤锛氭彁浜ゅ弽棣堝埌鍚庣
-  /// 瑙ｉ噴锛氱偣"鎻愪氦鍙嶉"鏃舵妸鍐呭鍙戠粰鏈嶅姟鍣?  Future<void> _submit() async {
+/// 瑙ｉ噴锛氱偣"鎻愪氦鍙嶉"鏃舵妸鍐呭鍙戠粰鏈嶅姟鍣?
+  Future<void> _submit() async {
     final text = _contentCtrl.text.trim();
     if (text.isEmpty) {
       ScaffoldMessenger.of(context)
@@ -48,7 +49,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
     final api = context.read<MacApi>();
     
-    // 妫€鏌ョ櫥褰?    final isLogin = await api.checkLogin();
+// 妫€鏌ョ櫥褰?
+    final isLogin = await api.checkLogin();
     if (!isLogin) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍')));
       return;
@@ -193,7 +195,8 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
 
     final api = context.read<MacApi>();
 
-    // 妫€鏌ョ櫥褰?    final isLogin = await api.checkLogin();
+// 妫€鏌ョ櫥褰?
+    final isLogin = await api.checkLogin();
     if (!isLogin) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍鍚庢彁浜ゆ眰鐗?)));
       return;
@@ -397,7 +400,8 @@ class _NoticeListTabState extends State<_NoticeListTab> {
 
   /// 寮€鍙戣€咃細鏉板摜
   /// 浣滅敤锛氫粠鎺ュ彛鍔犺浇鍏憡鍒楄〃
-  /// 瑙ｉ噴锛氬悜鏈嶅姟鍣ㄦ媺鍙栧叕鍛婃暟鎹?  Future<void> _load() async {
+/// 瑙ｉ噴锛氬悜鏈嶅姟鍣ㄦ媺鍙栧叕鍛婃暟鎹?
+  Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final api = context.read<MacApi>();
@@ -527,7 +531,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
   List<Map<String, dynamic>> _suggestList = [];
   List<Map<String, dynamic>> _findList = [];
   bool _loading = true;
-  // 鍒嗛〉涓庢粴鍔ㄦ帶鍒?  final ScrollController _suggestCtrl = ScrollController();
+// 鍒嗛〉涓庢粴鍔ㄦ帶鍒?
+  final ScrollController _suggestCtrl = ScrollController();
   final ScrollController _findCtrl = ScrollController();
   int _suggestPage = 1;
   int _findPage = 1;
@@ -540,7 +545,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
   void initState() {
     super.initState();
     _innerCtrl = TabController(length: 2, vsync: this);
-    // 鐩戝惉婊氬姩锛岄潬杩戝簳閮ㄨ嚜鍔ㄥ姞杞芥洿澶?    _suggestCtrl.addListener(() {
+// 鐩戝惉婊氬姩锛岄潬杩戝簳閮ㄨ嚜鍔ㄥ姞杞芥洿澶?
+    _suggestCtrl.addListener(() {
       if (_suggestHasMore &&
           !_loadingMoreSuggest &&
           _suggestCtrl.position.pixels >=
@@ -590,7 +596,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
 
   /// 寮€鍙戣€咃細鏉板摜
   /// 浣滅敤锛氬姞杞芥洿澶?鍙嶉鍥炲"
-  /// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤靛弽棣堝洖澶嶅苟杩藉姞鍒板垪琛?  Future<void> _loadMoreSuggest() async {
+/// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤靛弽棣堝洖澶嶅苟杩藉姞鍒板垪琛?
+  Future<void> _loadMoreSuggest() async {
     if (_loadingMoreSuggest || !_suggestHasMore) return;
     setState(() => _loadingMoreSuggest = true);
     try {
@@ -613,7 +620,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
 
   /// 寮€鍙戣€咃細鏉板摜
   /// 浣滅敤锛氬姞杞芥洿澶?姹傜墖鍥炲"
-  /// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤垫眰鐗囧洖澶嶅苟杩藉姞鍒板垪琛?  Future<void> _loadMoreFind() async {
+/// 瑙ｉ噴锛氬悜鍚庣璇锋眰涓嬩竴椤垫眰鐗囧洖澶嶅苟杩藉姞鍒板垪琛?
+  Future<void> _loadMoreFind() async {
     if (_loadingMoreFind || !_findHasMore) return;
     setState(() => _loadingMoreFind = true);
     try {
