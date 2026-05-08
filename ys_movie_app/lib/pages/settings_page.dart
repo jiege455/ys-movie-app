@@ -56,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
     await CacheService.clearCache();
     if (mounted) {
       setState(() => _cacheSize = '0.00MB');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('缂撳瓨宸叉竻鐞?)));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('缓存已清理')));
     }
   }
 
@@ -77,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('淇敼鏄电О'),
         content: TextField(
           controller: ctrl,
-          decoration: const InputDecoration(labelText: '鏂版樀绉?),
+          decoration: const InputDecoration(labelText: '新昵称'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('鍙栨秷')),
@@ -121,17 +121,17 @@ class _SettingsPageState extends State<SettingsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: oldCtrl, decoration: const InputDecoration(labelText: '鏃у瘑鐮?), obscureText: true),
-            TextField(controller: newCtrl, decoration: const InputDecoration(labelText: '鏂板瘑鐮?), obscureText: true),
-            TextField(controller: confirmCtrl, decoration: const InputDecoration(labelText: '纭鏂板瘑鐮?), obscureText: true),
+            TextField(controller: oldCtrl, decoration: const InputDecoration(labelText: '旧密码'), obscureText: true),
+            TextField(controller: newCtrl, decoration: const InputDecoration(labelText: '新密码'), obscureText: true),
+            TextField(controller: confirmCtrl, decoration: const InputDecoration(labelText: '确认新密码'), obscureText: true),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('鍙栨秷')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
           ElevatedButton(
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('涓ゆ瀵嗙爜杈撳叆涓嶄竴鑷?)));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('两次密码输入不一致')));
                 return;
               }
               Navigator.pop(ctx);
@@ -171,7 +171,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('Version $_version', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             ],
             const SizedBox(height: 16),
-            const Text('鎴戜滑鑷村姏浜庢彁渚涙渶浼樿川鐨勫奖瑙嗚鐪嬩綋楠屻€俓n濡傛湁渚垫潈璇疯仈绯绘垜浠垹闄ゃ€?, textAlign: TextAlign.center),
+            const Text('我们致力于提供最优质的影视观看体验。\n如有侵权请联系我们删除。', textAlign: TextAlign.center),
           ],
         ),
         actions: [
@@ -212,9 +212,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _getThemeName(String style) {
     switch (style) {
-      case 'light': return '澶╃┖钃?;
-      case 'dark': return '鏆楀钃?;
-      default: return '鏆楀钃?;
+      case 'light': return '天空蓝';
+      case 'dark': return '暗夜蓝';
+      default: return '暗夜蓝';
     }
   }
 
@@ -267,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
               // 澶╃┖钃濅富棰橀€夐」
               _buildThemeOption(
                 context: ctx,
-                title: '澶╃┖钃?,
+                title: '天空蓝',
                 subtitle: '鏄庝寒娓呮柊',
                 icon: Icons.wb_sunny,
                 iconColor: AppColors.primary,
@@ -284,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> {
               // 鏆楀钃濅富棰橀€夐」
               _buildThemeOption(
                 context: ctx,
-                title: '鏆楀钃?,
+                title: '暗夜蓝',
                 subtitle: '娣遍們鎶ょ溂',
                 icon: Icons.nights_stay,
                 iconColor: Theme.of(context).colorScheme.primary,
@@ -433,10 +433,10 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: _showChangePasswordDialog,
           ),
 
-          _buildSectionHeader('鍏充簬'),
+          _buildSectionHeader('关于'),
           ListTile(
-            title: const Text('妫€鏌ユ洿鏂?),
-            subtitle: Text('褰撳墠鐗堟湰: $_version'),
+            title: const Text('检查更新'),
+            subtitle: Text('当前版本: $_version'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () async {
               final api = context.read<MacApi>();
@@ -449,7 +449,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 showDialog(
                   context: context,
                   builder: (_) => AlertDialog(
-                    title: const Text('鍙戠幇鏂扮増鏈?),
+                    title: const Text('发现新版本'),
                     content: Text('鐗堟湰鍙凤細$vName\n\n$desc${isForce ? '\n\n姝ょ増鏈负寮哄埗鏇存柊' : ''}'),
                     actions: [
                       TextButton(onPressed: () => Navigator.pop(context), child: const Text('绋嶅悗鍐嶈')),
@@ -463,7 +463,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('褰撳墠宸叉槸鏈€鏂扮増鏈?)));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前已是最新版本')));
               }
             },
           ),
@@ -496,7 +496,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   elevation: 0,
                 ),
-                child: const Text('閫€鍑虹櫥褰?),
+                child: const Text('退出登录'),
               ),
             ),
           ],

@@ -32,7 +32,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   void initState() {
     super.initState();
     if (widget.vodName != null) {
-      _contentCtrl.text = '銆愯棰戞姤閿欍€慭n褰辩墖锛?{widget.vodName}\nID锛?{widget.vodId}\n闂鎻忚堪锛?;
+      _contentCtrl.text = '【视频报错】\n影片：{widget.vodName}\nID：{widget.vodId}\n问题描述：';
     }
   }
 
@@ -43,7 +43,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final text = _contentCtrl.text.trim();
     if (text.isEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('璇疯緭鍏ュ弽棣堝唴瀹?)));
+          .showSnackBar(const SnackBar(content: Text('请输入反馈内容')));
       return;
     }
 
@@ -58,7 +58,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
     if (api.containsFilterWord(text)) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('鍐呭鍖呭惈鏁忔劅璇嶏紝璇蜂慨鏀?)));
+          .showSnackBar(const SnackBar(content: Text('内容包含敏感词，请修改')));
       return;
     }
 
@@ -189,7 +189,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
     final remark = _remarkCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('璇疯緭鍏ョ墖鍚?)));
+          .showSnackBar(const SnackBar(content: Text('请输入片名')));
       return;
     }
 
@@ -198,13 +198,13 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
 // 妫€鏌ョ櫥褰?
     final isLogin = await api.checkLogin();
     if (!isLogin) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍鍚庢彁浜ゆ眰鐗?)));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录后提交求片')));
       return;
     }
 
     if (api.containsFilterWord(name) || api.containsFilterWord(remark)) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('鍐呭鍖呭惈鏁忔劅璇嶏紝璇蜂慨鏀?)));
+          .showSnackBar(const SnackBar(content: Text('内容包含敏感词，请修改')));
       return;
     }
 
@@ -283,7 +283,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('澶囨敞璇存槑锛堥€夊～锛?, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface)),
+            Text('备注说明（选填）', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface)),
             const SizedBox(height: 8),
             Container(
               height: 120,
@@ -753,7 +753,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                         border: Border.all(color: hasReply ? AppColors.error : scheme.primary),
                       ),
                       child: Text(
-                        hasReply ? '绠＄悊鍛樺凡鍥炲' : '寰呭鐞?,
+                        hasReply ? '管理员已回复' : '待处理',
                         style: TextStyle(
                           fontSize: 10, 
                           fontWeight: FontWeight.bold,
@@ -809,7 +809,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                             Icon(Icons.admin_panel_settings, size: 14, color: AppColors.success),
                             const SizedBox(width: 4),
                             Text(
-                              '绠＄悊鍛樺洖澶?,
+                               '管理员回复',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -921,7 +921,7 @@ class FeedbackCenterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('甯姪涓庡弽棣?)),
+      appBar: AppBar(title: const Text('帮助与反馈')),
       body: TexturedBackground(child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -929,7 +929,7 @@ class FeedbackCenterPage extends StatelessWidget {
             context,
             icon: Icons.feedback,
             title: '鍙嶉鎶ラ敊',
-            subtitle: '閬囧埌闂锛熷憡璇夋垜浠?,
+            subtitle: '遇到问题？告诉我们',
             color: scheme.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackPage())),
           ),
@@ -938,7 +938,7 @@ class FeedbackCenterPage extends StatelessWidget {
             context,
             icon: Icons.movie_filter,
             title: '姹傜墖鎵剧墖',
-            subtitle: '鎵句笉鍒版兂鐪嬬殑褰辩墖锛?,
+            subtitle: '找不到想看的影片？',
             color: AppColors.warning,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestMoviePage())),
           ),
@@ -947,7 +947,7 @@ class FeedbackCenterPage extends StatelessWidget {
             context,
             icon: Icons.message,
             title: '娑堟伅涓績',
-            subtitle: '鏌ョ湅鍏憡鍜屽洖澶?,
+            subtitle: '查看公告和回复',
             color: AppColors.success,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessageCenterPage())),
           ),
