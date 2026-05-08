@@ -478,15 +478,37 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
       final finalList = <Map<String, dynamic>>[];
       
-      rawList.removeWhere((c) => c['is_pinned'] == true || c['id'] == 'official' || c['is_official'] == true);
-      
+      final regularComments = <Map<String, dynamic>>[];
+      Map<String, dynamic>? apiPinned;
+
+      for (final c in rawList) {
+        final isOfficial = c['id'] == 'official' || c['is_official'] == true;
+        final isPinnedOrTop = c['is_pinned'] == true || c['is_top'] == true;
+        if (isOfficial || isPinnedOrTop) {
+          apiPinned ??= c;
+          continue;
+        }
+        regularComments.add(c);
+      }
+
+      if (pinnedComment == null && apiPinned != null) {
+        pinnedComment = {
+          'user_name': apiPinned['name'] ?? apiPinned['user_name'] ?? '官方置顶',
+          'user_portrait': _fixAvatarUrl((apiPinned['avatar'] ?? apiPinned['user_portrait'] ?? '').toString()),
+          'content': apiPinned['content'] ?? '',
+          'is_pinned': true,
+          'up': 9999,
+          'create_time': apiPinned['time'] ?? '',
+        };
+      }
+
       if (pinnedComment != null) {
-          finalList.add(pinnedComment);
+        finalList.add(pinnedComment);
       }
       
       if (adComment != null) finalList.add(adComment);
       
-      finalList.addAll(rawList);
+      finalList.addAll(regularComments);
 
       if (mounted) setState(() => _comments = finalList);
     } catch (_) {}
