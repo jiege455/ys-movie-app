@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage>
   String? _selectedYear;
   String? _selectedArea;
   String? _selectedClass;
+  String? _selectedLang;
 
   // ── 防抖 ──
   Timer? _tabDebounce;
@@ -391,12 +392,13 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 加载筛选项 ──
-  Future<void> _loadFacets() async {
+  // ── 加载筛选项（从 CMS 扩展分类获取） ──
+  Future<void> _loadFacets([int? typeId]) async {
     try {
       final api = context.read<MacApi>();
-      final typeId = _tabIds.isNotEmpty && _tabIds.length > 1 ? _tabIds[1] : 1;
-      final facets = await api.getFacets(typeId1: typeId);
+      final targetTypeId = typeId ?? (_tabIds.isNotEmpty && _tabIds.length > 1 ? _tabIds[1] : 1);
+      if (targetTypeId <= 0) return;
+      final facets = await api.getFacets(typeId1: targetTypeId);
       if (facets['years'] != null || facets['areas'] != null || facets['classes'] != null) {
         setState(() => _facets = facets);
       }
@@ -411,6 +413,7 @@ class _HomePageState extends State<HomePage>
       _selectedYear = null;
       _selectedArea = null;
       _selectedClass = null;
+      _selectedLang = null;
       _currentOrderby = 'time';
       _loadContent(_currentTabIndex, refresh: true);
     });
@@ -477,6 +480,10 @@ class _HomePageState extends State<HomePage>
     _tabDebounce = Timer(const Duration(milliseconds: 150), () {
       setState(() => _currentTabIndex = index);
       _loadContent(index, refresh: true);
+      // 切换分类时，重新加载该分类的扩展筛选数据（年份/地区/类型/语言）
+      if (index > 0 && _tabIds.length > index) {
+        _loadFacets(_tabIds[index]);
+      }
     });
   }
 
@@ -520,6 +527,7 @@ class _HomePageState extends State<HomePage>
           orderby: _currentOrderby,
           year: _selectedYear,
           area: _selectedArea,
+          lang: _selectedLang,
           clazz: _selectedClass,
         );
       }
@@ -731,7 +739,7 @@ class _HomePageState extends State<HomePage>
 
   // ── 筛选栏 ──
   Widget _buildFilterBar(bool isDark) {
-    final hasFilter = _selectedYear != null || _selectedArea != null || _selectedClass != null || _currentOrderby != 'time';
+    final hasFilter = _selectedYear != null || _selectedArea != null || _selectedClass != null || _selectedLang != null || _currentOrderby != 'time';
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -787,6 +795,19 @@ class _HomePageState extends State<HomePage>
               _onFilterChanged();
             },
           ),
+          if ((_facets['langs'] ?? []).isNotEmpty) ...[            const SizedBox(height: 6),
+            _buildFilterRow(
+              label: '语言',
+              items: ['全部', ..._facets['langs'] ?? []],
+              selected: _selectedLang ?? '全部',
+              primary: primary,
+              isDark: isDark,
+              onChanged: (v) {
+                setState(() => _selectedLang = v == '全部' ? null : v);
+                _onFilterChanged();
+              },
+            ),
+          ],
           if (hasFilter) ...[            const SizedBox(height: 8),
             GestureDetector(
               onTap: _clearFilters,
@@ -1216,39 +1237,42 @@ class _HomePageState extends State<HomePage>
       return RefreshIndicator(
         key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
         onRefresh: _onRefresh,
-        child: contentList.isEmpty && isLoadingThisCategory
-            ? _buildContentShimmer()
-            : CustomScrollView(
-                slivers: [
-                  if (_hotRecommendList.isNotEmpty)
-                    SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
-                  if (_continueWatchingList.isNotEmpty)
-                    SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
-                  if (contentList.isEmpty)
-                    SliverFillRemaining(child: _buildEmptyView())
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.all(16),
-                      sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          childAspectRatio: 0.65,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) {
-                            if (i >= contentList.length) {
-                              return _buildLoadMoreIndicator();
-                            }
-                            return _buildGridItem(contentList[i]);
-                          },
-                          childCount: contentList.length + (hasMore ? 1 : 0),
-                        ),
-                      ),
-                    ),
-                ],
+        child: CustomScrollView(
+          slivers: [
+            if (_hotRecommendList.isNotEmpty)
+              SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
+            if (_continueWatchingList.isNotEmpty)
+              SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
+            if (contentList.isEmpty && isLoadingThisCategory)
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: _buildShimmerGrid(),
+              )
+            else if (contentList.isEmpty)
+              SliverFillRemaining(child: _buildEmptyView())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.65,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      if (i >= contentList.length) {
+                        return _buildLoadMoreIndicator();
+                      }
+                      return _buildGridItem(contentList[i]);
+                    },
+                    childCount: contentList.length + (hasMore ? 1 : 0),
+                  ),
+                ),
               ),
+          ],
+        ),
       );
     }
 
@@ -1327,6 +1351,31 @@ class _HomePageState extends State<HomePage>
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Sliver 骨架屏网格 ──
+  Widget _buildShimmerGrid() {
+    return SliverGrid(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 0.65,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (_, __) => Shimmer.fromColors(
+          baseColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          highlightColor: Theme.of(context).colorScheme.surface,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        childCount: 9,
       ),
     );
   }
