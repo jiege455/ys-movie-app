@@ -1061,19 +1061,22 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             child: Column(
               children: [
                 // 1. 播放器区域
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: _betterPlayerController != null
-                      ? BetterPlayer(
-                          key: _playerGlobalKey, // 画中画功能必需的 GlobalKey
-                          controller: _betterPlayerController!,
-                        )
-                      : Container(
-                          color: bgColor,
-                          child: Center(
-                            child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                Container(
+                  color: Colors.black,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: _betterPlayerController != null
+                        ? BetterPlayer(
+                            key: _playerGlobalKey, // 画中画功能必需的 GlobalKey
+                            controller: _betterPlayerController!,
+                          )
+                        : Container(
+                            color: Colors.black,
+                            child: Center(
+                              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                            ),
                           ),
-                        ),
+                  ),
                 ),
                 
                 // 2. 内容区域
