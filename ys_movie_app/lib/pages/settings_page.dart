@@ -74,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-          decoration: const InputDecoration(labelText: '修改昵称'),
+        title: const Text('修改昵称'),
         content: TextField(
           controller: ctrl,
           decoration: const InputDecoration(labelText: '新昵称'),
@@ -117,7 +117,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-          _buildSectionHeader('修改密码'),
+        title: _buildSectionHeader('修改密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -159,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-          _buildSectionHeader('关于我们'),
+        title: _buildSectionHeader('关于我们'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -193,21 +193,30 @@ class _SettingsPageState extends State<SettingsPage> {
         return;
       }
     }
-    // 濡傛灉娌℃湁URL浣嗘湁鏂囨湰锛屾垨鑰呮棤娉曟墦寮€URL锛屾樉绀烘枃鏈?
     if (contactText.isNotEmpty) {
        showDialog(
          context: context,
          builder: (ctx) => AlertDialog(
-          _buildSectionHeader('联系客服'),
+          title: _buildSectionHeader('联系客服'),
            content: SelectableText(contactText),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
+           actions: [
+             TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
+           ],
          ),
        );
        return;
     }
     
-    // Fallback
-            const Text('暂无客服联系方式'),
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: _buildSectionHeader('联系客服'),
+        content: const Text('暂无客服联系方式'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
+        ],
+      ),
+    );
   }
 
   String _getThemeName(String style) {
@@ -218,8 +227,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // 寮€鍙戣€咃細鏉板摜缃戠粶绉戞妧 (qq: 2711793818)
-  // 淇锛氫紭鍖栦富棰橀€夋嫨鐣岄潰锛屽鍔犲彲瑙嗗寲鎸囩ず锛堝嬀閫夋爣璁?楂樹寒鑳屾櫙+涓婚棰勮锛?
   void _showThemePicker() {
     final themeProvider = context.read<ThemeProvider>();
     showModalBottomSheet(
@@ -243,13 +250,9 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 鏍囬
               Row(
                 children: [
-                  Text(
-          title: const Text('选择主题'),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                  ),
+                  Text('选择主题', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
@@ -258,13 +261,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-          Text('当前主题: ${_getThemeName(themeProvider.themeStyle)}', style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6))),
-                style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6)),
-              ),
+              Text('当前主题: ${_getThemeName(themeProvider.themeStyle)}', style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6))),
               const SizedBox(height: 20),
               
-              // 澶╃┖钃濅富棰橀€夐」
               _buildThemeOption(
                 context: ctx,
                 title: '天空蓝',
@@ -281,7 +280,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 12),
               
-              // 鏆楀钃濅富棰橀€夐」
               _buildThemeOption(
                 context: ctx,
                 title: '暗夜蓝',
@@ -304,8 +302,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // 寮€鍙戣€咃細鏉板摜缃戠粶绉戞妧 (qq: 2711793818)
-  // 鏋勫缓涓婚閫夐」鍗＄墖
   Widget _buildThemeOption({
     required BuildContext context,
     required String title,
@@ -332,7 +328,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         child: Row(
           children: [
-            // 涓婚棰勮鍥炬爣
             Container(
               width: 56,
               height: 56,
@@ -344,7 +339,6 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Icon(icon, color: iconColor, size: 28),
             ),
             const SizedBox(width: 16),
-            // 涓婚淇℃伅
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +362,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-            // 閫変腑鐘舵€佹寚绀?
             if (isSelected)
               Container(
                 width: 28,
@@ -398,7 +391,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    // final isDark = themeProvider.isDark; // 涓嶅啀鍙渶瑕佽繖涓竷灏斿€?
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
@@ -456,7 +448,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          // 通知 HomePage 弹出下载对话框
                         },
                         child: const Text('立即更新'),
                       ),
@@ -510,15 +501,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
     );
   }
 }
