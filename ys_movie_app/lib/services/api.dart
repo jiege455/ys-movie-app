@@ -950,6 +950,19 @@ class MacApi {
   String get rankListType => appPageSetting['app_page_rank_list_type']?.toString() ?? '2';
   int get vodSourceType => int.tryParse('${appPageSetting['app_vod_source_type'] ?? 0}') ?? 0;
 
+  Set<String> get enabledParserNames {
+    final config = appConfig;
+    final raw = config['parse_list'] ?? config['parse_api_list'] ?? config['system_parse_list']
+        ?? config['player_list'] ?? config['play_list_config'] ?? config['parser_config'];
+    if (raw is! List || raw.isEmpty) return <String>{};
+    return raw.whereType<Map>().where((m) {
+      final en = m['enabled'] ?? m['status'] ?? m['is_open'] ?? m['player_status'];
+      if (en == null) return true;
+      if (en is bool) return en;
+      return (int.tryParse('$en') ?? 0) == 1;
+    }).map((m) => (m['name'] ?? m['show'] ?? m['player_name'] ?? m['player'] ?? '').toString()).toSet();
+  }
+
   // ================= 广告开关 =================
   bool get isSplashAdOpen => appConfig['ad_splash_status'] == true;
   bool get isHomeInsertAdOpen => appConfig['ad_home_page_insert_status'] == true;
@@ -1837,6 +1850,25 @@ class MacApi {
              if (seenNames.contains(name)) continue;
              seenNames.add(name);
              dedupedPlayList.add(src);
+           }
+
+           final enabledParsers = enabledParserNames;
+           if (enabledParsers.isNotEmpty) {
+             final filtered = <Map<String, dynamic>>[];
+             for (final src in dedupedPlayList) {
+               final show = (src['show'] ?? '').toString().toLowerCase();
+               final matched = enabledParsers.any((p) =>
+                 p.toLowerCase() == show ||
+                 show.contains(p.toLowerCase()) ||
+                 p.toLowerCase().contains(show)
+               );
+               if (matched) filtered.add(src);
+             }
+             if (filtered.isNotEmpty) {
+               dedupedPlayList
+                 ..clear()
+                 ..addAll(filtered);
+             }
            }
 
            return {
