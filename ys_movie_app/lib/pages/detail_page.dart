@@ -1,6 +1,7 @@
 /// 开发者：杰哥网络科技 (qq: 2711793818)
 /// 作用：视频详情页（播放器 + 简介 + 选集 + 猜你喜欢）
 
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
@@ -694,7 +695,24 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         newController.enterFullScreen();
       } catch (_) {}
     }
-    _isSwitchingEpisode = false;
+
+    Timer? fallbackTimer;
+    void hideOverlay() {
+      if (mounted) {
+        setState(() {
+          _isSwitchingEpisode = false;
+        });
+      }
+      fallbackTimer?.cancel();
+    }
+
+    newController.addEventsListener((event) {
+      if (event.betterPlayerEventType == BetterPlayerEventType.play) {
+        hideOverlay();
+      }
+    });
+
+    fallbackTimer = Timer(const Duration(seconds: 3), hideOverlay);
 
     if (oldController != null) {
       try {
