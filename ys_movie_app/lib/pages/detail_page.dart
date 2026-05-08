@@ -578,6 +578,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         );
       },
       controlsConfiguration: BetterPlayerControlsConfiguration(
+        backgroundColor: Colors.black,
         playerTheme: BetterPlayerTheme.custom,
         customControlsBuilder: (controller, onVisibilityChanged) {
           return CustomPlayerControls(
@@ -652,7 +653,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
         loadingWidget: const SizedBox.shrink(),
       ),
       placeholder: Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: Colors.black,
       ),
     );
 
