@@ -52,7 +52,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
 // 妫€鏌ョ櫥褰?
     final isLogin = await api.checkLogin();
     if (!isLogin) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍')));
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
       return;
     }
 
@@ -69,10 +69,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
       if (ok) {
         _contentCtrl.clear();
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('鍙嶉宸叉彁浜わ紝鎰熻阿鏀寔')));
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('反馈已提交，感谢支持')));
       } else {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('鎻愪氦澶辫触锛岃绋嶅悗閲嶈瘯')));
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -85,7 +85,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('鍙嶉鎶ラ敊'),
+        title: const Text('反馈报错'),
         // 浣跨敤涓婚榛樿閰嶈壊
       ),
       body: TexturedBackground(child: SingleChildScrollView(
@@ -107,7 +107,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '濡傞亣鎾斁鍗￠】銆佽祫婧愬け鏁堟垨鏈夊姛鑳藉缓璁紝璇峰湪姝ょ暀瑷€锛屾垜浠細灏藉揩澶勭悊',
+            const Text('如遇播放卡顿、资源失效或有功能建议，请在此留言，我们会尽快处理'),
                       style: TextStyle(fontSize: 14, color: scheme.onSurface.withOpacity(0.8)),
                     ),
                   ),
@@ -116,7 +116,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              '闂鎻忚堪',
+            decoration: const InputDecoration(labelText: '问题描述'),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface),
             ),
             const SizedBox(height: 8),
@@ -135,7 +135,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
-                  hintText: '璇疯缁嗘弿杩版偍閬囧埌鐨勯棶棰橈紝渚嬪锛歕n1. 鏌愰儴褰辩墖绗嚑闆嗘棤娉曟挱鏀綷n2. 鐢婚潰鍗￠】鎴栧０闊充笉鍚屾\n3. 甯屾湜澧炲姞鐨勬柊鍔熻兘...',
+            '请详细描述您遇到的问题，例如：\n1. 某部影片第几集无法播放\n2. 画面卡顿或声音不同步\n3. 希望增加的新功能...',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                 ),
               ),
@@ -154,7 +154,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 ),
                 child: _submitting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                    : const Text('鎻愪氦鍙嶉', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('提交反馈'),
               ),
             ),
           ],
@@ -216,10 +216,10 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
         _nameCtrl.clear();
         _remarkCtrl.clear();
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('姹傜墖宸叉彁浜わ紝鑰愬績绛夊緟澶勭悊')));
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('求片已提交，耐心等待处理')));
       } else {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('鎻愪氦澶辫触锛岃绋嶅悗閲嶈瘯')));
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -232,7 +232,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('姹傜墖鎵剧墖'),
+        title: const Text('求片找片'),
         // 浣跨敤涓婚榛樿閰嶈壊
       ),
       body: TexturedBackground(child: SingleChildScrollView(
@@ -254,7 +254,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '鎯崇湅鐨勭墖瀛愭壘涓嶅埌锛熷憡璇夋垜鐗囧悕锛岀珯闀垮府浣犳壘锛乗n鎻愪氦鍚庤鐣欐剰娑堟伅涓績鐨?姹傜墖鍥炲"',
+            const Text('想看的片子找不到？告诉我片名，站长帮你找！\n提交后请留意消息中心的“求片回复”'),
                       style: TextStyle(fontSize: 14, color: scheme.onSurface.withOpacity(0.8)),
                     ),
                   ),
@@ -262,7 +262,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
               ),
             ),
             const SizedBox(height: 24),
-            Text('褰辩墖鍚嶇О锛堝繀濉級', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: scheme.onSurface)),
+            hintText: '影片名称（必填）',
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -276,7 +276,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  hintText: '鍑嗙‘鐨勭墖鍚嶆洿瀹规槗鎵惧埌',
+              hintText: '准确的片名更容易找到',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                   prefixIcon: Icon(Icons.search, color: scheme.onSurface.withOpacity(0.4)),
                 ),
@@ -300,7 +300,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
-                  hintText: '渚嬪锛氬笇鏈涜兘鏈?K鐢昏川銆佸浗璇厤闊炽€佹垨鑰呭叿浣撳摢涓€闆?.',
+            '例如：希望能有4K画质、国语配音、或者具体哪一集。',
                   hintStyle: TextStyle(color: scheme.onSurface.withOpacity(0.4)),
                 ),
               ),
@@ -319,7 +319,7 @@ class _RequestMoviePageState extends State<RequestMoviePage> {
                 ),
                 child: _submitting
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                    : const Text('鎻愪氦姹傜墖', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('提交求片'),
               ),
             ),
           ],
@@ -361,12 +361,12 @@ class _MessageCenterPageState extends State<MessageCenterPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('娑堟伅涓績'),
+        title: const Text('消息中心'),
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: const [
-            Tab(text: '绯荤粺鍏憡'),
-            Tab(text: '鎴戠殑娑堟伅'),
+            Tab(text: '系统公告'),
+            Tab(text: '我的消息'),
           ],
         ),
       ),
@@ -425,7 +425,7 @@ class _NoticeListTabState extends State<_NoticeListTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_items.isEmpty) {
-      return const Center(child: Text('鏆傛棤鍏憡'));
+      return const Center(child: Text('暂无公告'));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -655,8 +655,8 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
           unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           indicatorColor: Theme.of(context).colorScheme.primary,
           tabs: const [
-            Tab(text: '鍙嶉鍥炲'),
-            Tab(text: '姹傜墖鍥炲'),
+            Tab(text: '反馈回复'),
+            Tab(text: '求片回复'),
           ],
         ),
         Expanded(
@@ -665,14 +665,14 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
             children: [
               _buildList(
                 _suggestList,
-                emptyText: '鏆傛棤鍙嶉鍥炲',
+        child: const Center(child: Text('暂无反馈回复')),
                 controller: _suggestCtrl,
                 hasMore: _suggestHasMore,
                 loadingMore: _loadingMoreSuggest,
               ),
               _buildList(
                 _findList,
-                emptyText: '鏆傛棤姹傜墖鍥炲',
+        child: const Center(child: Text('暂无求片回复')),
                 controller: _findCtrl,
                 hasMore: _findHasMore,
                 loadingMore: _loadingMoreFind,
@@ -724,7 +724,7 @@ class _UserNoticeTabState extends State<_UserNoticeTab>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    loadingMore ? '鍔犺浇涓?..' : '宸插埌搴曢儴',
+                    loadingMore ? '加载中...' : '已到底部',
                     style: TextStyle(color: scheme.onSurface.withOpacity(0.6), fontSize: 12),
                   ),
                 ],
@@ -928,7 +928,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.feedback,
-            title: '鍙嶉鎶ラ敊',
+              title: '反馈报错',
             subtitle: '遇到问题？告诉我们',
             color: scheme.primary,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackPage())),
@@ -937,7 +937,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.movie_filter,
-            title: '姹傜墖鎵剧墖',
+              title: '求片找片',
             subtitle: '找不到想看的影片？',
             color: AppColors.warning,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestMoviePage())),
@@ -946,7 +946,7 @@ class FeedbackCenterPage extends StatelessWidget {
           _buildCard(
             context,
             icon: Icons.message,
-            title: '娑堟伅涓績',
+              title: '消息中心',
             subtitle: '查看公告和回复',
             color: AppColors.success,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessageCenterPage())),

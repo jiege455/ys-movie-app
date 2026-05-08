@@ -52,7 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _clearCache() async {
-    setState(() => _cacheSize = '娓呯悊涓?..');
+    setState(() => _cacheSize = '清理中...');
     await CacheService.clearCache();
     if (mounted) {
       setState(() => _cacheSize = '0.00MB');
@@ -64,7 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final api = context.read<MacApi>();
     final isLogin = await api.checkLogin();
     if (!isLogin) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍')));
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
        return;
     }
     final name = await api.getUserName();
@@ -74,13 +74,13 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('淇敼鏄电О'),
+          decoration: const InputDecoration(labelText: '修改昵称'),
         content: TextField(
           controller: ctrl,
           decoration: const InputDecoration(labelText: '新昵称'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('鍙栨秷')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
           ElevatedButton(
             onPressed: () async {
               final newName = ctrl.text.trim();
@@ -89,12 +89,12 @@ class _SettingsPageState extends State<SettingsPage> {
               
               final success = await api.modifyUserNickName(newName);
               if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('鏄电О淇敼鎴愬姛')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('昵称修改成功')));
               } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('淇敼澶辫触')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('修改失败')));
               }
             },
-            child: const Text('淇濆瓨'),
+              child: const Text('保存'),
           ),
         ],
       ),
@@ -105,7 +105,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final api = context.read<MacApi>();
     final isLogin = await api.checkLogin();
     if (!isLogin) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('璇峰厛鐧诲綍')));
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先登录')));
        return;
     }
 
@@ -117,7 +117,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('淇敼瀵嗙爜'),
+          _buildSectionHeader('修改密码'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -138,15 +138,15 @@ class _SettingsPageState extends State<SettingsPage> {
               
               final res = await api.modifyPassword(oldCtrl.text, newCtrl.text);
               if (res['success'] == true && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('瀵嗙爜淇敼鎴愬姛锛岃閲嶆柊鐧诲綍')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('密码修改成功，请重新登录')));
                 await api.logout();
                 widget.onLogout?.call();
                 if (mounted) Navigator.pop(context); // Close settings page
               } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['msg'] ?? '淇敼澶辫触')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('修改失败')));
               }
             },
-            child: const Text('鎻愪氦'),
+              child: const Text('提交'),
           ),
         ],
       ),
@@ -159,13 +159,13 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('鍏充簬鎴戜滑'),
+          _buildSectionHeader('关于我们'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.movie_filter, size: 64, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
-            const Text('鐙愮嫺褰辫', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('狐狸影视', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             if (!hideVer) ...[
               const SizedBox(height: 8),
               Text('Version $_version', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
@@ -175,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('纭畾')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
         ],
       ),
     );
@@ -198,16 +198,16 @@ class _SettingsPageState extends State<SettingsPage> {
        showDialog(
          context: context,
          builder: (ctx) => AlertDialog(
-           title: const Text('鑱旂郴瀹㈡湇'),
+          _buildSectionHeader('联系客服'),
            content: SelectableText(contactText),
-           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('纭畾'))],
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
          ),
        );
        return;
     }
     
     // Fallback
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('鏆傛棤瀹㈡湇鑱旂郴鏂瑰紡')));
+            const Text('暂无客服联系方式'),
   }
 
   String _getThemeName(String style) {
@@ -247,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Row(
                 children: [
                   Text(
-                    '閫夋嫨涓婚',
+          title: const Text('选择主题'),
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const Spacer(),
@@ -259,7 +259,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '褰撳墠涓婚: ${_getThemeName(themeProvider.themeStyle)}',
+          Text('当前主题: ${_getThemeName(themeProvider.themeStyle)}', style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6))),
                 style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.6)),
               ),
               const SizedBox(height: 20),
@@ -268,7 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeOption(
                 context: ctx,
                 title: '天空蓝',
-                subtitle: '鏄庝寒娓呮柊',
+              subtitle: '明亮清新',
                 icon: Icons.wb_sunny,
                 iconColor: AppColors.primary,
                 bgColor: Theme.of(context).cardColor,
@@ -285,7 +285,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeOption(
                 context: ctx,
                 title: '暗夜蓝',
-                subtitle: '娣遍們鎶ょ溂',
+              subtitle: '深邃护眼',
                 icon: Icons.nights_stay,
                 iconColor: Theme.of(context).colorScheme.primary,
                 bgColor: Theme.of(context).scaffoldBackgroundColor,
@@ -401,34 +401,34 @@ class _SettingsPageState extends State<SettingsPage> {
     // final isDark = themeProvider.isDark; // 涓嶅啀鍙渶瑕佽繖涓竷灏斿€?
     return Scaffold(
       appBar: AppBar(
-        title: const Text('璁剧疆'),
+        title: const Text('设置'),
         centerTitle: true,
       ),
       body: TexturedBackground(child: ListView(
         children: [
           const SizedBox(height: 10),
-          _buildSectionHeader('甯歌'),
+          _buildSectionHeader('常规'),
           ListTile(
-            title: const Text('涓婚璁剧疆'),
+            title: const Text('主题设置'),
             subtitle: Text(_getThemeName(themeProvider.themeStyle)),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showThemePicker,
           ),
           ListTile(
-            title: const Text('娓呯悊缂撳瓨'),
+            title: const Text('清理缓存'),
             subtitle: Text(_cacheSize),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _clearCache,
           ),
           
-          _buildSectionHeader('璐﹀彿'),
+          _buildSectionHeader('账号'),
           ListTile(
-            title: const Text('淇敼鏄电О'),
+            title: const Text('修改昵称'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showEditNicknameDialog,
           ),
           ListTile(
-            title: const Text('淇敼瀵嗙爜'),
+            title: const Text('修改密码'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showChangePasswordDialog,
           ),
@@ -475,7 +475,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: _contactService,
           ),
           ListTile(
-            title: const Text('鍏充簬鎴戜滑'),
+            title: const Text('关于我们'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showAboutDialog,
           ),
