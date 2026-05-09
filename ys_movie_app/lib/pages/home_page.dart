@@ -392,6 +392,47 @@ class _HomePageState extends State<HomePage>
       final api = context.read<MacApi>();
       final targetTypeId = typeId ?? (_tabIds.isNotEmpty && _tabIds.length > 1 ? _tabIds[1] : 1);
       if (targetTypeId <= 0) return;
+
+      List<String> _parseList(dynamic value) {
+        if (value == null) return [];
+        if (value is List) return value.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
+        final str = value.toString().trim();
+        if (str.isEmpty) return [];
+        return str.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      }
+
+      Map<String, List<String>>? _extractFromExtend(dynamic extend) {
+        if (extend is! Map) return null;
+        final result = <String, List<String>>{
+          'years': _parseList(extend['year']),
+          'areas': _parseList(extend['area']),
+          'classes': _parseList(extend['class']),
+        };
+        final langs = _parseList(extend['lang']);
+        if (langs.isNotEmpty) result['langs'] = langs;
+        if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
+          return result;
+        }
+        return null;
+      }
+
+      // 优先从 init 缓存的 type_list 中提取分类扩展数据
+      try {
+        final initData = await api.getAppInit();
+        final typeList = initData['type_list'] as List? ?? [];
+        for (final t in typeList) {
+          if (t is! Map) continue;
+          if (t['type_id'] == targetTypeId) {
+            final facets = _extractFromExtend(t['type_extend']);
+            if (facets != null) { setState(() => _facets = facets); return; }
+          }
+        }
+        // 收不到匹配的分类数据，尝试顶层 type_extend
+        final topFacets = _extractFromExtend(initData['type_extend']);
+        if (topFacets != null) { setState(() => _facets = topFacets); return; }
+      } catch (_) {}
+
+      // 收不到 init 数据，调用 API
       final facets = await api.getFacets(typeId1: targetTypeId);
       if (facets['years'] != null || facets['areas'] != null || facets['classes'] != null) {
         setState(() => _facets = facets);
@@ -470,9 +511,9 @@ class _HomePageState extends State<HomePage>
   void _onTabChanged() {
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
+    setState(() => _currentTabIndex = index);
     _tabDebounce?.cancel();
     _tabDebounce = Timer(const Duration(milliseconds: 150), () {
-      setState(() => _currentTabIndex = index);
       _loadContent(index, refresh: true);
       if (index > 0 && _tabIds.length > index) {
         _loadFacets(_tabIds[index]);
@@ -589,6 +630,7 @@ class _HomePageState extends State<HomePage>
           child: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
+            final currentIndex = _tabController.index;
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
@@ -600,10 +642,10 @@ class _HomePageState extends State<HomePage>
                     : _buildTabBar(isDark),
               ),
 
-              if (_currentTabIndex > 0)
+              if (currentIndex > 0)
                 SliverToBoxAdapter(child: _buildFilterBar(isDark)),
 
-              if (_currentTabIndex == 0 && _bannerList.isNotEmpty)
+              if (currentIndex == 0 && _bannerList.isNotEmpty)
                 SliverToBoxAdapter(
                   child: _buildBanner(),
                 ),

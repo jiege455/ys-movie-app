@@ -784,27 +784,41 @@ class MacApi {
 
   /// 获取推荐视频（用于轮播图，Level=9）
   Future<List<Map<String, dynamic>>> getBanner() async {
-    // 优先尝试从 app_api.php init 接口获取
     final data = await getAppInit();
-    if (data.isNotEmpty && data['banner_list'] != null) {
-      try {
-        final list = (data['banner_list'] as List);
-        return list.map((item) {
-          final v = item as Map<String, dynamic>;
-          return {
-            'id': '${v['vod_id'] ?? v['id'] ?? 0}',
-            'title': v['vod_name'] ?? v['title'] ?? '',
-            'poster': _fixUrl(v['vod_pic'] ?? v['poster'] ?? v['pic']),
-            'type': v['type_name'] ?? v['type'] ?? '',
-          };
-        }).toList();
-      } catch (e) {
-        print('Banner Parse Error: $e');
-      }
+    List<Map<String, dynamic>> banners = [];
+
+    Map<String, dynamic> _parseBannerItem(dynamic v) {
+      return {
+        'id': '${v['vod_id'] ?? v['slide_id'] ?? v['id'] ?? ''}',
+        'title': (v['vod_name'] ?? v['slide_name'] ?? v['title'] ?? '').toString(),
+        'poster': _fixUrl(v['vod_pic'] ?? v['slide_pic'] ?? v['poster'] ?? v['img'] ?? ''),
+        'type': (v['type_name'] ?? v['type'] ?? '').toString(),
+        'url': (v['vod_link'] ?? v['slide_url'] ?? v['url'] ?? '').toString(),
+      };
     }
 
-    // 插件/自定义接口不可用时，使用筛选接口近似"轮播"：取最新影片作为兜底
-    // 杰哥修复：恢复兜底逻辑，防止首页轮播图为空导致白板
+    void _tryParseField(String key) {
+      try {
+        final field = data[key];
+        if (field == null) return;
+        if (field is List) {
+          for (final item in field) {
+            if (item is Map) banners.add(_parseBannerItem(item));
+          }
+        } else if (field is Map) {
+          banners.add(_parseBannerItem(field));
+        }
+      } catch (_) {}
+    }
+
+    _tryParseField('banner_list');
+    if (banners.isEmpty) _tryParseField('home_banner');
+    if (banners.isEmpty) _tryParseField('slide_list');
+    if (banners.isEmpty) _tryParseField('focus_list');
+    if (banners.isEmpty) _tryParseField('advert_list');
+
+    if (banners.isNotEmpty) return banners;
+
     try {
       final latest = await getFiltered(orderby: 'time', limit: 5);
       if (latest.isNotEmpty) {
@@ -1121,8 +1135,10 @@ class MacApi {
               'type_id': m['type_id'],
               'type_name': (m['type_name'] ?? '').toString().trim(),
               'enabled': enabled,
+              'type_extend': m['type_extend'] ?? m['extend'] ?? null,
             };
           }).toList(),
+          'type_extend': dataMap['type_extend'] ?? dataMap['extend'] ?? null,
           'app_page_setting': dataMap['app_page_setting'],
           'notice': (dataMap['notice'] is Map)
               ? {
