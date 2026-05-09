@@ -49,7 +49,7 @@ class _SlideBannerState extends State<SlideBanner> {
             );
           }).toList(),
           options: CarouselOptions(
-            autoPlay: true,
+            autoPlay: widget.images.length > 1,
             enlargeCenterPage: false,
             viewportFraction: 1.0,
             onPageChanged: (index, _) {

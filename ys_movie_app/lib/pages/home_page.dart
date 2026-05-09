@@ -578,9 +578,19 @@ class _HomePageState extends State<HomePage>
   void _onTabChanged() {
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
-    setState(() => _currentTabIndex = index);
+    setState(() {
+      _currentTabIndex = index;
+      if (index > 0) {
+        _facets = {'years': [], 'areas': [], 'classes': []};
+        _selectedYear = null;
+        _selectedArea = null;
+        _selectedClass = null;
+        _selectedLang = null;
+        _currentOrderby = 'time';
+      }
+    });
     _tabDebounce?.cancel();
-    _tabDebounce = Timer(const Duration(milliseconds: 150), () {
+    _tabDebounce = Timer(const Duration(milliseconds: 80), () {
       _loadContent(index, refresh: true);
       if (index > 0 && _tabIds.length > index) {
         _loadFacets(_tabIds[index]);
@@ -697,7 +707,6 @@ class _HomePageState extends State<HomePage>
           child: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
-            final currentIndex = _tabController.index;
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
@@ -709,12 +718,19 @@ class _HomePageState extends State<HomePage>
                     : _buildTabBar(isDark),
               ),
 
-              if (currentIndex > 0)
+              if (_currentTabIndex > 0)
                 SliverToBoxAdapter(child: _buildFilterBar(isDark)),
 
-              if (currentIndex == 0 && _bannerList.isNotEmpty)
+              if (_bannerList.isNotEmpty)
                 SliverToBoxAdapter(
-                  child: _buildBanner(),
+                  child: AnimatedOpacity(
+                    opacity: _currentTabIndex == 0 ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 100),
+                    child: IgnorePointer(
+                      ignoring: _currentTabIndex != 0,
+                      child: _buildBanner(),
+                    ),
+                  ),
                 ),
 
               if (_announcements.isNotEmpty)
@@ -1285,7 +1301,7 @@ class _HomePageState extends State<HomePage>
       final list = rawList.whereType<Map>().toList();
       if (list.isEmpty || typeName.isEmpty) continue;
 
-      final displayList = list.take(9).toList();
+      final displayList = list.take(6).toList();
 
       result.add(
         SliverToBoxAdapter(
