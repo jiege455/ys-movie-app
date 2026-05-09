@@ -64,6 +64,9 @@ class _HomePageState extends State<HomePage>
   // ── 继续观看 ──
   List<Map<String, dynamic>> _continueWatchingList = [];
 
+  // ── 分类推荐（每个分类的热门推荐九宫格） ──
+  List<Map<String, dynamic>> _typeRecommendList = [];
+
   // ── 缓存 ──
   final Map<int, List<dynamic>> _contentCache = {};
   final Map<int, int> _pageCache = {};
@@ -92,6 +95,7 @@ class _HomePageState extends State<HomePage>
   static const String _cacheKeyHotWords = 'home_hotwords_cache';
   static const String _cacheKeyAnnouncements = 'home_announcements_cache';
   static const String _cacheKeyHotRecommend = 'home_hot_recommend_cache';
+  static const String _cacheKeyTypeRecommend = 'home_type_recommend_cache';
   static const String _cacheKeyContentPrefix = 'home_content_cache_';
   static const String _cacheKeyPagePrefix = 'home_page_cache_';
   static const String _cacheKeyHasMorePrefix = 'home_hasmore_cache_';
@@ -176,6 +180,17 @@ class _HomePageState extends State<HomePage>
       } catch (_) {}
     }
 
+    final typeRecommendJson = prefs.getString(_cacheKeyTypeRecommend);
+    if (typeRecommendJson != null) {
+      try {
+        final data = jsonDecode(typeRecommendJson);
+        final cacheTime = DateTime.parse(data['time']);
+        if (DateTime.now().difference(cacheTime) < _cacheValidDuration) {
+          _typeRecommendList = (data['list'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        }
+      } catch (_) {}
+    }
+
     for (int i = 0; i < _tabIds.length; i++) {
       final contentJson = prefs.getString('$_cacheKeyContentPrefix$_tabIds[i]');
       if (contentJson != null) {
@@ -251,6 +266,16 @@ class _HomePageState extends State<HomePage>
       );
     }
 
+    if (_typeRecommendList.isNotEmpty) {
+      await prefs.setString(
+        _cacheKeyTypeRecommend,
+        jsonEncode({
+          'time': DateTime.now().toIso8601String(),
+          'list': _typeRecommendList,
+        }),
+      );
+    }
+
     for (final entry in _contentCache.entries) {
       final tabId = _tabIds[entry.key];
       await prefs.setString(
@@ -289,6 +314,9 @@ class _HomePageState extends State<HomePage>
       if (list.isNotEmpty) {
         _tabs = ['推荐', ...list.where((e) => e['type_name'].toString() != '全部').map((e) => e['type_name'].toString())];
         _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
+
+        final rawTypeRec = initData['type_recommend_list'] as List<dynamic>? ?? [];
+        _typeRecommendList = rawTypeRec.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
 
         if (hasExistingTabs) {
           _tabController.removeListener(_onTabChanged);
@@ -1244,85 +1272,88 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 视频分类快捷入口 ──
-  IconData _iconForCategory(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('电影')) return Icons.movie;
-    if (lower.contains('电视') || lower.contains('剧')) return Icons.tv;
-    if (lower.contains('动漫') || lower.contains('动画')) return Icons.animation;
-    if (lower.contains('综艺')) return Icons.mic;
-    if (lower.contains('纪录')) return Icons.videocam;
-    if (lower.contains('短剧')) return Icons.play_circle;
-    if (lower.contains('体育')) return Icons.sports_soccer;
-    if (lower.contains('少儿')) return Icons.child_care;
-    if (lower.contains('音乐')) return Icons.music_note;
-    return Icons.category;
-  }
+  // ── 分类推荐九宫格（每个分类显示热门推荐的 3x3 网格） ──
+  List<Widget> _buildCategoryRecommendSlivers(bool isDark) {
+    final sections = _typeRecommendList;
+    if (sections.isEmpty) return [];
 
-  Widget _buildCategoryGrid(bool isDark) {
-    final categories = _tabs.length > 1 ? _tabs.sublist(1) : <String>[];
-    if (categories.isEmpty) return const SizedBox.shrink();
+    final List<Widget> result = [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Text(
-            '视频分类',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 90,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (ctx, i) {
-              final name = categories[i];
-              final icon = _iconForCategory(name);
-              return GestureDetector(
-                onTap: () => _tabController.animateTo(i + 1),
-                child: Container(
-                  width: 72,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDark ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200.withOpacity(0.6),
-                    ),
+    for (final section in sections) {
+      final typeName = section['type_name']?.toString() ?? '';
+      final rawList = section['list'] as List? ?? [];
+      final list = rawList.whereType<Map>().toList();
+      if (list.isEmpty || typeName.isEmpty) continue;
+
+      final displayList = list.take(9).toList();
+
+      result.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Text(
+                  '$typeName推荐',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    final tabIndex = _tabs.indexOf(typeName);
+                    if (tabIndex > 0) {
+                      _tabController.animateTo(tabIndex);
+                    }
+                  },
+                  child: Row(
                     children: [
-                      Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(height: 6),
                       Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        '更多',
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.slate300 : AppColors.slate600,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                         ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
-      ],
-    );
+      );
+
+      result.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.65,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) => _buildGridItem(displayList[i]),
+              childCount: displayList.length,
+            ),
+          ),
+        ),
+      );
+
+      result.add(const SliverToBoxAdapter(child: SizedBox(height: 8)));
+    }
+
+    return result;
   }
 
   // ── 内容列表 ──
@@ -1342,8 +1373,7 @@ class _HomePageState extends State<HomePage>
               SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
             if (_continueWatchingList.isNotEmpty)
               SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
-            if (_tabs.length > 1)
-              SliverToBoxAdapter(child: _buildCategoryGrid(isDark)),
+            ..._buildCategoryRecommendSlivers(isDark),
             if (contentList.isEmpty && isLoadingThisCategory)
               SliverPadding(
                 padding: const EdgeInsets.all(16),
