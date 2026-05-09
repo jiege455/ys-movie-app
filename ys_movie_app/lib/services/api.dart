@@ -2153,12 +2153,18 @@ class MacApi {
           // 尝试多种可能的字段名
           dynamic extendData = dataMap['type_extend'] ?? dataMap['extend'] ?? dataMap['vod_extend'];
 
+          // 如果 type_extend 是 JSON 字符串，尝试解码
+          if (extendData is String && extendData.isNotEmpty) {
+            try {
+              extendData = jsonDecode(extendData);
+            } catch (_) {}
+          }
+
           // 从 type_extend 中提取
           if (extendData is Map) {
             result['years'] = _parseCommaList(extendData['year']);
             result['areas'] = _parseCommaList(extendData['area']);
             result['classes'] = _parseCommaList(extendData['class']);
-            // 语言筛选项
             final langs = _parseCommaList(extendData['lang']);
             if (langs.isNotEmpty) result['langs'] = langs;
           }
@@ -2167,9 +2173,13 @@ class MacApi {
           final yrs = result['years'] ?? [];
           final ars = result['areas'] ?? [];
           final cls = result['classes'] ?? [];
-          if (yrs.isEmpty) result['years'] = _parseCommaList(dataMap['year'] ?? dataMap['years']);
-          if (ars.isEmpty) result['areas'] = _parseCommaList(dataMap['area'] ?? dataMap['areas']);
-          if (cls.isEmpty) result['classes'] = _parseCommaList(dataMap['class'] ?? dataMap['classes']);
+          if (yrs.isEmpty) result['years'] = _parseCommaList(dataMap['year'] ?? dataMap['years'] ?? dataMap['year_list']);
+          if (ars.isEmpty) result['areas'] = _parseCommaList(dataMap['area'] ?? dataMap['areas'] ?? dataMap['area_list']);
+          if (cls.isEmpty) result['classes'] = _parseCommaList(dataMap['class'] ?? dataMap['classes'] ?? dataMap['class_list']);
+          final dataLangs = _parseCommaList(dataMap['lang'] ?? dataMap['langs'] ?? dataMap['lang_list']);
+          if (dataLangs.isNotEmpty && (result['langs'] == null || result['langs']!.isEmpty)) {
+            result['langs'] = dataLangs;
+          }
         }
 
         // 确保至少有一项数据才返回
