@@ -123,7 +123,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         });
       }
     };
-    _castManager.addListener(_castStatusListener);
+    _castManager.castStatus.addListener(_castStatusListener!);
   }
 
   @override
@@ -151,8 +151,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     _battery.batteryLevel.then((v) {
       if (mounted) setState(() => _batteryLevel = v);
     });
-    _battery.onBatteryChanged.listen((state) {
-      if (mounted) setState(() => _batteryLevel = state.level);
+    _batterySubscription = _battery.onBatteryStateChanged.listen((state) async {
+      final level = await _battery.batteryLevel;
+      if (mounted) setState(() => _batteryLevel = level);
     });
   }
 
@@ -164,7 +165,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       FlutterVolumeController.addListener((v) {
         if (mounted) setState(() => _volume = v);
       });
-      ScreenBrightness.current.then((v) {
+      ScreenBrightness().current.then((v) {
         if (mounted) setState(() => _brightness = v);
       });
     } catch (_) {}
@@ -271,7 +272,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     final dur = _latestValue?.duration ?? Duration.zero;
     if (dur.inMilliseconds == 0) return;
     final seekMs = (delta / w * dur.inMilliseconds).round();
-    final newPos = (_dragStartPosition! + Duration(milliseconds: seekMs)).clamp(Duration.zero, dur);
+    var newPos = _dragStartPosition! + Duration(milliseconds: seekMs);
+    if (newPos < Duration.zero) newPos = Duration.zero;
+    if (newPos > dur) newPos = dur;
     _controller?.videoPlayerController?.seekTo(newPos);
   }
 
@@ -498,7 +501,8 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   bool _isAscending = true;
 
   void _showBottomEpisodesSheet() {
-    final eps = List<Map<String, dynamic>>.from(widget.episodes?.whereType<Map<String, dynamic>>() ?? []);
+    final raw = widget.episodes ?? [];
+    final eps = raw.whereType<Map<String, dynamic>>().toList();
     if (eps.isEmpty) return;
     if (_isAscending) {
       eps.sort((a, b) => (int.tryParse('${a['num'] ?? a['nid'] ?? 0}') ?? 0)
@@ -612,7 +616,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     _timeTimer?.cancel();
     _sleepTimer?.cancel();
     _batterySubscription?.cancel();
-    _castManager.removeListener(_castStatusListener);
+    _castManager.castStatus.removeListener(_castStatusListener!);
     _castManager.dispose();
     _controller?.removeEventsListener(_onPlayerEvent);
     super.dispose();
