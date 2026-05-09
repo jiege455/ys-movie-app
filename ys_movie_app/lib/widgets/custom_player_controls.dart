@@ -76,7 +76,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   double _volume = 0.5;
   bool _isSlidingVolume = false;
   bool _isSlidingBrightness = false;
-  bool _isLongPressing = false;
+double? _brightnessStart;
+double? _volumeStart;
+bool _isLongPressing = false;
   double _preLongPressSpeed = 1.0;
 
   // 投屏状态
@@ -211,6 +213,9 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       onLongPressStart: _onLongPressStart,
       onLongPressMoveUpdate: _onLongPressMoveUpdate,
       onLongPressEnd: _onLongPressEnd,
+      onVerticalDragStart: _onVerticalDragStart,
+      onVerticalDragUpdate: _onVerticalDragUpdate,
+      onVerticalDragEnd: _onVerticalDragEnd,
       child: AnimatedOpacity(
         opacity: _controlsVisible ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 300),
@@ -287,6 +292,39 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     _dragStartPosition = null;
   }
 
+  void _onVerticalDragStart(DragStartDetails details) {
+    if (_isLocked) return;
+    final w = MediaQuery.of(context).size.width;
+    if (details.localPosition.dx < w / 2) {
+      _isSlidingBrightness = true;
+      _brightnessStart = _brightness;
+    } else {
+      _isSlidingVolume = true;
+      _volumeStart = _volume;
+    }
+    setState(() {});
+  }
+
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    final h = MediaQuery.of(context).size.height;
+    final delta = details.primaryDelta ?? 0;
+    if (_isSlidingBrightness) {
+      _brightness = (_brightnessStart! - delta / h).clamp(0.05, 1.0);
+      try { ScreenBrightness().setScreenBrightness(_brightness); } catch (_) {}
+    } else if (_isSlidingVolume) {
+      _volume = (_volumeStart! - delta / h).clamp(0.0, 1.0);
+      try { FlutterVolumeController.setVolume(_volume, showSystemUI: false); } catch (_) {}
+    }
+    setState(() {});
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    setState(() {
+      _isSlidingBrightness = false;
+      _isSlidingVolume = false;
+    });
+  }
+
   String _formatTime(Duration d) {
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
@@ -356,7 +394,13 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         child: Row(
           children: [
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                if (_controller?.isFullScreen == true) {
+                  _controller?.exitFullScreen();
+                } else {
+                  Navigator.pop(context);
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
