@@ -55,8 +55,8 @@ export const checkLoggedIn = (): boolean => {
  */
 export const userLogin = async (userName: string, userPwd: string): Promise<ApiResult<UserAuth>> => {
   try {
-    const res: any = await pluginApi.get('appLogin', {
-      params: { user_name: userName, password: userPwd }
+    const res: any = await pluginApi.post('appLogin', {
+      user_name: userName, password: userPwd
     })
     if (res?.user?.user_id) {
       const auth: UserAuth = {
@@ -79,8 +79,8 @@ export const userLogin = async (userName: string, userPwd: string): Promise<ApiR
  */
 export const userRegister = async (userName: string, userPwd: string, userPwd2: string): Promise<ApiResult<UserAuth>> => {
   try {
-    const res: any = await pluginApi.get('appRegister', {
-      params: { user_name: userName, password: userPwd, password2: userPwd2 }
+    const res: any = await pluginApi.post('appRegister', {
+      user_name: userName, password: userPwd, password2: userPwd2
     })
     if (res?.user?.user_id) {
       return await userLogin(userName, userPwd)

@@ -23,6 +23,7 @@ interface PlayerState {
 
   togglePlay: () => void
   toggleFullscreen: () => void
+  reset: () => void
 }
 
 export const usePlayerStore = create<PlayerState>((set) => ({
@@ -41,5 +42,13 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   setCurrentEpisode: (currentEpisode) => set({ currentEpisode }),
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
-  toggleFullscreen: () => set((state) => ({ isFullscreen: !state.isFullscreen }))
+  toggleFullscreen: () => set((state) => ({ isFullscreen: !state.isFullscreen })),
+  reset: () => set({
+    isPlaying: false,
+    currentTime: 0,
+    duration: 0,
+    volume: 1,
+    isFullscreen: false,
+    currentEpisode: 0
+  })
 }))

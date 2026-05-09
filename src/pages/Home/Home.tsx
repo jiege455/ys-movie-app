@@ -32,7 +32,7 @@ const CATEGORY_DISPLAY_LIMIT = 8
 
 export const Home: React.FC = () => {
   const navigate = useNavigate()
-  const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   const [banners, setBanners] = useState<BannerMovie[]>([])
   const [hotMovies, setHotMovies] = useState<Movie[]>([])
@@ -43,17 +43,19 @@ export const Home: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    isMountedRef.current = true
-    loadHomeData()
-    return () => { isMountedRef.current = false }
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    loadHomeData(controller.signal)
+    return () => { controller.abort() }
   }, [])
 
-  const loadHomeData = useCallback(async () => {
+  const loadHomeData = useCallback(async (signal: AbortSignal) => {
     try {
       setLoading(true)
       setError(null)
       const data = await getHomeData()
-      if (!isMountedRef.current) return
+      if (signal.aborted) return
       if (data) {
         setBanners(data.banners)
         setHotMovies(data.hotMovies)
@@ -64,11 +66,11 @@ export const Home: React.FC = () => {
       }
     } catch (err) {
       console.error('加载首页数据失败:', err)
-      if (isMountedRef.current) {
+      if (!signal.aborted) {
         setError('加载数据失败，请检查网络连接')
       }
     } finally {
-      if (isMountedRef.current) {
+      if (!signal.aborted) {
         setLoading(false)
       }
     }
@@ -119,7 +121,12 @@ export const Home: React.FC = () => {
           <div className="glass border border-cyan-500/20 rounded-lg p-4 mb-4">
             <p className="text-cyan-400 text-center">{error}</p>
             <button
-              onClick={loadHomeData}
+              onClick={() => {
+              const controller = new AbortController()
+              abortRef.current?.abort()
+              abortRef.current = controller
+              loadHomeData(controller.signal)
+            }}
               className="mt-2 w-full bg-cyan-500 hover:bg-cyan-400 text-white py-2 rounded-lg transition-colors"
             >
               重新加载

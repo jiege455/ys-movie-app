@@ -55,6 +55,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<any>(null)
   const isMountedRef = useRef(true)
+  const fullscreenHandlerRef = useRef<(() => void) | null>(null)
   const startTimeRef = useRef(startTime)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -403,6 +404,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       const handleFullscreenChange = () => {
         setIsFullscreen(!!document.fullscreenElement)
       }
+      fullscreenHandlerRef.current = handleFullscreenChange
       document.addEventListener('fullscreenchange', handleFullscreenChange)
 
       // HLS/DASH 多码率清晰度处理
@@ -449,6 +451,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
 
     return () => {
       isMountedRef.current = false
+      if (fullscreenHandlerRef.current) {
+        document.removeEventListener('fullscreenchange', fullscreenHandlerRef.current)
+        fullscreenHandlerRef.current = null
+      }
       if (playerRef.current) {
         playerRef.current.dispose()
         playerRef.current = null
@@ -519,8 +525,9 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
     playerEl.addEventListener('leavepictureinpicture', handleLeavePiP)
 
     return () => {
-      playerEl.removeEventListener('enterpictureinpicture', handleEnterPiP)
-      playerEl.removeEventListener('leavepictureinpicture', handleLeavePiP)
+      const currentPlayerEl = playerRef.current?.el() || playerEl
+      currentPlayerEl.removeEventListener('enterpictureinpicture', handleEnterPiP)
+      currentPlayerEl.removeEventListener('leavepictureinpicture', handleLeavePiP)
       handleLeavePiP()
     }
   }, [])

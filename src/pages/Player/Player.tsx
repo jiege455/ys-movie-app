@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getMovieDetail } from '../../api'
 import { VideoPlayer } from '../../components/VideoPlayer/VideoPlayer'
@@ -14,39 +14,41 @@ import type { MovieDetail as MovieDetailType, VodEpisode } from '../../api/vod'
 export const Player: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentEpisode, setCurrentEpisode } = usePlayerStore()
+  const { currentEpisode, setCurrentEpisode, reset } = usePlayerStore()
   const [movieData, setMovieData] = useState<MovieDetailType | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     if (id) {
-      loadMovieData(id)
+      loadMovieData(id, controller.signal)
     }
     return () => {
-      isMountedRef.current = false
+      controller.abort()
+      reset()
     }
   }, [id])
 
-  const loadMovieData = async (movieId: string) => {
+  const loadMovieData = useCallback(async (movieId: string, signal: AbortSignal) => {
     try {
       setLoading(true)
       setError(null)
       const data = await getMovieDetail(movieId)
-      if (isMountedRef.current) {
-        setMovieData(data)
-      }
+      if (signal.aborted) return
+      setMovieData(data)
     } catch {
-      if (isMountedRef.current) {
-        setError('加载视频信息失败')
-      }
+      if (signal.aborted) return
+      setError('加载视频信息失败')
     } finally {
-      if (isMountedRef.current) {
+      if (!signal.aborted) {
         setLoading(false)
       }
     }
-  }
+  }, [])
 
   const handleEpisodeChange = (index: number) => {
     setCurrentEpisode(index)
@@ -132,6 +134,7 @@ export const Player: React.FC = () => {
       {/* 视频播放器 */}
       <div className="aspect-video bg-black">
         <VideoPlayer
+          key={getCurrentVideoUrl()}
           src={getCurrentVideoUrl()}
           poster={movieData.backdrop_path || movieData.poster_path}
         />

@@ -71,6 +71,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   // 猜你喜欢
   List<Map<String, dynamic>> _relatedList = [];
   List<Map<String, dynamic>> _comments = [];
+  int _commentDisplayLimit = 5;
   int _tabIndex = 0; // 0=详情,1=评论
 
   // 广告
@@ -510,7 +511,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       
       finalList.addAll(regularComments);
 
-      if (mounted) setState(() => _comments = finalList);
+      if (mounted) setState(() {
+        _comments = finalList;
+        _commentDisplayLimit = 5;
+      });
     } catch (_) {}
   }
 
@@ -1435,32 +1439,51 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                     ],
                                   ),
                                 )
-                              : ListView.builder(
-                                  padding: EdgeInsets.zero, // 修复：去除列表默认内边距，减少与标题的间隙
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: _comments.length,
-                                  itemBuilder: (ctx, i) {
-                                    final c = _comments[i];
-                                    final isPinned = '${c['is_pinned']}' == '1' || c['is_pinned'] == true || '${c['is_top']}' == '1';
-                                    final isAd = c['is_ad'] == true;
-                                    
-                                    final rawAvatar = c['user_portrait'] ?? c['user_avatar'] ?? c['portrait'] ?? c['avatar'] ?? c['pic'] ?? '';
-                                    final avatarUrl = _fixAvatarUrl(rawAvatar);
-                                    final userName = c['user_name'] ?? c['user_nick'] ?? c['nickname'] ?? c['name'] ?? '匿名';
-                                    final time = c['create_time'] ?? c['time'] ?? '';
-                                    final content = c['content'] ?? '';
-                                    
-                                    return CommentItem(
-                                      avatarUrl: avatarUrl,
-                                      userName: userName,
-                                      time: time,
-                                      content: content,
-                                      isPinned: isPinned,
-                                      isAd: isAd,
-                                      adData: isAd ? (c['ad_data'] as Map?)?.cast<String, dynamic>() : null,
-                                    );
-                                  },
+                              : Column(
+                                  children: [
+                                    ..._comments.take(_commentDisplayLimit).map((c) {
+                                      final isPinned = '${c['is_pinned']}' == '1' || c['is_pinned'] == true || '${c['is_top']}' == '1';
+                                      final isAd = c['is_ad'] == true;
+
+                                      final rawAvatar = c['user_portrait'] ?? c['user_avatar'] ?? c['portrait'] ?? c['avatar'] ?? c['pic'] ?? '';
+                                      final avatarUrl = _fixAvatarUrl(rawAvatar);
+                                      final userName = c['user_name'] ?? c['user_nick'] ?? c['nickname'] ?? c['name'] ?? '匿名';
+                                      final time = c['create_time'] ?? c['time'] ?? '';
+                                      final content = c['content'] ?? '';
+
+                                      return CommentItem(
+                                        avatarUrl: avatarUrl,
+                                        userName: userName,
+                                        time: time,
+                                        content: content,
+                                        isPinned: isPinned,
+                                        isAd: isAd,
+                                        adData: isAd ? (c['ad_data'] as Map?)?.cast<String, dynamic>() : null,
+                                      );
+                                    }),
+                                    if (_comments.length > _commentDisplayLimit)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _commentDisplayLimit = _comments.length;
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(color: scheme.primary.withOpacity(0.5)),
+                                            ),
+                                            child: Text(
+                                              '查看全部 ${_comments.length} 条评论',
+                                              style: TextStyle(color: scheme.primary, fontSize: 13),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                         ],
                         

@@ -73,7 +73,14 @@ export const Carousel: React.FC<CarouselProps> = ({
           className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement
-            target.src = 'https://via.placeholder.com/800x450?text=No+Image'
+            target.style.display = 'none'
+            const parent = target.parentElement
+            if (parent && !parent.querySelector('.img-fallback')) {
+              const fallback = document.createElement('div')
+              fallback.className = 'img-fallback absolute inset-0 flex items-center justify-center bg-slate-800'
+              fallback.innerHTML = '<span class="text-cyan-400/40">暂无图片</span>'
+              parent.appendChild(fallback)
+            }
           }}
         />
 
@@ -91,7 +98,7 @@ export const Carousel: React.FC<CarouselProps> = ({
           <div className="flex items-center space-x-3 text-sm text-cyan-300">
             <span className="flex items-center">
               <span className="text-cyan-400 mr-1">★</span>
-              {currentMovie.vote_average.toFixed(1)}
+              {currentMovie.vote_average?.toFixed(1) ?? '0.0'}
             </span>
             <span>{currentMovie.release_date}</span>
           </div>

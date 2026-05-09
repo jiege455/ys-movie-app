@@ -77,36 +77,36 @@ export const MovieDetail: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeSourceIndex, setActiveSourceIndex] = useState(0)
-  const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     if (id) {
-      loadMovieData(id)
+      loadMovieData(id, controller.signal)
     }
     return () => {
-      isMountedRef.current = false
+      controller.abort()
     }
   }, [id])
 
-  const loadMovieData = async (movieId: string) => {
+  const loadMovieData = async (movieId: string, signal: AbortSignal) => {
     try {
       setLoading(true)
       setError(null)
       const data = await getMovieDetail(movieId)
-      if (isMountedRef.current) {
-        setMovieData(data)
-        // 默认选中第一个有剧集的播放源
-        if (data?.vod_play_list) {
-          const firstValidIndex = data.vod_play_list.findIndex((s: VodSource) => (s.urls?.length || 0) > 0)
-          setActiveSourceIndex(firstValidIndex >= 0 ? firstValidIndex : 0)
-        }
+      if (signal.aborted) return
+      setMovieData(data)
+      if (data?.vod_play_list) {
+        const firstValidIndex = data.vod_play_list.findIndex((s: VodSource) => (s.urls?.length || 0) > 0)
+        setActiveSourceIndex(firstValidIndex >= 0 ? firstValidIndex : 0)
       }
     } catch {
-      if (isMountedRef.current) {
-        setError('加载电影信息失败')
-      }
+      if (signal.aborted) return
+      setError('加载电影信息失败')
     } finally {
-      if (isMountedRef.current) {
+      if (!signal.aborted) {
         setLoading(false)
       }
     }
@@ -145,7 +145,14 @@ export const MovieDetail: React.FC = () => {
           </button>
           {error && (
             <button
-              onClick={() => id && loadMovieData(id)}
+              onClick={() => {
+              if (id) {
+                const controller = new AbortController()
+                abortRef.current?.abort()
+                abortRef.current = controller
+                loadMovieData(id, controller.signal)
+              }
+            }}
               className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors"
             >
               重新加载
@@ -177,14 +184,21 @@ export const MovieDetail: React.FC = () => {
           <div className="w-32 flex-shrink-0">
             <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg glass-light">
               <img
-                src={movieData.poster_path || 'https://via.placeholder.com/300x450?text=No+Image'}
+                src={movieData.poster_path || ''}
                 alt={movieData.title}
                 className="w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = 'https://via.placeholder.com/300x450?text=No+Image'
+                  target.style.display = 'none'
+                  const parent = target.parentElement
+                  if (parent && !parent.querySelector('.img-fallback')) {
+                    const fallback = document.createElement('div')
+                    fallback.className = 'img-fallback absolute inset-0 flex items-center justify-center bg-slate-800'
+                    fallback.innerHTML = '<span class="text-cyan-400/40 text-xs">暂无图片</span>'
+                    parent.appendChild(fallback)
+                  }
                 }}
               />
             </div>
