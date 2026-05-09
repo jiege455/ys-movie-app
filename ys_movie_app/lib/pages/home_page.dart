@@ -723,14 +723,9 @@ class _HomePageState extends State<HomePage>
 
               if (_bannerList.isNotEmpty)
                 SliverToBoxAdapter(
-                  child: AnimatedOpacity(
-                    opacity: _currentTabIndex == 0 ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 100),
-                    child: IgnorePointer(
-                      ignoring: _currentTabIndex != 0,
-                      child: _buildBanner(),
-                    ),
-                  ),
+                  child: _currentTabIndex == 0
+                      ? _buildBanner()
+                      : const SizedBox(height: 0, width: double.infinity),
                 ),
 
               if (_announcements.isNotEmpty)
