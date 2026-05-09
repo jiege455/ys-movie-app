@@ -316,7 +316,20 @@ class _HomePageState extends State<HomePage>
         _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
 
         final rawTypeRec = initData['type_recommend_list'] as List<dynamic>? ?? [];
-        _typeRecommendList = rawTypeRec.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+        _typeRecommendList = rawTypeRec.whereType<Map>().map((section) {
+          final sec = Map<String, dynamic>.from(section);
+          final rawList = sec['list'] as List? ?? [];
+          sec['list'] = rawList.whereType<Map>().map((item) {
+            return {
+              'id': '${item['vod_id'] ?? item['id'] ?? ''}',
+              'title': (item['vod_name'] ?? item['title'] ?? '').toString(),
+              'poster': (item['vod_pic'] ?? item['poster'] ?? item['pic'] ?? '').toString(),
+              'year': '${item['vod_year'] ?? item['year'] ?? ''}',
+              'type': (item['type_name'] ?? item['type'] ?? '').toString(),
+            };
+          }).toList();
+          return sec;
+        }).toList();
 
         if (hasExistingTabs) {
           _tabController.removeListener(_onTabChanged);
@@ -429,14 +442,38 @@ class _HomePageState extends State<HomePage>
         return str.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       }
 
-      Map<String, List<String>>? _extractFromExtend(dynamic extend) {
-        if (extend is! Map) return null;
+      Map<String, List<String>>? _extractFromExtend(dynamic extend, Map typeItem) {
+        if (extend is Map) {
+          final result = <String, List<String>>{
+            'years': _parseList(extend['year']),
+            'areas': _parseList(extend['area']),
+            'classes': _parseList(extend['class']),
+          };
+          final langs = _parseList(extend['lang']);
+          if (langs.isNotEmpty) result['langs'] = langs;
+          if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
+            return result;
+          }
+        }
+        final flatYears = _parseList(typeItem['type_extend_year'] ?? typeItem['type_extend_years']);
+        final flatAreas = _parseList(typeItem['type_extend_area'] ?? typeItem['type_extend_areas']);
+        final flatClasses = _parseList(typeItem['type_extend_class'] ?? typeItem['type_extend_classes']);
+        final flatLangs = _parseList(typeItem['type_extend_lang'] ?? typeItem['type_extend_langs']);
+        if (flatYears.isNotEmpty || flatAreas.isNotEmpty || flatClasses.isNotEmpty) {
+          final r = <String, List<String>>{'years': flatYears, 'areas': flatAreas, 'classes': flatClasses};
+          if (flatLangs.isNotEmpty) r['langs'] = flatLangs;
+          return r;
+        }
+        return null;
+      }
+
+      Map<String, List<String>>? _extractFromExtendMap(Map extendMap) {
         final result = <String, List<String>>{
-          'years': _parseList(extend['year']),
-          'areas': _parseList(extend['area']),
-          'classes': _parseList(extend['class']),
+          'years': _parseList(extendMap['year']),
+          'areas': _parseList(extendMap['area']),
+          'classes': _parseList(extendMap['class']),
         };
-        final langs = _parseList(extend['lang']);
+        final langs = _parseList(extendMap['lang']);
         if (langs.isNotEmpty) result['langs'] = langs;
         if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
           return result;
@@ -451,12 +488,14 @@ class _HomePageState extends State<HomePage>
         for (final t in typeList) {
           if (t is! Map) continue;
           if (t['type_id'] == targetTypeId) {
-            final facets = _extractFromExtend(t['type_extend']);
+            final extend = t['type_extend'] ?? t['extend'];
+            final facets = _extractFromExtend(extend, t);
             if (facets != null) { setState(() => _facets = facets); return; }
           }
         }
         // 收不到匹配的分类数据，尝试顶层 type_extend
-        final topFacets = _extractFromExtend(initData['type_extend']);
+        final topExtend = initData['type_extend'] ?? initData['extend'];
+        final topFacets = _extractFromExtendMap(topExtend is Map ? topExtend : {});
         if (topFacets != null) { setState(() => _facets = topFacets); return; }
       } catch (_) {}
 
@@ -955,19 +994,18 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 轮播图（全宽+左下角标题） ──
+  // ── 轮播图（全宽+渐变遮罩+左下角标题） ──
   Widget _buildBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      height: 200,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+      height: 220,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
             SlideBanner(
               images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
-              fit: BoxFit.contain,
+              fit: BoxFit.cover,
               onTap: (index) {
                 final item = _bannerList[index];
                 final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
@@ -976,31 +1014,32 @@ class _HomePageState extends State<HomePage>
               },
             ),
             Positioned(
-              bottom: 10,
-              left: 10,
-              right: 10,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 70,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.65),
+                    ],
                   ),
-                ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 12,
+              left: 12,
+              right: 12,
+              child: Text(
+                _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -1335,34 +1374,7 @@ class _HomePageState extends State<HomePage>
             if (_continueWatchingList.isNotEmpty)
               SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
             ..._buildCategoryRecommendSlivers(isDark),
-            if (contentList.isEmpty && isLoadingThisCategory)
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: _buildShimmerGrid(),
-              )
-            else if (contentList.isEmpty)
-              SliverFillRemaining(child: _buildEmptyView())
-            else
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.65,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      if (i >= contentList.length) {
-                        return _buildLoadMoreIndicator();
-                      }
-                      return _buildGridItem(contentList[i]);
-                    },
-                    childCount: contentList.length + (hasMore ? 1 : 0),
-                  ),
-                ),
-              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
       );

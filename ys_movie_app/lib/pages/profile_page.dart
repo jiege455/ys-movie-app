@@ -628,9 +628,6 @@ class ProfilePageState extends State<ProfilePage> {
                              if (!mounted) return;
                              Navigator.push(context, MaterialPageRoute(builder: (_) => VodListPage(title: '我的缓存', items: cachedList)));
                           }),
-                          _buildGridIcon(Icons.history, '观看历史', onTap: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()));
-                          }),
                           _buildGridIcon(Icons.search, '求片找片', onTap: () {
                              Navigator.push(context, MaterialPageRoute(builder: (_) => const FindPage())).then((_) => refresh());
                           }),
