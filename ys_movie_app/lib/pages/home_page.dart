@@ -461,21 +461,13 @@ class _HomePageState extends State<HomePage>
       }
 
       Map<String, List<String>>? _extractFromExtend(dynamic extend, Map typeItem) {
-        dynamic ext = extend;
-        if (ext is String && ext.isNotEmpty) {
-          try {
-            ext = jsonDecode(ext);
-          } catch (_) {
-            ext = extend;
-          }
-        }
-        if (ext is Map) {
+        if (extend is Map) {
           final result = <String, List<String>>{
-            'years': _parseList(ext['year']),
-            'areas': _parseList(ext['area']),
-            'classes': _parseList(ext['class']),
+            'years': _parseList(extend['year']),
+            'areas': _parseList(extend['area']),
+            'classes': _parseList(extend['class']),
           };
-          final langs = _parseList(ext['lang']);
+          final langs = _parseList(extend['lang']);
           if (langs.isNotEmpty) result['langs'] = langs;
           if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
             return result;
@@ -606,8 +598,6 @@ class _HomePageState extends State<HomePage>
     if (index == _currentTabIndex) return;
     setState(() {
       _currentTabIndex = index;
-      _isLoadingContent = false;
-      _loadingIndex = -1;
       if (index > 0) {
         _facets = {'years': [], 'areas': [], 'classes': []};
         _selectedYear = null;
