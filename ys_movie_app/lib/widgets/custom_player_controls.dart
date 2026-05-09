@@ -313,7 +313,7 @@ bool _isLongPressing = false;
       try { ScreenBrightness().setScreenBrightness(_brightness); } catch (_) {}
     } else if (_isSlidingVolume) {
       _volume = (_volumeStart! - delta / h).clamp(0.0, 1.0);
-      try { FlutterVolumeController.setVolume(_volume, showSystemUI: false); } catch (_) {}
+      try { FlutterVolumeController.setVolume(_volume); } catch (_) {}
     }
     setState(() {});
   }
