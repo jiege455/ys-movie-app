@@ -955,7 +955,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 轮播图（全宽+文字叠加） ──
+  // ── 轮播图（全宽+左下角标题） ──
   Widget _buildBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -967,6 +967,7 @@ class _HomePageState extends State<HomePage>
           children: [
             SlideBanner(
               images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
+              fit: BoxFit.contain,
               onTap: (index) {
                 final item = _bannerList[index];
                 final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
@@ -975,67 +976,27 @@ class _HomePageState extends State<HomePage>
               },
             ),
             Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Row(
                 children: [
-                  Text(
-                    _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _bannerList.isNotEmpty ? (_bannerList[0]['remarks'] ?? _bannerList[0]['vod_remarks'] ?? '') : '',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      if (_bannerList.isEmpty) return;
-                      final item = _bannerList[0];
-                      final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-                      if (vodId.isEmpty || vodId == '0') return;
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
-                    },
+                  Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
-                          const SizedBox(width: 4),
-                          Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                        ],
+                      child: Text(
+                        _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
