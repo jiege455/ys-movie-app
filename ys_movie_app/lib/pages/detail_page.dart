@@ -520,6 +520,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       return;
     }
 
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：提前保存全屏状态，用于新控制器 fullScreenByDefault，防止切换选集时全屏闪退
+    final wasFullScreen = _betterPlayerController?.isFullScreen ?? false;
+
     final ep = _episodes[_currentEpisodeIndex];
     String url = ep['url'] ?? '';
     final parseApi = ep['parse_api'] ?? '';
@@ -546,7 +550,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       fit: BoxFit.contain,
       autoPlay: true,
       looping: false,
-      fullScreenByDefault: false,
+      fullScreenByDefault: wasFullScreen,   // 杰哥：切换选集时保持全屏状态
       allowedScreenSleep: false,
       autoDetectFullscreenDeviceOrientation: false,
       deviceOrientationsAfterFullScreen: [
@@ -708,7 +712,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       } catch (_) {}
     }
 
-    final wasFullScreen = _betterPlayerController?.isFullScreen ?? false;
     final oldController = _betterPlayerController;
     _betterPlayerController = newController;
     _addControllerListeners();
@@ -724,13 +727,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       }
     }
 
-    if (wasFullScreen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        try {
-          newController.enterFullScreen();
-        } catch (_) {}
-      });
-    }
     _isSwitchingEpisode = false;
   }
 

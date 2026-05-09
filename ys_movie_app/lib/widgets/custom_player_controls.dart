@@ -245,9 +245,12 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         child: Material(
           color: Colors.transparent,
           child: Container(
-            width: 300,
+            width: 320,
             height: double.infinity,
-            color: const Color(0xE61F1F1F), // 加深背景不透明度
+            decoration: BoxDecoration(
+              color: const Color(0xEE111827),
+              border: Border(left: BorderSide(color: Colors.white.withOpacity(0.08))),
+            ),
             child: SafeArea(child: child),
           ),
         ),
@@ -437,17 +440,22 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('选集 ($total)', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   TextButton.icon(
                     icon: Icon(isAscending ? Icons.arrow_downward : Icons.arrow_upward, color: AppColors.slate300, size: 16),
-                    label: Text(isAscending ? '正序' : '倒序', style: const TextStyle(color: AppColors.slate300)),
+                    label: Text(isAscending ? '正序' : '倒序', style: const TextStyle(color: AppColors.slate300, fontSize: 13)),
                     onPressed: () {
                       setStateSheet(() => isAscending = !isAscending);
                     },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      backgroundColor: Colors.white.withOpacity(0.06),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
                   ),
                 ],
               ),
@@ -466,7 +474,7 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
-                        label: Text('$s-$endStr'),
+                        label: Text('$s-$endStr', style: TextStyle(fontSize: 12, fontWeight: isSel ? FontWeight.w600 : FontWeight.normal)),
                         selected: isSel,
                         onSelected: (v) {
                           if (v) setStateSheet(() => currentPage = p);
@@ -474,32 +482,32 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                         selectedColor: AppColors.success,
                         backgroundColor: Colors.white.withOpacity(0.06),
                         labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.slate300, fontSize: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          borderRadius: BorderRadius.circular(6),
+                          side: BorderSide(color: isSel ? AppColors.success.withOpacity(0.5) : Colors.white.withOpacity(0.1)),
                         ),
                       ),
                     );
                   }),
                 ),
               ),
-            if (pageCount > 1) const SizedBox(height: 8),
+            if (pageCount > 1) const SizedBox(height: 10),
             
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // 保持4列
-                  childAspectRatio: 2.2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
+                  crossAxisCount: 4,
+                  childAspectRatio: 1.3,   // 杰哥：调高比例让格子更高，显示集号+名称
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
                 ),
                 itemCount: displayList.length,
                 itemBuilder: (ctx, index) {
                   final ep = displayList[index];
-                  // 计算原始索引
                   int originalIndex;
                   if (isAscending) {
                      originalIndex = startIdx + index;
@@ -507,29 +515,57 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                      originalIndex = endIdx - 1 - index;
                   }
                   
+                  final epNum = originalIndex + 1;
+                  final epName = ep['name'] ?? '$epNum';
                   final isSelected = originalIndex == widget.currentEpisodeIndex;
                   
-                  return InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onEpisodeSelected?.call(originalIndex);
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.success : Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(6),
-                        border: isSelected ? null : Border.all(color: Colors.white.withOpacity(0.08)),
-                      ),
-                      child: Text(
-                        ep['name'] ?? '${originalIndex + 1}',
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.slate300,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12,
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        Navigator.pop(context);
+                        widget.onEpisodeSelected?.call(originalIndex);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.success.withOpacity(0.85) : Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected 
+                              ? AppColors.success.withOpacity(0.6) 
+                              : Colors.white.withOpacity(0.08),
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$epNum',
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : AppColors.cyan400,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              epName.replaceAll('$epNum', '').trim().isEmpty 
+                                ? '第${epNum}集' 
+                                : epName.replaceAll('$epNum', '').replaceAll('第', '').replaceAll('集', '').trim(),
+                              style: TextStyle(
+                                color: isSelected ? Colors.white.withOpacity(0.85) : AppColors.slate400,
+                                fontSize: 10,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
