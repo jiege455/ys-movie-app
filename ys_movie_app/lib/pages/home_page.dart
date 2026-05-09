@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage>
 
   // ── 轮播图 ──
   List<dynamic> _bannerList = [];
+  int _currentBannerIdx = 0;
 
   // ── 搜索热词 ──
   List<String> _hotWords = [];
@@ -277,6 +278,23 @@ class _HomePageState extends State<HomePage>
     }
 
     for (final entry in _contentCache.entries) {
+      final tabId = _tabIds[entry.key];
+      await prefs.setString(
+        '$_cacheKeyContentPrefix$tabId',
+        jsonEncode({
+          'time': DateTime.now().toIso8601String(),
+          'list': entry.value,
+          'page': _pageCache[entry.key] ?? 1,
+          'hasMore': _hasMoreCache[entry.key] ?? true,
+        }),
+      );
+    }
+  }
+
+  Future<void> _saveContentCacheOnly() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final entry in _contentCache.entries) {
+      if (entry.key >= _tabIds.length) continue;
       final tabId = _tabIds[entry.key];
       await prefs.setString(
         '$_cacheKeyContentPrefix$tabId',
@@ -650,7 +668,7 @@ class _HomePageState extends State<HomePage>
           _hasMoreCache[index] = list.length >= 9;
           _pageCache[index] = (_pageCache[index] ?? 1) + 1;
         });
-        _saveCache();
+        _saveContentCacheOnly();
       } else {
         setState(() => _hasMoreCache[index] = false);
       }
@@ -1023,6 +1041,9 @@ class _HomePageState extends State<HomePage>
                 if (vodId.isEmpty || vodId == '0') return;
                 Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
               },
+              onPageChanged: (idx) {
+                if (mounted) setState(() => _currentBannerIdx = idx);
+              },
             ),
             Positioned(
               bottom: 0,
@@ -1047,7 +1068,9 @@ class _HomePageState extends State<HomePage>
               left: 12,
               right: 12,
               child: Text(
-                _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
+                _bannerList.isNotEmpty && _currentBannerIdx < _bannerList.length
+                    ? (_bannerList[_currentBannerIdx]['title'] ?? _bannerList[_currentBannerIdx]['vod_name'] ?? '')
+                    : '',
                 style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1147,6 +1170,8 @@ class _HomePageState extends State<HomePage>
                   imageUrl: item['poster'] ?? '',
                   width: 110,
                   fit: BoxFit.cover,
+                  memCacheWidth: 330,
+                  memCacheHeight: 500,
                   placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                   errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                 ),
@@ -1236,6 +1261,8 @@ class _HomePageState extends State<HomePage>
                     CachedNetworkImage(
                       imageUrl: item['poster'] ?? '',
                       fit: BoxFit.cover,
+                      memCacheWidth: 600,
+                      memCacheHeight: 330,
                       placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                       errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                     ),
@@ -1439,6 +1466,8 @@ class _HomePageState extends State<HomePage>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
+                    memCacheWidth: 400,
+                    memCacheHeight: 600,
                     placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                     errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                   ),

@@ -11,9 +11,10 @@ import '../theme/app_theme.dart';
 class SlideBanner extends StatefulWidget {
   final List<String> images;
   final ValueChanged<int>? onTap;
+  final ValueChanged<int>? onPageChanged;
   final BoxFit fit;
 
-  const SlideBanner({super.key, required this.images, this.onTap, this.fit = BoxFit.cover});
+  const SlideBanner({super.key, required this.images, this.onTap, this.onPageChanged, this.fit = BoxFit.cover});
 
   @override
   State<SlideBanner> createState() => _SlideBannerState();
@@ -41,6 +42,8 @@ class _SlideBannerState extends State<SlideBanner> {
               child: CachedNetworkImage(
                 imageUrl: url,
                 fit: widget.fit,
+                memCacheWidth: 1200,
+                memCacheHeight: 660,
                 width: double.infinity,
                 placeholder: (_, __) => Container(color: AppColors.darkElevated),
                 errorWidget: (_, __, ___) =>
@@ -54,6 +57,7 @@ class _SlideBannerState extends State<SlideBanner> {
             viewportFraction: 1.0,
             onPageChanged: (index, _) {
               setState(() => _current = index);
+              widget.onPageChanged?.call(index);
             },
           ),
         ),

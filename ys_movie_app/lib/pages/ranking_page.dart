@@ -384,6 +384,8 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
                       width: 90,
                       height: 130,
                       fit: BoxFit.cover,
+                      memCacheWidth: 270,
+                      memCacheHeight: 390,
                       placeholder: (_, __) => Container(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                       errorWidget: (_, __, ___) => Container(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.movie)),
                     ),

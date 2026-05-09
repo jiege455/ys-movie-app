@@ -610,6 +610,26 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                 _showDanmakuInputDialog();
               });
             },
+            onShowSources: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                builder: (ctx) {
+                  final scheme = Theme.of(context).colorScheme;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _sources.asMap().entries.map((entry) => ListTile(
+                      title: Text(entry.value['name'] ?? '源${entry.key + 1}'),
+                      trailing: _currentSourceIndex == entry.key ? Icon(Icons.check, color: scheme.primary) : null,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _changeSource(entry.key);
+                      },
+                    )).toList(),
+                  );
+                },
+              );
+            },
             onShowSpeed: () {
               showModalBottomSheet(
                 context: context,
@@ -917,6 +937,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
           child: CachedNetworkImage(
             imageUrl: ad['poster'],
             fit: BoxFit.cover,
+            memCacheWidth: 800,
+            memCacheHeight: 450,
             placeholder: (_, __) => Container(color: Theme.of(context).cardColor),
             errorWidget: (_, __, ___) => const SizedBox.shrink(),
           ),
@@ -1187,6 +1209,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                           width: 100,
                                           height: 140,
                                           fit: BoxFit.cover,
+                                          memCacheWidth: 300,
+                                          memCacheHeight: 420,
                                           placeholder: (_, __) => Container(color: cardColor),
                                           errorWidget: (_, __, ___) => Container(color: cardColor, child: Icon(Icons.broken_image, color: iconColor)),
                                         ),
@@ -1376,6 +1400,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                                                   imageUrl: item['poster'],
                                                   fit: BoxFit.cover,
                                                   width: double.infinity,
+                                                  memCacheWidth: 400,
+                                                  memCacheHeight: 600,
                                                   placeholder: (_, __) => Container(color: cardColor),
                                                 ),
                                               ),

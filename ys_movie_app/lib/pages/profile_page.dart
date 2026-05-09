@@ -536,6 +536,8 @@ class ProfilePageState extends State<ProfilePage> {
                                                   CachedNetworkImage(
                                                     imageUrl: item['poster'],
                                                     fit: BoxFit.cover,
+                                                    memCacheWidth: 400,
+                                                    memCacheHeight: 600,
                                                     placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                                                     errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                                                   ),
