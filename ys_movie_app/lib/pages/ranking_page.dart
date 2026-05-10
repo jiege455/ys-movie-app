@@ -255,6 +255,8 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   bool loading = false;
   bool _initialized = false;
   bool _isLoading = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -262,6 +264,12 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      final show = _scrollController.hasClients && _scrollController.offset > 500;
+      if (show != _showScrollToTop && mounted) {
+        setState(() => _showScrollToTop = show);
+      }
+    });
     if (widget.autoLoad) {
       _initialized = true;
       _loadData();
@@ -359,12 +367,15 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
         ),
       );
     }
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(top: 16, bottom: 20, left: 16, right: 16),
-        itemCount: items.length,
-        itemBuilder: (ctx, i) {
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: _loadData,
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(top: 16, bottom: 20, left: 16, right: 16),
+            itemCount: items.length,
+            itemBuilder: (ctx, i) {
           final item = items[i];
           return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: item['id']))),
@@ -449,7 +460,59 @@ class _RankingListState extends State<_RankingList> with AutomaticKeepAliveClien
           );
         },
       ),
+        ),
+        if (_showScrollToTop)
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                );
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.15)
+                        : Colors.black.withOpacity(0.06),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.keyboard_arrow_up_rounded,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withOpacity(0.7)
+                      : Colors.black.withOpacity(0.5),
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   List<String> _splitActors(dynamic raw) {

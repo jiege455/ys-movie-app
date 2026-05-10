@@ -703,8 +703,8 @@ class _HomePageState extends State<HomePage>
           ),
           if (_showScrollToTop)
             Positioned(
-              bottom: 16,
-              right: 16,
+              bottom: 20,
+              right: 20,
               child: GestureDetector(
                 onTap: () {
                   _scrollController.animateTo(
@@ -713,21 +713,37 @@ class _HomePageState extends State<HomePage>
                     curve: Curves.easeInOut,
                   );
                 },
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: AnimatedScale(
+                  scale: 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.black.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.black.withOpacity(0.06),
+                        width: 1,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.5),
+                      size: 28,
+                    ),
                   ),
-                  child: const Icon(Icons.arrow_upward, color: Colors.white, size: 22),
                 ),
               ),
             ),
@@ -1200,14 +1216,7 @@ class _HomePageState extends State<HomePage>
             item['title'] ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${item['year'] ?? ''} · ${item['area'] ?? ''}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1326,14 +1335,7 @@ class _HomePageState extends State<HomePage>
             item['title'] ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${item['year'] ?? ''} · ${item['area'] ?? ''}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
