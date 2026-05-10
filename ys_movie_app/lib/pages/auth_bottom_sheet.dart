@@ -11,6 +11,9 @@ void showAuthBottomSheet(BuildContext context, {VoidCallback? onLoginSuccess}) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black54,
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.of(context).size.height * 0.65,
+    ),
     builder: (context) => AuthBottomSheet(onLoginSuccess: onLoginSuccess),
   );
 }
