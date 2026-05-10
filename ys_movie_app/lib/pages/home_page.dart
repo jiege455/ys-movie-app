@@ -114,9 +114,6 @@ class _HomePageState extends State<HomePage>
           initialIndex: _currentTabIndex,
         );
         _tabController.addListener(_onTabChanged);
-        _tabController.animation?.addListener(() {
-          if (mounted) setState(() {});
-        });
       }
       _loadTabs();
     });
@@ -515,15 +512,6 @@ class _HomePageState extends State<HomePage>
     if (_categoryRecommends.isNotEmpty) setState(() {});
   }
 
-  // ── 有效显示索引（用 offset 实时判断，避免滑动幻影） ──
-  int _getEffectiveDisplayIndex() {
-    final idx = _tabController.index;
-    final offset = _tabController.offset;
-    if (offset > 0.4 && idx < _tabs.length - 1) return idx + 1;
-    if (offset < -0.4 && idx > 0) return idx - 1;
-    return idx;
-  }
-
   // ── Tab 切换 ──
   void _onTabChanged() {
     final index = _tabController.index;
@@ -652,7 +640,7 @@ class _HomePageState extends State<HomePage>
               NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
-            final currentIndex = _getEffectiveDisplayIndex();
+            final currentIndex = _tabController.index;
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
@@ -672,15 +660,6 @@ class _HomePageState extends State<HomePage>
                   child: currentIndex > 0
                       ? _buildFilterBar(isDark)
                       : const SizedBox.shrink(),
-                ),
-              ),
-
-              SliverToBoxAdapter(
-                child: Visibility(
-                  maintainState: true,
-                  maintainSize: false,
-                  visible: currentIndex == 0 && _bannerList.isNotEmpty,
-                  child: _buildBanner(),
                 ),
               ),
 
@@ -1356,6 +1335,8 @@ class _HomePageState extends State<HomePage>
         onRefresh: _onRefresh,
         child: CustomScrollView(
           slivers: [
+            if (_bannerList.isNotEmpty)
+              SliverToBoxAdapter(child: _buildBanner()),
             if (_hotRecommendList.isNotEmpty)
               SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
             if (_categoryRecommends.isNotEmpty)
