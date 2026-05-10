@@ -194,6 +194,16 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     }
   }
 
+  /// 开发者：杰哥网络科技 (qq: 2711793818)
+  /// 修复：页面返回时暂停播放，防止后台继续有声音
+  @override
+  void deactivate() {
+    try {
+      _betterPlayerController?.pause();
+    } catch (_) {}
+    super.deactivate();
+  }
+
   Future<void> _loadData() async {
     if (widget.localPlayUrl != null && widget.localPlayUrl!.isNotEmpty) {
       // 播放本地文件
@@ -749,6 +759,19 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
       } catch (e) {
         debugPrint("Dispose Old Controller Error: $e");
       }
+    }
+
+    // 开发者：杰哥网络科技 (qq: 2711793818)
+    // 修复：全屏切换选集后黑屏只有声音的问题
+    // 原因：新控制器创建时 fullScreenByDefault=true 会立即进入全屏，
+    // 但此时 widget 还没重建完成，导致视频渲染异常
+    // 解决：如果之前是全屏，延迟 300ms 后手动进入全屏，确保 widget 重建完成
+    if (wasFullScreen && mounted) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted && _betterPlayerController != null && !_betterPlayerController!.isFullScreen) {
+          _betterPlayerController!.enterFullScreen();
+        }
+      });
     }
 
     _isSwitchingEpisode = false;
