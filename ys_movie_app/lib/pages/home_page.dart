@@ -701,7 +701,6 @@ class _HomePageState extends State<HomePage>
                   }).toList(),
                 ),
           ),
-          ),
           if (_showScrollToTop)
             Positioned(
               bottom: 16,
