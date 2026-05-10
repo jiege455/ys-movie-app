@@ -140,7 +140,12 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
       final api = context.read<MacApi>();
       final res = await api.register(username, password, verifyCode: verify, inviteCode: inviteCode);
       if (res['success'] == true) {
-        _showSuccess('注册成功');
+        _showSuccess('注册成功，正在自动登录...');
+        // 注册成功后自动登录
+        final loginRes = await api.login(username, password);
+        if (loginRes['success'] == true) {
+          _showSuccess('登录成功');
+        }
         if (mounted) {
           Navigator.pop(context);
           widget.onLoginSuccess?.call();
@@ -246,17 +251,7 @@ class _AuthBottomSheetState extends State<AuthBottomSheet> with SingleTickerProv
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          Container(
-            width: 60, height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.primaryGradient,
-              boxShadow: [BoxShadow(color: primary.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 4))],
-            ),
-            child: const Icon(Icons.movie_creation_rounded, color: Colors.white, size: 30),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Text(
             '欢迎来到狐狸影视',
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: isDark ? AppColors.slate100 : AppColors.slate900),

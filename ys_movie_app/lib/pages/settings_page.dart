@@ -268,7 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeOption(
                 context: ctx,
                 title: '云白',
-              subtitle: '明亮清爽，适合日间观看',
+                subtitle: '明亮清爽，适合日间观看',
                 icon: Icons.wb_sunny,
                 iconColor: AppColors.primary,
                 bgColor: Theme.of(context).cardColor,
@@ -285,12 +285,12 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeOption(
                 context: ctx,
                 title: '墨夜',
-              subtitle: '深邃沉浸，护眼观影体验',
+                subtitle: '深邃沉浸，护眼观影体验',
                 icon: Icons.nights_stay,
                 iconColor: Theme.of(context).colorScheme.primary,
                 bgColor: Theme.of(context).scaffoldBackgroundColor,
                 textColor: Theme.of(context).colorScheme.onSurface,
-                isSelected: themeProvider.themeStyle == 'dark',
+                isSelected: themeProvider.themeStyle == 'dark' || themeProvider.themeStyle == 'blue_black',
                 onTap: () {
                   themeProvider.setThemeStyle('dark');
                   Navigator.pop(ctx);
