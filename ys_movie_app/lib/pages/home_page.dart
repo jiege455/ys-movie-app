@@ -777,7 +777,7 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       ),
-    );
+    ));
   }
 
   // ── 搜索栏 ──
