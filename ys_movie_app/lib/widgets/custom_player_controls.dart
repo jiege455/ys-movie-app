@@ -1323,7 +1323,6 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                 ],
               ),
             ],
-            ],
           ],
         ),
       ),
