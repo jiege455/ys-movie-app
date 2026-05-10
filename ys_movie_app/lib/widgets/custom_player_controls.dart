@@ -490,16 +490,15 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // 保持4列
-                  childAspectRatio: 2.2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isFullScreen ? 8 : 4,
+                  childAspectRatio: isFullScreen ? 1.8 : 2.0,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
                 ),
                 itemCount: displayList.length,
                 itemBuilder: (ctx, index) {
                   final ep = displayList[index];
-                  // 计算原始索引
                   int originalIndex;
                   if (isAscending) {
                      originalIndex = startIdx + index;
@@ -509,27 +508,41 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                   
                   final isSelected = originalIndex == widget.currentEpisodeIndex;
                   
-                  return InkWell(
+                  return GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
                       widget.onEpisodeSelected?.call(originalIndex);
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.success : Colors.white.withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(6),
-                        border: isSelected ? null : Border.all(color: Colors.white.withOpacity(0.08)),
-                      ),
-                      child: Text(
-                        ep['name'] ?? '${originalIndex + 1}',
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.slate300,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12,
+                        color: isSelected ? AppColors.success.withOpacity(0.18) : Colors.white.withOpacity(0.04),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected ? AppColors.success : Colors.white.withOpacity(0.08),
+                          width: isSelected ? 1.5 : 1,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            ep['name'] ?? '${originalIndex + 1}',
+                            style: TextStyle(
+                              color: isSelected ? AppColors.success : AppColors.slate300,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (isFullScreen)
+                            Text(
+                              '${originalIndex + 1}',
+                              style: TextStyle(color: AppColors.slate500, fontSize: 10),
+                            ),
+                        ],
                       ),
                     ),
                   );
@@ -1302,68 +1315,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                   _buildPlayPauseBtn(40),
                   const SizedBox(width: 16),
                   _buildNextEpBtn(40),
-                  const SizedBox(width: 16),
-                  
-                  // 弹幕开关
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        final settings = PlayerSettings();
-                        if (!settings.danmakuUserEnabled && settings.danmakuEnabled == false) {
-                          return;
-                        }
-                        settings.setDanmakuEnabled(!settings.danmakuUserEnabled);
-                        setState(() {});
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                           border: Border.all(color: PlayerSettings().danmakuEnabled ? AppColors.success : AppColors.slate500),
-                           borderRadius: BorderRadius.circular(16),
-                           color: PlayerSettings().danmakuEnabled ? AppColors.success.withOpacity(0.2) : Colors.transparent,
-                        ),
-                        child: Text('弹', style: TextStyle(
-                          color: PlayerSettings().danmakuEnabled 
-                            ? AppColors.success 
-                            : (PlayerSettings().danmakuUserEnabled == false && PlayerSettings().danmakuEnabled == false)
-                              ? AppColors.error
-                              : Colors.white, 
-                          fontSize: 12,
-                        )),
-                      ),
-                    ),
-                  ),
-                  
-                  _buildIconBtn(Icons.settings, _showDanmakuSettingsSheet),
-                  
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        widget.onDanmakuToggle?.call();
-                        cancelAndRestartTimer();
-                      },
-                      child: Container(
-                        height: 36,
-                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.slate700.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        child: const Text('此刻你在想什么...', style: TextStyle(color: AppColors.slate500, fontSize: 12)),
-                      ),
-                    ),
-                  ),
-                  
-                  _buildTextBtn('片头/尾', _showSkipSheet),
+                  const SizedBox(width: 24),
+                  _buildTextBtn('选集', _showEpisodeSheet),
                   _buildTextBtn('播放源', _showSourceSheet),
                   _buildTextBtn('倍速', _showSpeedSheet),
-                  _buildTextBtn('选集', _showEpisodeSheet),
+                  _buildTextBtn('片头/尾', _showSkipSheet),
                 ],
               ),
+            ],
             ],
           ],
         ),
@@ -1584,23 +1543,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   }
   
   Widget _buildTextBtn(String text, VoidCallback? onTap) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(6),
-        onTap: () {
-          onTap?.call();
-          cancelAndRestartTimer();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          margin: const EdgeInsets.only(left: 6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
-        ),
+    return GestureDetector(
+      onTap: () {
+        onTap?.call();
+        cancelAndRestartTimer();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
       ),
     );
   }

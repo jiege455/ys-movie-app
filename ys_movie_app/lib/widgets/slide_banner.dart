@@ -45,6 +45,7 @@ class _SlideBannerState extends State<SlideBanner> {
                 memCacheWidth: 1200,
                 memCacheHeight: 660,
                 width: double.infinity,
+                height: double.infinity,
                 placeholder: (_, __) => Container(color: AppColors.darkElevated),
                 errorWidget: (_, __, ___) =>
                     Container(color: AppColors.darkElevated, child: const Icon(Icons.broken_image, color: AppColors.slate500)),

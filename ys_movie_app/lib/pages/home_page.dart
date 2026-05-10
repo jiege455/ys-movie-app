@@ -114,7 +114,6 @@ class _HomePageState extends State<HomePage>
       }
       _loadTabs();
     });
-    _scrollController.addListener(_onScroll);
   }
 
   // ── 缓存读写 ──
@@ -592,15 +591,15 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 滚动监听 ──
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      final hasMore = _hasMoreCache[_currentTabIndex] ?? true;
+  // ── 滚动监听（NotificationListener） ──
+  bool _onScrollNotification(ScrollNotification notification, int index) {
+    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200) {
+      final hasMore = _hasMoreCache[index] ?? true;
       if (!_isLoadingContent && hasMore) {
-        _loadContent(_currentTabIndex, loadMore: true);
+        _loadContent(index, loadMore: true);
       }
     }
+    return false;
   }
 
   // ── 下拉刷新 ──
@@ -644,13 +643,27 @@ class _HomePageState extends State<HomePage>
                     : _buildTabBar(isDark),
               ),
 
-              if (currentIndex > 0)
-                SliverToBoxAdapter(child: _buildFilterBar(isDark)),
-
-              if (currentIndex == 0 && _bannerList.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _buildBanner(),
+              SliverToBoxAdapter(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: currentIndex > 0
+                      ? _buildFilterBar(isDark)
+                      : const SizedBox.shrink(),
                 ),
+              ),
+
+              SliverToBoxAdapter(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: currentIndex == 0 && _bannerList.isNotEmpty
+                      ? _buildBanner()
+                      : const SizedBox.shrink(),
+                ),
+              ),
 
               if (_announcements.isNotEmpty)
                 SliverToBoxAdapter(
@@ -938,17 +951,19 @@ class _HomePageState extends State<HomePage>
       height: 220,
       child: Stack(
         children: [
-          SlideBanner(
-            images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
-            onTap: (index) {
-              final item = _bannerList[index];
-              final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-              if (vodId.isEmpty || vodId == '0') return;
-              Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
-            },
-            onPageChanged: (index) {
-              setState(() => _bannerCurrentIndex = index);
-            },
+          Positioned.fill(
+            child: SlideBanner(
+              images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
+              onTap: (index) {
+                final item = _bannerList[index];
+                final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+                if (vodId.isEmpty || vodId == '0') return;
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+              },
+              onPageChanged: (index) {
+                setState(() => _bannerCurrentIndex = index);
+              },
+            ),
           ),
           Positioned(
             bottom: 0,
@@ -1276,73 +1291,87 @@ class _HomePageState extends State<HomePage>
     final hasMore = _hasMoreCache[index] ?? true;
     final isLoadingThisCategory = _isLoadingContent && _loadingIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final showFooter = contentList.isNotEmpty && !isLoadingThisCategory;
 
     if (index == 0) {
-      return RefreshIndicator(
-        key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
-        onRefresh: _onRefresh,
-        child: CustomScrollView(
-          slivers: [
-            if (_hotRecommendList.isNotEmpty)
-              SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
-            if (_categoryRecommends.isNotEmpty)
-              SliverToBoxAdapter(child: _buildCategorySections(isDark)),
-            if (contentList.isEmpty && isLoadingThisCategory)
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: _buildShimmerGrid(),
-              )
-            else if (contentList.isEmpty)
-              SliverFillRemaining(child: _buildEmptyView())
-            else
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.65,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
-                      if (i >= contentList.length) {
-                        return _buildLoadMoreIndicator();
-                      }
-                      return _buildGridItem(contentList[i]);
-                    },
-                    childCount: contentList.length + (hasMore ? 1 : 0),
+      return NotificationListener<ScrollNotification>(
+        onNotification: (n) => _onScrollNotification(n, index),
+        child: RefreshIndicator(
+          key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            slivers: [
+              if (_hotRecommendList.isNotEmpty)
+                SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
+              if (_categoryRecommends.isNotEmpty)
+                SliverToBoxAdapter(child: _buildCategorySections(isDark)),
+              if (contentList.isEmpty && isLoadingThisCategory)
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: _buildShimmerGrid(),
+                )
+              else if (contentList.isEmpty)
+                SliverFillRemaining(child: _buildEmptyView())
+              else ...[
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.65,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => _buildGridItem(contentList[i]),
+                      childCount: contentList.length,
+                    ),
                   ),
                 ),
-              ),
-          ],
+                if (showFooter)
+                  SliverToBoxAdapter(
+                    child: hasMore ? _buildLoadMoreFooter() : _buildNoMoreFooter(),
+                  ),
+              ],
+            ],
+          ),
         ),
       );
     }
 
-    return RefreshIndicator(
-      key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
-      onRefresh: _onRefresh,
-      child: contentList.isEmpty && isLoadingThisCategory
-          ? _buildContentShimmer()
-          : contentList.isEmpty
-              ? _buildEmptyView()
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.65,
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) => _onScrollNotification(n, index),
+      child: RefreshIndicator(
+        key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
+        onRefresh: _onRefresh,
+        child: contentList.isEmpty && isLoadingThisCategory
+            ? _buildContentShimmer()
+            : contentList.isEmpty
+                ? _buildEmptyView()
+                : CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.all(16),
+                        sliver: SliverGrid(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 0.65,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) => _buildGridItem(contentList[i]),
+                            childCount: contentList.length,
+                          ),
+                        ),
+                      ),
+                      if (showFooter)
+                        SliverToBoxAdapter(
+                          child: hasMore ? _buildLoadMoreFooter() : _buildNoMoreFooter(),
+                        ),
+                    ],
                   ),
-                  itemCount: contentList.length + (hasMore ? 1 : 0),
-                  itemBuilder: (context, i) {
-                    if (i >= contentList.length) {
-                      return _buildLoadMoreIndicator();
-                    }
-                    return _buildGridItem(contentList[i]);
-                  },
-                ),
+      ),
     );
   }
 
@@ -1459,11 +1488,31 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 加载更多指示器 ──
-  Widget _buildLoadMoreIndicator() {
+  // ── 加载更多指示器（全宽footer，不在网格内） ──
+  Widget _buildLoadMoreFooter() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: const Center(child: CircularProgressIndicator()),
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      alignment: Alignment.center,
+      child: const SizedBox(
+        width: 28,
+        height: 28,
+        child: CircularProgressIndicator(strokeWidth: 2.5),
+      ),
+    );
+  }
+
+  // ── 没有更多了提示 ──
+  Widget _buildNoMoreFooter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      alignment: Alignment.center,
+      child: Text(
+        '—— 没有更多了 ——',
+        style: TextStyle(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+        ),
+      ),
     );
   }
 }

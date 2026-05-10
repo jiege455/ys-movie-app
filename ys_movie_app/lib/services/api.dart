@@ -1872,12 +1872,9 @@ class MacApi {
            if (enabledParsers.isNotEmpty) {
              final filtered = <Map<String, dynamic>>[];
              for (final src in dedupedPlayList) {
-               final show = (src['show'] ?? '').toString().toLowerCase();
-               final matched = enabledParsers.any((p) =>
-                 p.toLowerCase() == show ||
-                 show.contains(p.toLowerCase()) ||
-                 p.toLowerCase().contains(show)
-               );
+               final show = (src['show'] ?? '').toString();
+               final showLower = show.toLowerCase();
+               final matched = enabledParsers.any((p) => p.toLowerCase() == showLower);
                if (matched) filtered.add(src);
              }
              if (filtered.isNotEmpty) {
