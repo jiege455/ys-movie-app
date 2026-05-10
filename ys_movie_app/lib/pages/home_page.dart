@@ -655,13 +655,11 @@ class _HomePageState extends State<HomePage>
               ),
 
               SliverToBoxAdapter(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: currentIndex == 0 && _bannerList.isNotEmpty
-                      ? _buildBanner()
-                      : const SizedBox.shrink(),
+                child: Visibility(
+                  maintainState: true,
+                  maintainSize: false,
+                  visible: currentIndex == 0 && _bannerList.isNotEmpty,
+                  child: _buildBanner(),
                 ),
               ),
 
@@ -947,9 +945,12 @@ class _HomePageState extends State<HomePage>
     final safeIndex = _bannerCurrentIndex.clamp(0, _bannerList.length - 1);
     final currentItem = _bannerList.isNotEmpty ? _bannerList[safeIndex] : null;
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       height: 220,
-      child: Stack(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
         children: [
           Positioned.fill(
             child: SlideBanner(
@@ -1035,6 +1036,7 @@ class _HomePageState extends State<HomePage>
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -1085,7 +1087,7 @@ class _HomePageState extends State<HomePage>
               crossAxisCount: 3,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.72,
+              childAspectRatio: 0.65,
             ),
             itemCount: itemCount,
             itemBuilder: (ctx, i) {
@@ -1209,7 +1211,7 @@ class _HomePageState extends State<HomePage>
                     crossAxisCount: 3,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 0.72,
+                    childAspectRatio: 0.65,
                   ),
                   itemCount: displayItems.length,
                   itemBuilder: (ctx, i) {
