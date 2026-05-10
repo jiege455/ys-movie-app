@@ -1835,8 +1835,12 @@ class MacApi {
            final playList = (data['vod_play_list'] as List).map((p) {
               final pi = (p['player_info'] as Map?) ?? const {};
               final show = (pi['app_name'] ?? pi['app_show'] ?? pi['appName'] ?? pi['show'] ?? '播放源').toString();
+              // player_parse_type: "1" = 后台插件解析管理已添加, 0 = 未添加
+              final parseType = pi['player_parse_type'];
+              final isAdded = parseType == '1' || parseType == 1 || parseType == true;
               return {
                 'show': show,
+                'is_added': isAdded,
                 'urls': (p['urls'] as List).map((u) => {
                   'name': u['name'] ?? '正片',
                   'url': u['url'] ?? '',
@@ -1845,8 +1849,13 @@ class MacApi {
               };
            }).toList();
            
+           // 过滤：只保留后台插件解析管理已添加的播放源
+           final addedPlayList = playList.where((s) => s['is_added'] == true).toList();
+           // 如果过滤后为空，则显示全部（兼容旧数据）
+           final effectiveList = addedPlayList.isNotEmpty ? addedPlayList : playList;
+           
            List<Map<String, dynamic>> finalPlayList = [];
-           for(var source in playList) {
+           for(var source in effectiveList) {
               List<Map<String, dynamic>> eps = [];
               final srcUrls = (source['urls'] as List?) ?? const [];
               for(var ep in srcUrls) {
@@ -1866,22 +1875,6 @@ class MacApi {
              if (seenNames.contains(name)) continue;
              seenNames.add(name);
              dedupedPlayList.add(src);
-           }
-
-           final enabledParsers = enabledParserNames;
-           if (enabledParsers.isNotEmpty) {
-             final filtered = <Map<String, dynamic>>[];
-             for (final src in dedupedPlayList) {
-               final show = (src['show'] ?? '').toString();
-               final showLower = show.toLowerCase();
-               final matched = enabledParsers.any((p) => p.toLowerCase() == showLower);
-               if (matched) filtered.add(src);
-             }
-             if (filtered.isNotEmpty) {
-               dedupedPlayList
-                 ..clear()
-                 ..addAll(filtered);
-             }
            }
 
            return {
