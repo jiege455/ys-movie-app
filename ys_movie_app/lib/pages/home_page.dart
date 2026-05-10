@@ -66,6 +66,9 @@ class _HomePageState extends State<HomePage>
   // ── 分类推荐（每个分类的推荐列表六宫格） ──
   final List<Map<String, dynamic>> _categoryRecommends = [];
 
+  // ── 显示返回顶部按钮 ──
+  bool _showScrollToTop = false;
+
   // ── 缓存 ──
   final Map<int, List<dynamic>> _contentCache = {};
   final Map<int, int> _pageCache = {};
@@ -599,6 +602,10 @@ class _HomePageState extends State<HomePage>
         _loadContent(index, loadMore: true);
       }
     }
+    final show = notification.metrics.pixels > 500;
+    if (show != _showScrollToTop) {
+      setState(() => _showScrollToTop = show);
+    }
     return false;
   }
 
@@ -628,7 +635,9 @@ class _HomePageState extends State<HomePage>
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.slate50,
       body: TexturedBackground(
         child: SafeArea(
-          child: NestedScrollView(
+          child: Stack(
+            children: [
+              NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             final currentIndex = _tabController.index;
@@ -680,7 +689,40 @@ class _HomePageState extends State<HomePage>
                   }).toList(),
                 ),
           ),
-        ),
+          ),
+          if (_showScrollToTop)
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: () {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.arrow_upward, color: Colors.white, size: 22),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
       ),
     );
   }
@@ -1296,47 +1338,16 @@ class _HomePageState extends State<HomePage>
     final showFooter = contentList.isNotEmpty && !isLoadingThisCategory;
 
     if (index == 0) {
-      return NotificationListener<ScrollNotification>(
-        onNotification: (n) => _onScrollNotification(n, index),
-        child: RefreshIndicator(
-          key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
-          onRefresh: _onRefresh,
-          child: CustomScrollView(
-            slivers: [
-              if (_hotRecommendList.isNotEmpty)
-                SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
-              if (_categoryRecommends.isNotEmpty)
-                SliverToBoxAdapter(child: _buildCategorySections(isDark)),
-              if (contentList.isEmpty && isLoadingThisCategory)
-                SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: _buildShimmerGrid(),
-                )
-              else if (contentList.isEmpty)
-                SliverFillRemaining(child: _buildEmptyView())
-              else ...[
-                SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.65,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => _buildGridItem(contentList[i]),
-                      childCount: contentList.length,
-                    ),
-                  ),
-                ),
-                if (showFooter)
-                  SliverToBoxAdapter(
-                    child: hasMore ? _buildLoadMoreFooter() : _buildNoMoreFooter(),
-                  ),
-              ],
-            ],
-          ),
+      return RefreshIndicator(
+        key: _refreshKeys.putIfAbsent(index, () => GlobalKey<RefreshIndicatorState>()),
+        onRefresh: _onRefresh,
+        child: CustomScrollView(
+          slivers: [
+            if (_hotRecommendList.isNotEmpty)
+              SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
+            if (_categoryRecommends.isNotEmpty)
+              SliverToBoxAdapter(child: _buildCategorySections(isDark)),
+          ],
         ),
       );
     }
