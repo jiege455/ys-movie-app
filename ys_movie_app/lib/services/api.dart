@@ -2193,7 +2193,33 @@ class MacApi {
       // API 调用失败，降级处理
     }
 
-    // 兜底：从本地缓存或默认值
+    // 兜底：尝试从 init 缓存的 type_extend 中提取
+    try {
+      final initData = await getAppInit();
+      final typeList = initData['type_list'] as List? ?? [];
+      for (final t in typeList) {
+        if (t is! Map) continue;
+        final tid = t['type_id'];
+        if (tid != typeId1) continue;
+        dynamic ext = t['type_extend'] ?? t['extend'];
+        if (ext is String && ext.isNotEmpty) {
+          try { ext = jsonDecode(ext); } catch (_) {}
+        }
+        if (ext is Map) {
+          final yrs = _parseCommaList(ext['year']);
+          final ars = _parseCommaList(ext['area']);
+          final cls = _parseCommaList(ext['class']);
+          final lgs = _parseCommaList(ext['lang']);
+          if (yrs.isNotEmpty || ars.isNotEmpty || cls.isNotEmpty) {
+            final r = <String, List<String>>{'years': yrs, 'areas': ars, 'classes': cls};
+            if (lgs.isNotEmpty) r['langs'] = lgs;
+            return r;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 最终兜底：默认值
     return {
       'years': ['2025','2024','2023','2022','2021','2020','2019','2018','2017'],
       'areas': ['大陆','香港','台湾','美国','韩国','日本','泰国','英国','法国'],

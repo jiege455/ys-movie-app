@@ -117,8 +117,7 @@ class _HomePageState extends State<HomePage>
       }
       _loadTabs();
     });
-    _scrollController.addListener(_onScroll);
-  }
+    }
 
   // ── 缓存读写 ──
   Future<void> _loadCachedData() async {
@@ -628,7 +627,7 @@ class _HomePageState extends State<HomePage>
 
   // ── 加载内容（refresh=刷新页, loadMore=加载下一页） ──
   Future<void> _loadContent(int index, {bool refresh = false, bool loadMore = false}) async {
-    if (_isLoadingContent && _loadingIndex == index && !loadMore) return;
+    if (_isLoadingContent && _loadingIndex == index) return;
     if (index >= _tabIds.length) return;
 
     final hasCache = _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty;
@@ -684,6 +683,7 @@ class _HomePageState extends State<HomePage>
       }
     } catch (e) {
       debugPrint('加载内容失败: $e');
+      setState(() => _hasMoreCache[index] = false);
     } finally {
       if (_loadingIndex == index) {
         setState(() {
@@ -694,15 +694,15 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 滚动监听 ──
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+  // ── 滚动监听（通过 NotificationListener 捕获内层滚动） ──
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200) {
       final hasMore = _hasMoreCache[_currentTabIndex] ?? true;
       if (!_isLoadingContent && hasMore) {
         _loadContent(_currentTabIndex, loadMore: true);
       }
     }
+    return false;
   }
 
   // ── 下拉刷新 ──
@@ -762,16 +762,18 @@ class _HomePageState extends State<HomePage>
                 ),
             ];
           },
-          body: _isLoadingTabs
-              ? _buildContentShimmer()
-              : TabBarView(
-                  controller: _tabController,
-                  children: _tabs.asMap().entries.map((entry) {
-                    return KeepAliveWrapper(
-                      child: _buildContentList(entry.key),
-                    );
-                  }).toList(),
-                ),
+          body: NotificationListener<ScrollNotification>(
+            onNotification: _onScrollNotification,
+            child: _isLoadingTabs
+                ? _buildContentShimmer()
+                : TabBarView(
+                    controller: _tabController,
+                    children: _tabs.asMap().entries.map((entry) {
+                      return KeepAliveWrapper(
+                        child: _buildContentList(entry.key),
+                      );
+                    }).toList(),
+                  ),
           ),
         ),
       ),
