@@ -114,6 +114,9 @@ class _HomePageState extends State<HomePage>
           initialIndex: _currentTabIndex,
         );
         _tabController.addListener(_onTabChanged);
+        _tabController.animation?.addListener(() {
+          if (mounted) setState(() {});
+        });
       }
       _loadTabs();
     });
@@ -512,6 +515,15 @@ class _HomePageState extends State<HomePage>
     if (_categoryRecommends.isNotEmpty) setState(() {});
   }
 
+  // ── 有效显示索引（用 offset 实时判断，避免滑动幻影） ──
+  int _getEffectiveDisplayIndex() {
+    final idx = _tabController.index;
+    final offset = _tabController.offset;
+    if (offset > 0.4 && idx < _tabs.length - 1) return idx + 1;
+    if (offset < -0.4 && idx > 0) return idx - 1;
+    return idx;
+  }
+
   // ── Tab 切换 ──
   void _onTabChanged() {
     final index = _tabController.index;
@@ -640,7 +652,7 @@ class _HomePageState extends State<HomePage>
               NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
-            final currentIndex = _tabController.index;
+            final currentIndex = _getEffectiveDisplayIndex();
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
