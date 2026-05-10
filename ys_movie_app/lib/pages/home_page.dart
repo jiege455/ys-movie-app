@@ -1,5 +1,5 @@
 /// 开发者：杰哥网络科技 (qq: 2711793818)
-/// 作用：首页（顶部分类菜单 + Banner + 热门推荐 + 继续观看 + 内容网格）
+/// 作用：首页（顶部分类菜单 + Banner + 热门推荐九宫格 + 分类六宫格 + 内容网格）
 
 import 'dart:async';
 import 'dart:convert';
@@ -15,7 +15,6 @@ import 'package:shimmer/shimmer.dart';
 import '../pages/detail_page.dart';
 import '../pages/search_page.dart';
 import '../services/api.dart';
-import '../services/store.dart';
 import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../utils/keep_alive_wrapper.dart';
@@ -58,11 +57,14 @@ class _HomePageState extends State<HomePage>
   // ── 通知栏 ──
   List<dynamic> _announcements = [];
 
+  // ── 轮播图当前索引 ──
+  int _bannerCurrentIndex = 0;
+
   // ── 热门推荐 ──
   List<dynamic> _hotRecommendList = [];
 
-  // ── 继续观看 ──
-  List<Map<String, dynamic>> _continueWatchingList = [];
+  // ── 分类推荐（每个分类的推荐列表六宫格） ──
+  final List<Map<String, dynamic>> _categoryRecommends = [];
 
   // ── 缓存 ──
   final Map<int, List<dynamic>> _contentCache = {};
@@ -303,7 +305,7 @@ class _HomePageState extends State<HomePage>
         _loadFacets();
         _loadAnnouncements(initData['notice']);
         _loadHotRecommend();
-        _loadContinueWatching();
+        _loadCategoryRecommends(list);
 
         for (int i = 1; i < _tabs.length && i <= 3; i++) {
           _loadContent(i, refresh: true);
@@ -466,7 +468,7 @@ class _HomePageState extends State<HomePage>
       final list = await api.getFiltered(
         typeId: null,
         page: 1,
-        limit: 10,
+        limit: 9,
         orderby: 'hits',
       );
       if (list.isNotEmpty) {
@@ -478,33 +480,34 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 加载继续观看 ──
-  Future<void> _loadContinueWatching() async {
-    try {
-      final history = await StoreService.getHistory();
-      final List<Map<String, dynamic>> result = [];
-      for (final item in history.take(10)) {
-        final parts = item.split('|');
-        if (parts.length >= 3) {
-          double progressVal = 0.0;
-          if (parts.length > 5) {
-            try {
-              final sec = int.parse(parts[5]);
-              if (sec > 0) progressVal = 0.3;
-            } catch (_) {}
-          }
-          result.add({
-            'id': parts[0],
-            'title': parts.length > 1 ? parts[1] : '',
-            'poster': parts.length > 2 ? parts[2] : '',
-            'progressVal': progressVal,
+  // ── 加载分类推荐（每个分类6条热门数据） ──
+  Future<void> _loadCategoryRecommends(List<dynamic> typeList) async {
+    _categoryRecommends.clear();
+    final api = context.read<MacApi>();
+    for (final t in typeList) {
+      if (t is! Map) continue;
+      final typeName = t['type_name']?.toString() ?? '';
+      final typeId = int.tryParse('${t['type_id']}') ?? 0;
+      if (typeName == '全部' || typeName.isEmpty || typeId <= 0) continue;
+      try {
+        final items = await api.getFiltered(
+          typeId: typeId,
+          page: 1,
+          limit: 6,
+          orderby: 'hits',
+        );
+        if (items.isNotEmpty) {
+          _categoryRecommends.add({
+            'name': typeName,
+            'typeId': typeId,
+            'items': items,
           });
         }
+      } catch (e) {
+        debugPrint('加载分类 $typeName 推荐失败: $e');
       }
-      setState(() => _continueWatchingList = result);
-    } catch (e) {
-      debugPrint('加载继续观看失败: $e');
     }
+    if (_categoryRecommends.isNotEmpty) setState(() {});
   }
 
   // ── Tab 切换 ──
@@ -607,7 +610,6 @@ class _HomePageState extends State<HomePage>
     await _loadHotWords();
     await _loadAnnouncements();
     await _loadHotRecommend();
-    await _loadContinueWatching();
   }
 
   @override
@@ -927,95 +929,96 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 轮播图（全宽+文字叠加） ──
+  // ── 轮播图（全宽+文字叠加+标题跟随轮播） ──
   Widget _buildBanner() {
+    final safeIndex = _bannerCurrentIndex.clamp(0, _bannerList.length - 1);
+    final currentItem = _bannerList.isNotEmpty ? _bannerList[safeIndex] : null;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      height: 200,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          children: [
-            SlideBanner(
-              images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
-              onTap: (index) {
-                final item = _bannerList[index];
-                final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-                if (vodId.isEmpty || vodId == '0') return;
-                Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
-              },
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                  ),
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      height: 220,
+      child: Stack(
+        children: [
+          SlideBanner(
+            images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
+            onTap: (index) {
+              final item = _bannerList[index];
+              final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+              if (vodId.isEmpty || vodId == '0') return;
+              Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+            },
+            onPageChanged: (index) {
+              setState(() => _bannerCurrentIndex = index);
+            },
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.85)],
                 ),
               ),
             ),
-            Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+          ),
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  currentItem != null ? (currentItem['title'] ?? currentItem['vod_name'] ?? '') : '',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  currentItem != null ? (currentItem['remarks'] ?? currentItem['vod_remarks'] ?? '') : '',
+                  style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () {
+                    if (_bannerList.isEmpty) return;
+                    final item = _bannerList[safeIndex];
+                    final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+                    if (vodId.isEmpty || vodId == '0') return;
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _bannerList.isNotEmpty ? (_bannerList[0]['remarks'] ?? _bannerList[0]['vod_remarks'] ?? '') : '',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      if (_bannerList.isEmpty) return;
-                      final item = _bannerList[0];
-                      final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-                      if (vodId.isEmpty || vodId == '0') return;
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
-                          const SizedBox(width: 4),
-                          Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                        const SizedBox(width: 4),
+                        Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1047,44 +1050,36 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 热门推荐区域 ──
+  // ── 热门推荐九宫格 ──
   Widget _buildHotRecommendSection(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Row(
-            children: [
-              Text('热门推荐', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {},
-                child: Row(
-                  children: [
-                    Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-                    Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                  ],
-                ),
-              ),
-            ],
+    if (_hotRecommendList.isEmpty) return const SizedBox.shrink();
+    final itemCount = _hotRecommendList.length.clamp(0, 9);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text('热门推荐', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
           ),
-        ),
-        SizedBox(
-          height: 180,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _hotRecommendList.length.clamp(0, 10),
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: itemCount,
             itemBuilder: (ctx, i) {
               final item = _hotRecommendList[i];
               return _buildHotRecommendCard(item);
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1096,232 +1091,182 @@ class _HomePageState extends State<HomePage>
         if (vodId.isEmpty) return;
         Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
       },
-      child: SizedBox(
-        width: 110,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: item['poster'] ?? '',
-                  width: 110,
-                  fit: BoxFit.cover,
-                  placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
-                  errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: item['poster'] ?? '',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 400,
+                    memCacheHeight: 600,
+                    placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                    errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                  ),
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.slate900.withOpacity(0.54),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(item['year'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              item['title'] ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '${item['year'] ?? ''} · ${item['area'] ?? ''}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item['title'] ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${item['year'] ?? ''} · ${item['area'] ?? ''}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+          ),
+        ],
       ),
     );
   }
 
-  // ── 继续观看区域 ──
-  Widget _buildContinueWatchingSection(bool isDark) {
+  // ── 各分类推荐六宫格 ──
+  Widget _buildCategorySections(bool isDark) {
+    if (_categoryRecommends.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Row(
+      children: _categoryRecommends.map((cat) {
+        final name = cat['name'] as String;
+        final items = cat['items'] as List<dynamic>;
+        final typeId = cat['typeId'] as int;
+        final displayItems = items.take(6).toList();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('继续观看', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {},
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: Row(
                   children: [
-                    Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-                    Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                    Text(
+                      '$name推荐',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        final catIndex = _tabIds.indexOf(typeId);
+                        if (catIndex > 0) _tabController.animateTo(catIndex);
+                      },
+                      child: Row(
+                        children: [
+                          Text('更多', style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                          Icon(Icons.arrow_forward_ios, size: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                        ],
+                      ),
+                    ),
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemCount: displayItems.length,
+                  itemBuilder: (ctx, i) {
+                    final item = displayItems[i];
+                    return _buildCategoryItemCard(item);
+                  },
                 ),
               ),
             ],
           ),
-        ),
-        SizedBox(
-          height: 140,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _continueWatchingList.length.clamp(0, 10),
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (ctx, i) {
-              final item = _continueWatchingList[i];
-              return _buildContinueWatchingCard(item);
-            },
-          ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 
-  // ── 继续观看卡片 ──
-  Widget _buildContinueWatchingCard(Map<String, dynamic> item) {
-    final progressVal = item['progressVal'] as double? ?? 0.0;
+  Widget _buildCategoryItemCard(dynamic item) {
     return GestureDetector(
       onTap: () {
         final vodId = item['id']?.toString() ?? '';
         if (vodId.isEmpty) return;
         Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
       },
-      child: SizedBox(
-        width: 200,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CachedNetworkImage(
-                      imageUrl: item['poster'] ?? '',
-                      fit: BoxFit.cover,
-                      placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
-                      errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
-                    ),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: item['poster'] ?? '',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 400,
+                    memCacheHeight: 600,
+                    placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
+                    errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
+                  ),
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.slate900.withOpacity(0.54),
+                        borderRadius: BorderRadius.circular(4),
                       ),
+                      child: Text(item['year'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 10)),
                     ),
-                    if (progressVal > 0)
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: LinearProgressIndicator(
-                          value: progressVal,
-                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                          minHeight: 3,
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              item['title'] ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '已看至 ${(progressVal * 100).toInt()}%',
-              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            item['title'] ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${item['year'] ?? ''} · ${item['area'] ?? ''}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+          ),
+        ],
       ),
-    );
-  }
-
-  // ── 视频分类快捷入口 ──
-  IconData _iconForCategory(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('电影')) return Icons.movie;
-    if (lower.contains('电视') || lower.contains('剧')) return Icons.tv;
-    if (lower.contains('动漫') || lower.contains('动画')) return Icons.animation;
-    if (lower.contains('综艺')) return Icons.mic;
-    if (lower.contains('纪录')) return Icons.videocam;
-    if (lower.contains('短剧')) return Icons.play_circle;
-    if (lower.contains('体育')) return Icons.sports_soccer;
-    if (lower.contains('少儿')) return Icons.child_care;
-    if (lower.contains('音乐')) return Icons.music_note;
-    return Icons.category;
-  }
-
-  Widget _buildCategoryGrid(bool isDark) {
-    final categories = _tabs.length > 1 ? _tabs.sublist(1) : <String>[];
-    if (categories.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Text(
-            '视频分类',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 90,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (ctx, i) {
-              final name = categories[i];
-              final icon = _iconForCategory(name);
-              return GestureDetector(
-                onTap: () => _tabController.animateTo(i + 1),
-                child: Container(
-                  width: 72,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDark ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200.withOpacity(0.6),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(height: 6),
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.slate300 : AppColors.slate600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -1340,10 +1285,8 @@ class _HomePageState extends State<HomePage>
           slivers: [
             if (_hotRecommendList.isNotEmpty)
               SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
-            if (_continueWatchingList.isNotEmpty)
-              SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
-            if (_tabs.length > 1)
-              SliverToBoxAdapter(child: _buildCategoryGrid(isDark)),
+            if (_categoryRecommends.isNotEmpty)
+              SliverToBoxAdapter(child: _buildCategorySections(isDark)),
             if (contentList.isEmpty && isLoadingThisCategory)
               SliverPadding(
                 padding: const EdgeInsets.all(16),
