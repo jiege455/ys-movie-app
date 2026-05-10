@@ -51,7 +51,6 @@ class _HomePageState extends State<HomePage>
 
   // ── 轮播图 ──
   List<dynamic> _bannerList = [];
-  int _currentBannerIdx = 0;
 
   // ── 搜索热词 ──
   List<String> _hotWords = [];
@@ -64,9 +63,6 @@ class _HomePageState extends State<HomePage>
 
   // ── 继续观看 ──
   List<Map<String, dynamic>> _continueWatchingList = [];
-
-  // ── 分类推荐（每个分类的热门推荐九宫格） ──
-  List<Map<String, dynamic>> _typeRecommendList = [];
 
   // ── 缓存 ──
   final Map<int, List<dynamic>> _contentCache = {};
@@ -96,7 +92,6 @@ class _HomePageState extends State<HomePage>
   static const String _cacheKeyHotWords = 'home_hotwords_cache';
   static const String _cacheKeyAnnouncements = 'home_announcements_cache';
   static const String _cacheKeyHotRecommend = 'home_hot_recommend_cache';
-  static const String _cacheKeyTypeRecommend = 'home_type_recommend_cache';
   static const String _cacheKeyContentPrefix = 'home_content_cache_';
   static const String _cacheKeyPagePrefix = 'home_page_cache_';
   static const String _cacheKeyHasMorePrefix = 'home_hasmore_cache_';
@@ -117,7 +112,8 @@ class _HomePageState extends State<HomePage>
       }
       _loadTabs();
     });
-    }
+    _scrollController.addListener(_onScroll);
+  }
 
   // ── 缓存读写 ──
   Future<void> _loadCachedData() async {
@@ -176,17 +172,6 @@ class _HomePageState extends State<HomePage>
         final cacheTime = DateTime.parse(data['time']);
         if (DateTime.now().difference(cacheTime) < _cacheValidDuration) {
           _hotRecommendList = data['list'];
-        }
-      } catch (_) {}
-    }
-
-    final typeRecommendJson = prefs.getString(_cacheKeyTypeRecommend);
-    if (typeRecommendJson != null) {
-      try {
-        final data = jsonDecode(typeRecommendJson);
-        final cacheTime = DateTime.parse(data['time']);
-        if (DateTime.now().difference(cacheTime) < _cacheValidDuration) {
-          _typeRecommendList = (data['list'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
         }
       } catch (_) {}
     }
@@ -266,34 +251,7 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    if (_typeRecommendList.isNotEmpty) {
-      await prefs.setString(
-        _cacheKeyTypeRecommend,
-        jsonEncode({
-          'time': DateTime.now().toIso8601String(),
-          'list': _typeRecommendList,
-        }),
-      );
-    }
-
     for (final entry in _contentCache.entries) {
-      final tabId = _tabIds[entry.key];
-      await prefs.setString(
-        '$_cacheKeyContentPrefix$tabId',
-        jsonEncode({
-          'time': DateTime.now().toIso8601String(),
-          'list': entry.value,
-          'page': _pageCache[entry.key] ?? 1,
-          'hasMore': _hasMoreCache[entry.key] ?? true,
-        }),
-      );
-    }
-  }
-
-  Future<void> _saveContentCacheOnly() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (final entry in _contentCache.entries) {
-      if (entry.key >= _tabIds.length) continue;
       final tabId = _tabIds[entry.key];
       await prefs.setString(
         '$_cacheKeyContentPrefix$tabId',
@@ -331,22 +289,6 @@ class _HomePageState extends State<HomePage>
       if (list.isNotEmpty) {
         _tabs = ['推荐', ...list.where((e) => e['type_name'].toString() != '全部').map((e) => e['type_name'].toString())];
         _tabIds = [0, ...list.where((e) => e['type_name'].toString() != '全部').map((e) => int.tryParse('${e['type_id']}') ?? 0)];
-
-        final rawTypeRec = initData['type_recommend_list'] as List<dynamic>? ?? [];
-        _typeRecommendList = rawTypeRec.whereType<Map>().map((section) {
-          final sec = Map<String, dynamic>.from(section);
-          final rawList = sec['list'] as List? ?? [];
-          sec['list'] = rawList.whereType<Map>().map((item) {
-            return {
-              'id': '${item['vod_id'] ?? item['id'] ?? ''}',
-              'title': (item['vod_name'] ?? item['title'] ?? '').toString(),
-              'poster': (item['vod_pic'] ?? item['poster'] ?? item['pic'] ?? '').toString(),
-              'year': '${item['vod_year'] ?? item['year'] ?? ''}',
-              'type': (item['type_name'] ?? item['type'] ?? '').toString(),
-            };
-          }).toList();
-          return sec;
-        }).toList();
 
         if (hasExistingTabs) {
           _tabController.removeListener(_onTabChanged);
@@ -459,46 +401,14 @@ class _HomePageState extends State<HomePage>
         return str.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
       }
 
-      Map<String, List<String>>? _extractFromExtend(dynamic extend, Map typeItem) {
-        dynamic ext = extend;
-        if (ext is String && ext.isNotEmpty) {
-          try {
-            ext = jsonDecode(ext);
-          } catch (_) {
-            ext = extend;
-          }
-        }
-        if (ext is Map) {
-          final result = <String, List<String>>{
-            'years': _parseList(ext['year']),
-            'areas': _parseList(ext['area']),
-            'classes': _parseList(ext['class']),
-          };
-          final langs = _parseList(ext['lang']);
-          if (langs.isNotEmpty) result['langs'] = langs;
-          if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
-            return result;
-          }
-        }
-        final flatYears = _parseList(typeItem['type_extend_year'] ?? typeItem['type_extend_years']);
-        final flatAreas = _parseList(typeItem['type_extend_area'] ?? typeItem['type_extend_areas']);
-        final flatClasses = _parseList(typeItem['type_extend_class'] ?? typeItem['type_extend_classes']);
-        final flatLangs = _parseList(typeItem['type_extend_lang'] ?? typeItem['type_extend_langs']);
-        if (flatYears.isNotEmpty || flatAreas.isNotEmpty || flatClasses.isNotEmpty) {
-          final r = <String, List<String>>{'years': flatYears, 'areas': flatAreas, 'classes': flatClasses};
-          if (flatLangs.isNotEmpty) r['langs'] = flatLangs;
-          return r;
-        }
-        return null;
-      }
-
-      Map<String, List<String>>? _extractFromExtendMap(Map extendMap) {
+      Map<String, List<String>>? _extractFromExtend(dynamic extend) {
+        if (extend is! Map) return null;
         final result = <String, List<String>>{
-          'years': _parseList(extendMap['year']),
-          'areas': _parseList(extendMap['area']),
-          'classes': _parseList(extendMap['class']),
+          'years': _parseList(extend['year']),
+          'areas': _parseList(extend['area']),
+          'classes': _parseList(extend['class']),
         };
-        final langs = _parseList(extendMap['lang']);
+        final langs = _parseList(extend['lang']);
         if (langs.isNotEmpty) result['langs'] = langs;
         if (result['years']!.isNotEmpty || result['areas']!.isNotEmpty || result['classes']!.isNotEmpty) {
           return result;
@@ -513,14 +423,12 @@ class _HomePageState extends State<HomePage>
         for (final t in typeList) {
           if (t is! Map) continue;
           if (t['type_id'] == targetTypeId) {
-            final extend = t['type_extend'] ?? t['extend'];
-            final facets = _extractFromExtend(extend, t);
+            final facets = _extractFromExtend(t['type_extend']);
             if (facets != null) { setState(() => _facets = facets); return; }
           }
         }
         // 收不到匹配的分类数据，尝试顶层 type_extend
-        final topExtend = initData['type_extend'] ?? initData['extend'];
-        final topFacets = _extractFromExtendMap(topExtend is Map ? topExtend : {});
+        final topFacets = _extractFromExtend(initData['type_extend']);
         if (topFacets != null) { setState(() => _facets = topFacets); return; }
       } catch (_) {}
 
@@ -603,21 +511,9 @@ class _HomePageState extends State<HomePage>
   void _onTabChanged() {
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
-    setState(() {
-      _currentTabIndex = index;
-      _isLoadingContent = false;
-      _loadingIndex = -1;
-      if (index > 0) {
-        _facets = {'years': [], 'areas': [], 'classes': []};
-        _selectedYear = null;
-        _selectedArea = null;
-        _selectedClass = null;
-        _selectedLang = null;
-        _currentOrderby = 'time';
-      }
-    });
+    setState(() => _currentTabIndex = index);
     _tabDebounce?.cancel();
-    _tabDebounce = Timer(const Duration(milliseconds: 80), () {
+    _tabDebounce = Timer(const Duration(milliseconds: 150), () {
       _loadContent(index, refresh: true);
       if (index > 0 && _tabIds.length > index) {
         _loadFacets(_tabIds[index]);
@@ -627,7 +523,7 @@ class _HomePageState extends State<HomePage>
 
   // ── 加载内容（refresh=刷新页, loadMore=加载下一页） ──
   Future<void> _loadContent(int index, {bool refresh = false, bool loadMore = false}) async {
-    if (_isLoadingContent && _loadingIndex == index) return;
+    if (_isLoadingContent && _loadingIndex == index && !loadMore) return;
     if (index >= _tabIds.length) return;
 
     final hasCache = _contentCache.containsKey(index) && _contentCache[index]!.isNotEmpty;
@@ -677,13 +573,12 @@ class _HomePageState extends State<HomePage>
           _hasMoreCache[index] = list.length >= 9;
           _pageCache[index] = (_pageCache[index] ?? 1) + 1;
         });
-        _saveContentCacheOnly();
+        _saveCache();
       } else {
         setState(() => _hasMoreCache[index] = false);
       }
     } catch (e) {
       debugPrint('加载内容失败: $e');
-      setState(() => _hasMoreCache[index] = false);
     } finally {
       if (_loadingIndex == index) {
         setState(() {
@@ -694,15 +589,15 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 滚动监听（通过 NotificationListener 捕获内层滚动） ──
-  bool _onScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200) {
+  // ── 滚动监听 ──
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       final hasMore = _hasMoreCache[_currentTabIndex] ?? true;
       if (!_isLoadingContent && hasMore) {
         _loadContent(_currentTabIndex, loadMore: true);
       }
     }
-    return false;
   }
 
   // ── 下拉刷新 ──
@@ -735,6 +630,7 @@ class _HomePageState extends State<HomePage>
           child: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
+            final currentIndex = _tabController.index;
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
@@ -746,14 +642,12 @@ class _HomePageState extends State<HomePage>
                     : _buildTabBar(isDark),
               ),
 
-              if (_currentTabIndex > 0)
+              if (currentIndex > 0)
                 SliverToBoxAdapter(child: _buildFilterBar(isDark)),
 
-              if (_bannerList.isNotEmpty)
+              if (currentIndex == 0 && _bannerList.isNotEmpty)
                 SliverToBoxAdapter(
-                  child: _currentTabIndex == 0
-                      ? _buildBanner()
-                      : const SizedBox(height: 0, width: double.infinity),
+                  child: _buildBanner(),
                 ),
 
               if (_announcements.isNotEmpty)
@@ -762,22 +656,20 @@ class _HomePageState extends State<HomePage>
                 ),
             ];
           },
-          body: NotificationListener<ScrollNotification>(
-            onNotification: _onScrollNotification,
-            child: _isLoadingTabs
-                ? _buildContentShimmer()
-                : TabBarView(
-                    controller: _tabController,
-                    children: _tabs.asMap().entries.map((entry) {
-                      return KeepAliveWrapper(
-                        child: _buildContentList(entry.key),
-                      );
-                    }).toList(),
-                  ),
+          body: _isLoadingTabs
+              ? _buildContentShimmer()
+              : TabBarView(
+                  controller: _tabController,
+                  children: _tabs.asMap().entries.map((entry) {
+                    return KeepAliveWrapper(
+                      child: _buildContentList(entry.key),
+                    );
+                  }).toList(),
+                ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   // ── 搜索栏 ──
@@ -1035,57 +927,91 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 轮播图（全宽+渐变遮罩+左下角标题） ──
+  // ── 轮播图（全宽+文字叠加） ──
   Widget _buildBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      height: 220,
+      height: 200,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
             SlideBanner(
               images: _bannerList.map((e) => (e['poster'] ?? e['image'] ?? e['vod_pic'] ?? '').toString()).toList(),
-              fit: BoxFit.cover,
               onTap: (index) {
                 final item = _bannerList[index];
                 final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
                 if (vodId.isEmpty || vodId == '0') return;
                 Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
               },
-              onPageChanged: (idx) {
-                if (mounted) setState(() => _currentBannerIdx = idx);
-              },
             ),
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              height: 70,
+              height: 100,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.65),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
                   ),
                 ),
               ),
             ),
             Positioned(
-              bottom: 12,
-              left: 12,
-              right: 12,
-              child: Text(
-                _bannerList.isNotEmpty && _currentBannerIdx < _bannerList.length
-                    ? (_bannerList[_currentBannerIdx]['title'] ?? _bannerList[_currentBannerIdx]['vod_name'] ?? '')
-                    : '',
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _bannerList.isNotEmpty ? (_bannerList[0]['title'] ?? _bannerList[0]['vod_name'] ?? '') : '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _bannerList.isNotEmpty ? (_bannerList[0]['remarks'] ?? _bannerList[0]['vod_remarks'] ?? '') : '',
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      if (_bannerList.isEmpty) return;
+                      final item = _bannerList[0];
+                      final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
+                      if (vodId.isEmpty || vodId == '0') return;
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1182,8 +1108,6 @@ class _HomePageState extends State<HomePage>
                   imageUrl: item['poster'] ?? '',
                   width: 110,
                   fit: BoxFit.cover,
-                  memCacheWidth: 330,
-                  memCacheHeight: 500,
                   placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                   errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                 ),
@@ -1273,8 +1197,6 @@ class _HomePageState extends State<HomePage>
                     CachedNetworkImage(
                       imageUrl: item['poster'] ?? '',
                       fit: BoxFit.cover,
-                      memCacheWidth: 600,
-                      memCacheHeight: 330,
                       placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                       errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                     ),
@@ -1322,88 +1244,85 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  // ── 分类推荐九宫格（每个分类显示热门推荐的 3x3 网格） ──
-  List<Widget> _buildCategoryRecommendSlivers(bool isDark) {
-    final sections = _typeRecommendList;
-    if (sections.isEmpty) return [];
+  // ── 视频分类快捷入口 ──
+  IconData _iconForCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('电影')) return Icons.movie;
+    if (lower.contains('电视') || lower.contains('剧')) return Icons.tv;
+    if (lower.contains('动漫') || lower.contains('动画')) return Icons.animation;
+    if (lower.contains('综艺')) return Icons.mic;
+    if (lower.contains('纪录')) return Icons.videocam;
+    if (lower.contains('短剧')) return Icons.play_circle;
+    if (lower.contains('体育')) return Icons.sports_soccer;
+    if (lower.contains('少儿')) return Icons.child_care;
+    if (lower.contains('音乐')) return Icons.music_note;
+    return Icons.category;
+  }
 
-    final List<Widget> result = [];
+  Widget _buildCategoryGrid(bool isDark) {
+    final categories = _tabs.length > 1 ? _tabs.sublist(1) : <String>[];
+    if (categories.isEmpty) return const SizedBox.shrink();
 
-    for (final section in sections) {
-      final typeName = section['type_name']?.toString() ?? '';
-      final rawList = section['list'] as List? ?? [];
-      final list = rawList.whereType<Map>().toList();
-      if (list.isEmpty || typeName.isEmpty) continue;
-
-      final displayList = list.take(6).toList();
-
-      result.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              children: [
-                Text(
-                  '$typeName推荐',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Text(
+            '视频分类',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 90,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (ctx, i) {
+              final name = categories[i];
+              final icon = _iconForCategory(name);
+              return GestureDetector(
+                onTap: () => _tabController.animateTo(i + 1),
+                child: Container(
+                  width: 72,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? AppColors.slate700.withOpacity(0.4) : AppColors.slate200.withOpacity(0.6),
+                    ),
                   ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    final tabIndex = _tabs.indexOf(typeName);
-                    if (tabIndex > 0) {
-                      _tabController.animateTo(tabIndex);
-                    }
-                  },
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 6),
                       Text(
-                        '更多',
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? AppColors.slate300 : AppColors.slate600,
                         ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
-      );
-
-      result.add(
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.65,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) => _buildGridItem(displayList[i]),
-              childCount: displayList.length,
-            ),
-          ),
-        ),
-      );
-
-      result.add(const SliverToBoxAdapter(child: SizedBox(height: 8)));
-    }
-
-    return result;
+      ],
+    );
   }
 
   // ── 内容列表 ──
@@ -1423,8 +1342,36 @@ class _HomePageState extends State<HomePage>
               SliverToBoxAdapter(child: _buildHotRecommendSection(isDark)),
             if (_continueWatchingList.isNotEmpty)
               SliverToBoxAdapter(child: _buildContinueWatchingSection(isDark)),
-            ..._buildCategoryRecommendSlivers(isDark),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            if (_tabs.length > 1)
+              SliverToBoxAdapter(child: _buildCategoryGrid(isDark)),
+            if (contentList.isEmpty && isLoadingThisCategory)
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: _buildShimmerGrid(),
+              )
+            else if (contentList.isEmpty)
+              SliverFillRemaining(child: _buildEmptyView())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.65,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      if (i >= contentList.length) {
+                        return _buildLoadMoreIndicator();
+                      }
+                      return _buildGridItem(contentList[i]);
+                    },
+                    childCount: contentList.length + (hasMore ? 1 : 0),
+                  ),
+                ),
+              ),
           ],
         ),
       );
@@ -1478,8 +1425,6 @@ class _HomePageState extends State<HomePage>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    memCacheWidth: 400,
-                    memCacheHeight: 600,
                     placeholder: (ctx, _) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200),
                     errorWidget: (ctx, _, ___) => Container(color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.darkElevated : AppColors.slate200, child: const Icon(Icons.broken_image)),
                   ),
