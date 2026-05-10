@@ -1584,23 +1584,14 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
   }
   
   Widget _buildTextBtn(String text, VoidCallback? onTap) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(6),
-        onTap: () {
-          onTap?.call();
-          cancelAndRestartTimer();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          margin: const EdgeInsets.only(left: 6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
-        ),
+    return GestureDetector(
+      onTap: () {
+        onTap?.call();
+        cancelAndRestartTimer();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
       ),
     );
   }

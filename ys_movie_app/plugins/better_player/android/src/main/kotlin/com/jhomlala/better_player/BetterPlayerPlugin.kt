@@ -19,8 +19,6 @@ import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -109,7 +107,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     }
 
     /// 开发者：杰哥网络科技
-    /// 注册PiP广播接收器，处理播放/暂停/关闭按钮点击
+    /// 注册PiP广播接收器，处理播放/暂停/关闭/快进/快退按钮点击
     private fun registerPipBroadcastReceiver() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || activity == null) return
         val appContext = flutterState?.applicationContext ?: return
@@ -118,6 +116,14 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         pipBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (intent?.action) {
+                    "${packageName}.ACTION_PIP_REWIND" -> {
+                        currentPipPlayer?.let { player ->
+                            // 快退15秒
+                            val newPos = (player.position - 15000).coerceAtLeast(0)
+                            player.seekTo(newPos.toInt())
+                            updatePipActions(player)
+                        }
+                    }
                     "${packageName}.ACTION_PIP_PLAY_PAUSE" -> {
                         currentPipPlayer?.let { player ->
                             if (player.isPlaying()) {
@@ -126,6 +132,14 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                                 player.play()
                             }
                             // 更新PiP按钮状态
+                            updatePipActions(player)
+                        }
+                    }
+                    "${packageName}.ACTION_PIP_FAST_FORWARD" -> {
+                        currentPipPlayer?.let { player ->
+                            // 快进15秒
+                            val newPos = player.position + 15000
+                            player.seekTo(newPos.toInt())
                             updatePipActions(player)
                         }
                     }
@@ -139,7 +153,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         }
 
         val filter = IntentFilter().apply {
+            addAction("${packageName}.ACTION_PIP_REWIND")
             addAction("${packageName}.ACTION_PIP_PLAY_PAUSE")
+            addAction("${packageName}.ACTION_PIP_FAST_FORWARD")
             addAction("${packageName}.ACTION_PIP_CLOSE")
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -161,58 +177,98 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     }
 
     /// 更新PiP窗口中的控制按钮状态（播放/暂停图标切换）
+    /// 开发者：杰哥网络科技 (qq: 2711793818)
+    /// 修复：增加快退/快进按钮，使用唯一的requestCode避免PendingIntent冲突
     private fun updatePipActions(player: BetterPlayer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null) {
-            val appContext = flutterState!!.applicationContext
-            val packageName = appContext.packageName
-            val actions = ArrayList<RemoteAction>()
+            try {
+                val appContext = flutterState!!.applicationContext
+                val packageName = appContext.packageName
+                val actions = ArrayList<RemoteAction>()
 
-            val playPauseIntent = Intent("${packageName}.ACTION_PIP_PLAY_PAUSE")
-            val playPausePendingIntent = PendingIntent.getBroadcast(
-                appContext,
-                1,
-                playPauseIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            val playPauseIconId = if (player.isPlaying()) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
-            val playPauseAction = RemoteAction(
-                Icon.createWithResource(appContext, playPauseIconId),
-                if (player.isPlaying()) "暂停" else "播放",
-                if (player.isPlaying()) "暂停视频" else "播放视频",
-                playPausePendingIntent
-            )
-            actions.add(playPauseAction)
+                // 1. 快退按钮 (requestCode = 100)
+                val rewindIntent = Intent("${packageName}.ACTION_PIP_REWIND")
+                val rewindPendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    100,
+                    rewindIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val rewindAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_media_rew),
+                    "快退",
+                    "快退15秒",
+                    rewindPendingIntent
+                )
+                actions.add(rewindAction)
 
-            val closeIntent = Intent("${packageName}.ACTION_PIP_CLOSE")
-            val closePendingIntent = PendingIntent.getBroadcast(
-                appContext,
-                2,
-                closeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            val closeAction = RemoteAction(
-                Icon.createWithResource(appContext, android.R.drawable.ic_menu_close_clear_cancel),
-                "关闭",
-                "关闭画中画",
-                closePendingIntent
-            )
-            actions.add(closeAction)
+                // 2. 播放/暂停按钮 (requestCode = 101)
+                val playPauseIntent = Intent("${packageName}.ACTION_PIP_PLAY_PAUSE")
+                val playPausePendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    101,
+                    playPauseIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val playPauseIconId = if (player.isPlaying()) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                val playPauseAction = RemoteAction(
+                    Icon.createWithResource(appContext, playPauseIconId),
+                    if (player.isPlaying()) "暂停" else "播放",
+                    if (player.isPlaying()) "暂停视频" else "播放视频",
+                    playPausePendingIntent
+                )
+                actions.add(playPauseAction)
 
-            val builder = PictureInPictureParams.Builder()
-            val aspectRatio = player.getAspectRatio()
-            if (aspectRatio != null) {
-                val ratioValue = aspectRatio.toFloat()
-                val clampedRatio = when {
-                    ratioValue > 16f/9f -> android.util.Rational(16, 9)
-                    ratioValue < 4f/3f -> android.util.Rational(4, 3)
-                    else -> aspectRatio
+                // 3. 快进按钮 (requestCode = 102)
+                val fastForwardIntent = Intent("${packageName}.ACTION_PIP_FAST_FORWARD")
+                val fastForwardPendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    102,
+                    fastForwardIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val fastForwardAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_media_ff),
+                    "快进",
+                    "快进15秒",
+                    fastForwardPendingIntent
+                )
+                actions.add(fastForwardAction)
+
+                // 4. 关闭PiP按钮 (requestCode = 103)
+                val closeIntent = Intent("${packageName}.ACTION_PIP_CLOSE")
+                val closePendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    103,
+                    closeIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val closeAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_menu_close_clear_cancel),
+                    "关闭",
+                    "关闭画中画",
+                    closePendingIntent
+                )
+                actions.add(closeAction)
+
+                val builder = PictureInPictureParams.Builder()
+                val aspectRatio = player.getAspectRatio()
+                if (aspectRatio != null) {
+                    val ratioValue = aspectRatio.toFloat()
+                    val clampedRatio = when {
+                        ratioValue > 16f/9f -> android.util.Rational(16, 9)
+                        ratioValue < 4f/3f -> android.util.Rational(4, 3)
+                        else -> aspectRatio
+                    }
+                    builder.setAspectRatio(clampedRatio)
+                } else {
+                    builder.setAspectRatio(android.util.Rational(16, 9))
                 }
-                builder.setAspectRatio(clampedRatio)
-            } else {
-                builder.setAspectRatio(android.util.Rational(16, 9))
+                builder.setActions(actions)
+                activity!!.setPictureInPictureParams(builder.build())
+            } catch (e: Exception) {
+                Log.e(TAG, "updatePipActions failed", e)
             }
-            builder.setActions(actions)
-            activity!!.setPictureInPictureParams(builder.build())
         }
     }
 
@@ -546,6 +602,10 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         }
     }
 
+    /// 开发者：杰哥网络科技 (qq: 2711793818)
+    /// 修复：PiP控制按钮完整支持（快退/播放/暂停/快进/关闭）
+    /// 修复：使用唯一requestCode避免PendingIntent冲突
+    /// 修复：进入PiP后立即更新按钮状态，确保图标正确
     private fun enablePictureInPicture(player: BetterPlayer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             currentPipPlayer = player
@@ -567,17 +627,33 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             }
 
             // 开发者：杰哥网络科技
-            // 修复：添加PiP控制按钮（播放/暂停/关闭），使用RemoteAction确保可点击
+            // 修复：添加完整的PiP控制按钮（快退/播放/暂停/快进/关闭）
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val actions = ArrayList<RemoteAction>()
                 val appContext = flutterState!!.applicationContext
                 val packageName = appContext.packageName
 
-                // 播放/暂停按钮
+                // 1. 快退按钮 (requestCode = 100)
+                val rewindIntent = Intent("${packageName}.ACTION_PIP_REWIND")
+                val rewindPendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    100,
+                    rewindIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val rewindAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_media_rew),
+                    "快退",
+                    "快退15秒",
+                    rewindPendingIntent
+                )
+                actions.add(rewindAction)
+
+                // 2. 播放/暂停按钮 (requestCode = 101)
                 val playPauseIntent = Intent("${packageName}.ACTION_PIP_PLAY_PAUSE")
                 val playPausePendingIntent = PendingIntent.getBroadcast(
                     appContext,
-                    1,
+                    101,
                     playPauseIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
@@ -591,11 +667,27 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 )
                 actions.add(playPauseAction)
 
-                // 关闭PiP按钮
+                // 3. 快进按钮 (requestCode = 102)
+                val fastForwardIntent = Intent("${packageName}.ACTION_PIP_FAST_FORWARD")
+                val fastForwardPendingIntent = PendingIntent.getBroadcast(
+                    appContext,
+                    102,
+                    fastForwardIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val fastForwardAction = RemoteAction(
+                    Icon.createWithResource(appContext, android.R.drawable.ic_media_ff),
+                    "快进",
+                    "快进15秒",
+                    fastForwardPendingIntent
+                )
+                actions.add(fastForwardAction)
+
+                // 4. 关闭PiP按钮 (requestCode = 103)
                 val closeIntent = Intent("${packageName}.ACTION_PIP_CLOSE")
                 val closePendingIntent = PendingIntent.getBroadcast(
                     appContext,
-                    2,
+                    103,
                     closeIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
@@ -628,7 +720,10 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             pipHandler = Handler(Looper.getMainLooper())
             pipRunnable = Runnable {
                 if (activity!!.isInPictureInPictureMode) {
-                    pipHandler!!.postDelayed(pipRunnable!!, 100)
+                    // 开发者：杰哥网络科技
+                    // 修复：在PiP模式下定期更新按钮状态，确保播放/暂停图标同步
+                    updatePipActions(player)
+                    pipHandler!!.postDelayed(pipRunnable!!, 500)
                 } else {
                     player.onPictureInPictureStatusChanged(false)
                     player.disposeMediaSession()
