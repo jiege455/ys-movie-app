@@ -514,6 +514,7 @@ class _HomePageState extends State<HomePage>
 
   // ── Tab 切换 ──
   void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
     final index = _tabController.index;
     if (index == _currentTabIndex) return;
     setState(() => _currentTabIndex = index);
@@ -640,7 +641,6 @@ class _HomePageState extends State<HomePage>
               NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) {
-            final currentIndex = _tabController.index;
             return [
               SliverToBoxAdapter(
                 child: _buildSearchBar(isDark),
@@ -657,7 +657,7 @@ class _HomePageState extends State<HomePage>
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
-                  child: currentIndex > 0
+                  child: _currentTabIndex > 0
                       ? _buildFilterBar(isDark)
                       : const SizedBox.shrink(),
                 ),
