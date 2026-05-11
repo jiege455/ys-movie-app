@@ -12,12 +12,12 @@ import type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, Category, 
 export type { Movie, BannerMovie, MovieDetail, VodSource, VodEpisode, TypeRecommendSection, CategoryFilter }
 
 const mapVodToMovie = (v: any): Movie => ({
-  id: String(v.vod_id),
-  title: v.vod_name,
-  poster_path: v.vod_pic || '',
-  vote_average: Number(v.vod_score || 0),
-  release_date: String(v.vod_year || ''),
-  overview: v.vod_remarks || ''
+  id: String(v.vod_id || v.id || ''),
+  title: v.vod_name || v.title || '',
+  poster_path: v.vod_pic || v.poster || v.pic || '',
+  vote_average: Number(v.vod_score || v.score || 0),
+  release_date: String(v.vod_year || v.year || ''),
+  overview: v.vod_remarks || v.overview || v.blurb || ''
 })
 
 export interface HomeData {
@@ -31,20 +31,21 @@ export interface HomeData {
 /**
  * 获取首页完整数据（一次请求返回轮播图+推荐+分类+热搜词）
  * 插件接口: api.php/jgappapi.index/init
+ * 修复：Banner字段兼容 slide_id/vod_id/slide_pic/vod_pic 等多重数据格式
  */
 export const getHomeData = async (): Promise<HomeData | null> => {
   try {
     const res: any = await pluginApi.get('init')
 
     const banners: BannerMovie[] = (res.banner_list || []).map((v: any) => ({
-      id: String(v.vod_id),
-      title: v.vod_name,
-      poster_path: v.vod_pic || '',
-      backdrop_path: v.vod_pic_slide || v.vod_pic || '',
+      id: String(v.vod_id || v.slide_id || v.id || ''),
+      title: v.vod_name || v.slide_name || v.title || '',
+      poster_path: v.vod_pic || v.slide_pic || v.poster || v.img || '',
+      backdrop_path: v.vod_pic_slide || v.vod_pic || v.slide_pic || '',
       vote_average: Number(v.vod_score || 0),
       release_date: String(v.vod_year || ''),
-      overview: v.vod_remarks || '',
-      link: v.vod_link || ''
+      overview: v.vod_remarks || v.slide_remarks || '',
+      link: v.vod_link || v.slide_url || v.url || ''
     }))
 
     const hotMovies: Movie[] = (res.recommend_list || []).map(mapVodToMovie)
@@ -53,7 +54,7 @@ export const getHomeData = async (): Promise<HomeData | null> => {
       (section: any) => ({
         type_id: String(section.type_id || ''),
         type_name: section.type_name || '',
-        list: (section.list || []).map(mapVodToMovie)
+        list: (section.list || section.recommend_list || []).map(mapVodToMovie)
       })
     )
 
@@ -88,7 +89,7 @@ export const getHotMovies = async (page: number = 1): Promise<Movie[]> => {
     const res: any = await pluginApi.get('typeFilterVodList', {
       params: { sort: '周榜', page, pagesize: 20 }
     })
-    const list = res.recommend_list || []
+    const list = res.recommend_list || res.vod_list || res.list || []
     return list.map(mapVodToMovie)
   } catch (error) {
     console.error('获取热门视频失败:', error)
@@ -113,6 +114,7 @@ export const getBannerMovies = async (): Promise<BannerMovie[]> => {
 /**
  * 按分类获取视频列表（支持筛选和分页）
  * 插件接口: api.php/jgappapi.index/typeFilterVodList
+ * 修复：响应字段兼容 recommend_list/vod_list/list
  */
 export const getCategoryMovies = async (
   categoryId: string,
@@ -140,7 +142,7 @@ export const getCategoryMovies = async (
     if (filter.lang) params.lang = filter.lang
 
     const res: any = await pluginApi.get('typeFilterVodList', { params })
-    const list = res.recommend_list || []
+    const list = res.recommend_list || res.vod_list || res.list || []
     return list.map(mapVodToMovie)
   } catch (error) {
     console.error('获取分类视频失败:', error)
@@ -171,7 +173,7 @@ export const searchMovies = async (keyword: string): Promise<Movie[]> => {
     const res: any = await pluginApi.get('searchList', {
       params: { keywords: keyword, page: 1 }
     })
-    const list = res.search_list || []
+    const list = res.search_list || res.recommend_list || res.vod_list || res.list || []
     return list.map(mapVodToMovie)
   } catch (error) {
     console.error('搜索视频失败:', error)
@@ -188,7 +190,7 @@ export const searchMoviesAdvanced = async (keyword: string, page: number = 1, _l
     const res: any = await pluginApi.get('searchList', {
       params: { keywords: keyword, page }
     })
-    const list = (res.search_list || []).map(mapVodToMovie)
+    const list = (res.search_list || res.recommend_list || res.vod_list || res.list || []).map(mapVodToMovie)
     return { list, total: list.length }
   } catch (error) {
     console.error('高级搜索失败:', error)
@@ -199,6 +201,7 @@ export const searchMoviesAdvanced = async (keyword: string, page: number = 1, _l
 /**
  * 获取视频详情（含解析后的播放列表）
  * 插件接口: api.php/jgappapi.index/vodDetail
+ * 修复：vod_play_list 在 res 根层级，不是嵌套在 res.vod 内
  */
 export const getMovieDetail = async (id: string): Promise<MovieDetail | null> => {
   try {
@@ -212,9 +215,11 @@ export const getMovieDetail = async (id: string): Promise<MovieDetail | null> =>
       return null
     }
 
+    const vodPlayList = res.vod_play_list || info.vod_play_list || []
+
     let playList: VodSource[] = []
-    if (info.vod_play_list && Array.isArray(info.vod_play_list)) {
-      playList = info.vod_play_list.map((src: any) => ({
+    if (vodPlayList && Array.isArray(vodPlayList)) {
+      playList = vodPlayList.map((src: any) => ({
         name: src.player_info?.show || src.show || src.from || '',
         urls: (src.urls || []).map((ep: any) => ({
           name: ep.name,
