@@ -482,34 +482,44 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  // ── 加载分类推荐（每个分类6条热门数据） ──
+  // ── 加载分类推荐（每个分类6条热门数据，并行加载） ──
   Future<void> _loadCategoryRecommends(List<dynamic> typeList) async {
     _categoryRecommends.clear();
     final api = context.read<MacApi>();
+
+    final validTypes = <Map<String, dynamic>>[];
     for (final t in typeList) {
       if (t is! Map) continue;
       final typeName = t['type_name']?.toString() ?? '';
       final typeId = int.tryParse('${t['type_id']}') ?? 0;
       if (typeName == '全部' || typeName.isEmpty || typeId <= 0) continue;
+      validTypes.add({'name': typeName, 'typeId': typeId});
+    }
+
+    final futures = validTypes.map((t) async {
       try {
         final items = await api.getFiltered(
-          typeId: typeId,
+          typeId: t['typeId'] as int,
           page: 1,
           limit: 6,
           orderby: 'hits',
         );
-        if (items.isNotEmpty) {
-          _categoryRecommends.add({
-            'name': typeName,
-            'typeId': typeId,
-            'items': items,
-          });
-        }
+        return {'name': t['name'], 'typeId': t['typeId'], 'items': items};
       } catch (e) {
-        debugPrint('加载分类 $typeName 推荐失败: $e');
+        debugPrint('加载分类 ${t['name']} 推荐失败: $e');
+        return {'name': t['name'], 'typeId': t['typeId'], 'items': <dynamic>[]};
+      }
+    }).toList();
+
+    final results = await Future.wait(futures);
+    for (final r in results) {
+      final items = r['items'] as List<dynamic>;
+      if (items.isNotEmpty) {
+        _categoryRecommends.add(r);
       }
     }
-    if (_categoryRecommends.isNotEmpty) setState(() {});
+
+    if (_categoryRecommends.isNotEmpty && mounted) setState(() {});
   }
 
   // ── Tab 切换 ──
