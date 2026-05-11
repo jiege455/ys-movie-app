@@ -28,6 +28,7 @@ export const Category: React.FC = () => {
   const { categories, loadCategories } = useCategoryStore()
 
   const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   const categoryName = useMemo(() => {
     if (location.state?.name) return location.state.name as string
@@ -48,7 +49,10 @@ export const Category: React.FC = () => {
   useEffect(() => {
     isMountedRef.current = true
     loadCategories()
-    return () => { isMountedRef.current = false }
+    return () => {
+      isMountedRef.current = false
+      abortRef.current?.abort()
+    }
   }, [])
 
   useEffect(() => {
@@ -66,19 +70,23 @@ export const Category: React.FC = () => {
 
   const loadMovies = useCallback(async () => {
     if (!id) return
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     try {
       setLoading(true)
       setError(null)
       const data = await getCategoryMovies(id, 1, buildFilter())
-      if (!isMountedRef.current) return
+      if (!isMountedRef.current || controller.signal.aborted) return
       setMovies(data)
     } catch (e) {
+      if (controller.signal.aborted) return
       console.error(e)
       if (isMountedRef.current) {
         setError('加载分类数据失败，请稍后重试')
       }
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !controller.signal.aborted) {
         setLoading(false)
       }
     }

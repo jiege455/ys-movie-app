@@ -12,6 +12,7 @@ import type { Movie } from '../../types'
 export const DiscoverPage: React.FC = () => {
   const navigate = useNavigate()
   const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
@@ -23,10 +24,16 @@ export const DiscoverPage: React.FC = () => {
   useEffect(() => {
     isMountedRef.current = true
     loadMovies(1)
-    return () => { isMountedRef.current = false }
+    return () => {
+      isMountedRef.current = false
+      abortRef.current?.abort()
+    }
   }, [])
 
   const loadMovies = useCallback(async (p: number) => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     if (p === 1) {
       setLoading(true)
     } else {
@@ -35,7 +42,7 @@ export const DiscoverPage: React.FC = () => {
     setError(null)
     try {
       const data = await getHotMovies(p)
-      if (!isMountedRef.current) return
+      if (!isMountedRef.current || controller.signal.aborted) return
       if (data.length < 20) {
         setHasMore(false)
       }
@@ -46,11 +53,12 @@ export const DiscoverPage: React.FC = () => {
       }
       setPage(p)
     } catch {
+      if (controller.signal.aborted) return
       if (isMountedRef.current) {
         setError('加载失败，请检查网络连接')
       }
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !controller.signal.aborted) {
         setLoading(false)
         setLoadingMore(false)
       }

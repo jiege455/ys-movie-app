@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { userLogin, userRegister, ApiResult, UserAuth } from '../../api'
 import { useUserStore } from '../../store/userStore'
@@ -11,7 +11,8 @@ import { useUserStore } from '../../store/userStore'
 
 export const Login: React.FC = () => {
   const navigate = useNavigate()
-  const { setIsLoggedIn, setUser } = useUserStore()
+  const isMountedRef = useRef(true)
+  const { login } = useUserStore()
   const [isRegister, setIsRegister] = useState(false)
   const [userName, setUserName] = useState('')
   const [userPwd, setUserPwd] = useState('')
@@ -161,4 +162,4 @@ export const Login: React.FC = () => {
   )
 }
 
-export default Login
+ex

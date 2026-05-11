@@ -663,13 +663,24 @@ class _HomePageState extends State<HomePage>
               ),
 
               SliverToBoxAdapter(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: _currentTabIndex > 0
-                      ? _buildFilterBar(isDark)
-                      : const SizedBox.shrink(),
+                child: AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) {
+                    final double animValue = _tabController.animation!.value;
+                    final bool nearRecommend = animValue < 0.12;
+                    return AnimatedSize(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      alignment: Alignment.topCenter,
+                      clipBehavior: Clip.hardEdge,
+                      child: nearRecommend
+                          ? const SizedBox(width: double.infinity)
+                          : Opacity(
+                              opacity: animValue.clamp(0.0, 1.0),
+                              child: _buildFilterBar(isDark),
+                            ),
+                    );
+                  },
                 ),
               ),
 
