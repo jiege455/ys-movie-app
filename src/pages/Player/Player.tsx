@@ -3,21 +3,29 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getMovieDetail } from '../../api'
 import { VideoPlayer } from '../../components/VideoPlayer/VideoPlayer'
 import { usePlayerStore } from '../../store/playerStore'
-import type { MovieDetail as MovieDetailType, VodEpisode } from '../../api/vod'
+import type { MovieDetail as MovieDetailType, VodEpisode, VodSource } from '../../api/vod'
 
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
  * 视频播放页
- * 提供视频播放、选集切换、播放控制等功能
+ * 修复：
+ * 1. 按播放源分组显示剧集（解决多源扁平化导致剧集错乱）
+ * 2. 新增播放源切换（保持与详情页一致的操作体验）
+ * 3. 动态检测视频宽高比，适配竖屏短剧尺寸
  */
 
 export const Player: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentEpisode, setCurrentEpisode, reset } = usePlayerStore()
+  const {
+    currentEpisode, setCurrentEpisode,
+    activeSourceIndex, setActiveSourceIndex,
+    reset
+  } = usePlayerStore()
   const [movieData, setMovieData] = useState<MovieDetailType | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isVerticalVideo, setIsVerticalVideo] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -40,6 +48,12 @@ export const Player: React.FC = () => {
       const data = await getMovieDetail(movieId)
       if (signal.aborted) return
       setMovieData(data)
+      if (data?.vod_play_list) {
+        const validSources = data.vod_play_list.filter((s: VodSource) => (s.urls?.length || 0) > 0)
+        if (validSources.length > 0 && activeSourceIndex >= validSources.length) {
+          setActiveSourceIndex(0)
+        }
+      }
     } catch {
       if (signal.aborted) return
       setError('加载视频信息失败')
@@ -48,29 +62,30 @@ export const Player: React.FC = () => {
         setLoading(false)
       }
     }
-  }, [])
+  }, [activeSourceIndex, setActiveSourceIndex])
 
   const handleEpisodeChange = (index: number) => {
     setCurrentEpisode(index)
+  }
+
+  const handleSourceChange = (index: number) => {
+    setActiveSourceIndex(index)
+    setCurrentEpisode(0)
   }
 
   const handleBackClick = () => {
     navigate(-1)
   }
 
-  // 获取所有剧集
-  const getAllEpisodes = (): VodEpisode[] => {
-    if (!movieData?.vod_play_list) return []
-    const episodes: VodEpisode[] = []
-    movieData.vod_play_list.forEach((source: { urls?: VodEpisode[] }) => {
-      if (source.urls) {
-        episodes.push(...source.urls)
-      }
-    })
-    return episodes
-  }
+  const handleVideoMetadata = useCallback((info: { duration: number; videoWidth: number; videoHeight: number }) => {
+    if (info.videoWidth > 0 && info.videoHeight > 0) {
+      setIsVerticalVideo(info.videoHeight > info.videoWidth)
+    }
+  }, [])
 
-  const episodes = getAllEpisodes()
+  const validSources: VodSource[] = movieData?.vod_play_list?.filter((s: VodSource) => (s.urls?.length || 0) > 0) || []
+  const currentSource: VodSource | undefined = validSources[activeSourceIndex]
+  const episodes: VodEpisode[] = currentSource?.urls || []
 
   const getCurrentVideoUrl = () => {
     if (episodes.length > 0 && currentEpisode < episodes.length) {
@@ -83,7 +98,7 @@ export const Player: React.FC = () => {
     if (episodes.length > 0 && currentEpisode < episodes.length) {
       return episodes[currentEpisode]?.name || `第${currentEpisode + 1}集`
     }
-    return '正片'
+    return currentSource?.name || '正片'
   }
 
   if (loading) {
@@ -113,6 +128,8 @@ export const Player: React.FC = () => {
     )
   }
 
+  const videoUrl = getCurrentVideoUrl()
+
   return (
     <div className="min-h-screen">
       {/* 顶部导航 */}
@@ -127,18 +144,42 @@ export const Player: React.FC = () => {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-cyan-100 text-lg font-bold truncate">{movieData.title}</h1>
-          <p className="text-cyan-400/60 text-sm">{getCurrentEpisodeName()}</p>
+          <p className="text-cyan-400/60 text-sm">
+            {currentSource?.name ? `${currentSource.name} · ` : ''}{getCurrentEpisodeName()}
+          </p>
         </div>
       </div>
 
-      {/* 视频播放器 */}
-      <div className="aspect-video bg-black">
+      {/* 视频播放器 - 动态宽高比：竖屏短剧用9/16，横屏用16/9 */}
+      <div className={`bg-black ${isVerticalVideo ? 'aspect-[9/16] max-h-[80vh] mx-auto' : 'aspect-video'}`}>
         <VideoPlayer
-          key={getCurrentVideoUrl()}
-          src={getCurrentVideoUrl()}
+          key={videoUrl}
+          src={videoUrl}
           poster={movieData.backdrop_path || movieData.poster_path}
+          onLoadedMetadata={handleVideoMetadata}
         />
       </div>
+
+      {/* 播放源切换标签 */}
+      {validSources.length > 1 && (
+        <div className="px-4 py-3 border-b border-cyan-500/20">
+          <div className="flex flex-wrap gap-2">
+            {validSources.map((source, index) => (
+              <button
+                key={source.name || index}
+                onClick={() => handleSourceChange(index)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  index === activeSourceIndex
+                    ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                    : 'glass-light text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-100 border border-cyan-500/20'
+                }`}
+              >
+                {source.name || `源${index + 1}`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 选集列表 */}
       {episodes.length > 1 && (

@@ -72,7 +72,7 @@ const MovieDetailSkeleton: React.FC = () => (
 export const MovieDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { setCurrentEpisode } = usePlayerStore()
+  const { setCurrentEpisode, setActiveSourceIndex: storeSetSource } = usePlayerStore()
   const [movieData, setMovieData] = useState<MovieDetailType | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -114,6 +114,7 @@ export const MovieDetail: React.FC = () => {
 
   const handlePlayClick = (episodeIndex: number = 0) => {
     setCurrentEpisode(episodeIndex)
+    storeSetSource(activeSourceIndex)
     navigate(`/player/${id}`)
   }
 

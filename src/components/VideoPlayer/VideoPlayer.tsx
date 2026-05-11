@@ -14,7 +14,7 @@ interface VideoPlayerProps {
   onPause?: () => void
   onEnded?: () => void
   onTimeUpdate?: (currentTime: number) => void
-  onLoadedMetadata?: (duration: number) => void
+  onLoadedMetadata?: (info: { duration: number; videoWidth: number; videoHeight: number }) => void
   onQualityChange?: (quality: string) => void
   onError?: (error: any) => void
   className?: string
@@ -376,8 +376,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
       player.on('loadedmetadata', () => {
         if (isMountedRef.current) {
           const dur = player.duration() || 0
+          const videoEl = player.tech({ IWillNotUseThisInPlugins: true })?.el() as HTMLVideoElement | undefined
+          const vw = videoEl?.videoWidth || 0
+          const vh = videoEl?.videoHeight || 0
           setDuration(dur)
-          onLoadedMetadata?.(dur)
+          onLoadedMetadata?.({ duration: dur, videoWidth: vw, videoHeight: vh })
           if (startTimeRef.current > 0 && (player.currentTime() ?? 0) < startTimeRef.current) {
             player.currentTime(startTimeRef.current)
           }
