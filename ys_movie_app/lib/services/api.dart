@@ -230,7 +230,7 @@ class MacApi {
       if (data is Map && code==1) { final prefs=await SharedPreferences.getInstance(); await prefs.setString('user_name',username); return {'success':true,'info':data['msg']??'登录成功'}; }
       else return {'success':false,'msg':data is Map?data['msg']:'登录失败'};
     } catch (e) {
-      try { final resp=await _dio.post('user/login', data:{'user_name':username,'user_pwd':password}); if (int.tryParse('${resp.data['code']??0}')??0==1) return {'success':true,'info':resp.data['info']}; } catch (_) {}
+      try { final resp=await _dio.post('user/login', data:{'user_name':username,'user_pwd':password}); if ((int.tryParse('${resp.data['code']??0}')??0)==1) return {'success':true,'info':resp.data['info']}; } catch (_) {}
       return {'success':false,'msg':'登录请求失败: $e'};
     }
   }
