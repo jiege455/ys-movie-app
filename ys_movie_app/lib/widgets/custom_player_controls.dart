@@ -5,6 +5,7 @@
 /// 解释：仿照截图实现的顶部栏、底部栏、锁定按钮、侧边菜单等功能。
 
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:better_player/better_player.dart';
@@ -919,11 +920,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       },
       child: Container(
         color: Colors.transparent,
-        // 开发者：杰哥网络科技
-        // 修复：PiP模式下使用IgnorePointer，让系统原生控制按钮可以正常点击
-        // 同时保持Flutter控制UI可见（透明），避免视频区域闪烁
+        // 开发者：杰哥网络科技 (qq: 2711793818)
+        // 修复：桌面端(Win/Mac/Linux)无系统原生PiP控件，PiP模式下仍需响应Flutter触摸事件
+        // 移动端(Android/iOS)使用系统原生PiP控件，Flutter层屏蔽触摸避免冲突
         child: IgnorePointer(
-          ignoring: isPipMode,
+          ignoring: isPipMode && !(Platform.isWindows || Platform.isMacOS || Platform.isLinux),
           child: Stack(
             children: [
               // 1. 锁定按钮
@@ -1019,6 +1020,53 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
                           valueColor: const AlwaysStoppedAnimation(Colors.white),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+
+              // 8. 桌面端 PiP 模式简化控制按钮
+              // 开发者：杰哥网络科技 (qq: 2711793818)
+              // 桌面端无系统原生PiP控件，需要Flutter层提供可交互的控制按钮
+              if (isPipMode && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _pipControlBtn(Icons.replay_10, '快退10s', () {
+                            final pos = _controller?.videoPlayerController?.value.position ?? Duration.zero;
+                            _controller?.seekTo(pos - const Duration(seconds: 10));
+                          }),
+                          const SizedBox(width: 16),
+                          _pipControlBtn(
+                            _controller?.isPlaying() == true ? Icons.pause : Icons.play_arrow,
+                            _controller?.isPlaying() == true ? '暂停' : '播放',
+                            () {
+                              if (_controller?.isPlaying() == true) {
+                                _controller?.pause();
+                              } else {
+                                _controller?.play();
+                              }
+                              if (mounted) setState(() {});
+                            },
+                            size: 36,
+                          ),
+                          const SizedBox(width: 16),
+                          _pipControlBtn(Icons.forward_10, '快进10s', () {
+                            final pos = _controller?.videoPlayerController?.value.position ?? Duration.zero;
+                            _controller?.seekTo(pos + const Duration(seconds: 10));
+                          }),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1592,6 +1640,22 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+      ),
+    );
+  }
+
+  // 开发者：杰哥网络科技 (qq: 2711793818)
+  // PiP 模式下的控制按钮（桌面端专用）
+  Widget _pipControlBtn(IconData icon, String label, VoidCallback onTap, {double size = 28}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: size),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        ],
       ),
     );
   }
