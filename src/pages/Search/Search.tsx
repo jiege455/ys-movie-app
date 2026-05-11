@@ -1,18 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { searchMovies } from '../../api'
 import { MovieCard } from '../../components/MovieCard/MovieCard'
 import { debounce } from '../../lib/utils'
 import type { Movie } from '../../types'
 
+const SEARCH_DEBOUNCE_MS = 400
+
 /**
  * 开发者：杰哥网络科技 (qq: 2711793818)
- * 搜索页面
- * 支持关键词搜索视频，实时展示搜索结果
+ * 搜索页
+ * 支持实时搜索建议和关键词搜索，带防抖优化
+ * 修复：debounce 定时器组件卸载时清除，防止内存泄漏
  */
 
 export const Search: React.FC = () => {
   const navigate = useNavigate()
+  const isMountedRef = useRef(true)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initialQuery = searchParams.get('q') || ''
@@ -31,27 +35,37 @@ export const Search: React.FC = () => {
     setSearched(true)
     try {
       const movies = await searchMovies(keyword.trim())
+      if (!isMountedRef.current) return
       setResults(movies)
     } catch (error) {
+      if (!isMountedRef.current) return
       console.error('搜索出错:', error)
       setResults([])
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
   const debouncedSearch = useCallback(
     debounce((keyword: string) => {
-      doSearch(keyword)
-    }, 500),
+      if (isMountedRef.current) {
+        doSearch(keyword)
+      }
+    }, SEARCH_DEBOUNCE_MS),
     [doSearch]
   )
 
   useEffect(() => {
+    isMountedRef.current = true
     const q = searchParams.get('q')
     if (q) {
       setQuery(q)
       doSearch(q)
+    }
+    return () => {
+      isMountedRef.current = false
     }
   }, [searchParams, doSearch])
 

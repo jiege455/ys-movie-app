@@ -15,8 +15,10 @@ export const Profile: React.FC = () => {
   const { isLoggedIn: loggedIn, user, logout, favorites, setFavorites, setFavoritesLoading } = useUserStore()
   const [activeTab, setActiveTab] = useState<'favorites' | 'history'>('favorites')
   const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    isMountedRef.current = true
     if (!checkLoggedIn()) {
       return
     }
@@ -24,18 +26,21 @@ export const Profile: React.FC = () => {
 
     return () => {
       isMountedRef.current = false
+      abortRef.current?.abort()
     }
   }, [loggedIn])
 
   const loadFavorites = async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setFavoritesLoading(true)
     try {
       const data = await getFavorites()
-      if (isMountedRef.current) {
-        setFavorites(data)
-      }
+      if (!isMountedRef.current || controller.signal.aborted) return
+      setFavorites(data)
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !controller.signal.aborted) {
         setFavoritesLoading(false)
       }
     }

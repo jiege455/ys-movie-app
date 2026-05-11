@@ -40,7 +40,7 @@ export const useUserStore = create<UserState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('user_auth')
-    set({ isLoggedIn: false, user: null, favorites: [] })
+    set({ isLoggedIn: false, user: null, favorites: [], favoritesLoading: false })
   },
 
   addFavoriteItem: (item) => set((state) => ({

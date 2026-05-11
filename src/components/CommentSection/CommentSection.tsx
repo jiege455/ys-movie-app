@@ -16,6 +16,7 @@ interface CommentSectionProps {
 // 简单的评论缓存，避免重复请求
 const commentCache = new Map<string, { data: MovieComment[]; time: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
+const CACHE_MAX_SIZE = 50
 
 export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
   const [comments, setComments] = useState<MovieComment[]>([])
@@ -48,6 +49,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ vodId }) => {
       if (isMountedRef.current) {
         setComments(data)
         // 存入缓存
+        if (commentCache.size >= CACHE_MAX_SIZE) {
+          const firstKey = commentCache.keys().next().value
+          if (firstKey !== undefined) {
+            commentCache.delete(firstKey)
+          }
+        }
         commentCache.set(vodId, { data, time: Date.now() })
       }
     } finally {

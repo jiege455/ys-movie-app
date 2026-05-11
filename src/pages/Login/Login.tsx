@@ -12,7 +12,7 @@ import { useUserStore } from '../../store/userStore'
 export const Login: React.FC = () => {
   const navigate = useNavigate()
   const isMountedRef = useRef(true)
-  const { login } = useUserStore()
+  const { setIsLoggedIn, setUser } = useUserStore()
   const [isRegister, setIsRegister] = useState(false)
   const [userName, setUserName] = useState('')
   const [userPwd, setUserPwd] = useState('')
@@ -21,6 +21,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState('')
 
   const handleAuthSuccess = (auth: UserAuth, message: string) => {
+    if (!isMountedRef.current) return
     setIsLoggedIn(true)
     setUser(auth)
     setError('')
@@ -37,6 +38,7 @@ export const Login: React.FC = () => {
     setLoading(true)
     setError('')
     const result: ApiResult<UserAuth> = await userLogin(userName, userPwd)
+    if (!isMountedRef.current) return
     if (result.success && result.data) {
       handleAuthSuccess(result.data, '登录成功')
     } else {
@@ -62,6 +64,7 @@ export const Login: React.FC = () => {
     setLoading(true)
     setError('')
     const result: ApiResult<UserAuth> = await userRegister(userName, userPwd, userPwd2)
+    if (!isMountedRef.current) return
     if (result.success && result.data) {
       handleAuthSuccess(result.data, '注册成功，已自动登录')
     } else {
@@ -162,4 +165,4 @@ export const Login: React.FC = () => {
   )
 }
 
-ex
+export default Login

@@ -17,27 +17,33 @@ export const MessageCenter: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all')
   const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
+    isMountedRef.current = true
     if (isLoggedIn) {
       loadMessages()
     }
     return () => {
       isMountedRef.current = false
+      abortRef.current?.abort()
     }
   }, [isLoggedIn])
 
   const loadMessages = async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setLoading(true)
     try {
       const data = await getMessages()
-      if (isMountedRef.current) {
-        setMessages(data)
-      }
+      if (!isMountedRef.current || controller.signal.aborted) return
+      setMessages(data)
     } catch (error) {
+      if (controller.signal.aborted) return
       console.error('加载消息失败:', error)
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !controller.signal.aborted) {
         setLoading(false)
       }
     }

@@ -17,31 +17,36 @@ export const Topic: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isMountedRef = useRef(true)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     loadTopicData()
     return () => {
       isMountedRef.current = false
+      abortRef.current?.abort()
     }
   }, [])
 
   const loadTopicData = async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     try {
       setLoading(true)
       setError(null)
       const setting = await getAppPageSetting()
-      if (isMountedRef.current) {
-        if (setting?.app_tab_topic_name) {
-          setTopicName(setting.app_tab_topic_name)
-        }
-        setMovies([])
+      if (!isMountedRef.current || controller.signal.aborted) return
+      if (setting?.app_tab_topic_name) {
+        setTopicName(setting.app_tab_topic_name)
       }
+      setMovies([])
     } catch {
+      if (controller.signal.aborted) return
       if (isMountedRef.current) {
         setError('加载专题数据失败')
       }
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !controller.signal.aborted) {
         setLoading(false)
       }
     }

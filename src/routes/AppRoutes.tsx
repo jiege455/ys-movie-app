@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom'
 import { TabBar } from '../components/TabBar/TabBar'
 import { PageLoading } from '../components/PageLoading/PageLoading'
 
@@ -35,9 +35,9 @@ const NotFoundPage: React.FC = () => (
     <div className="text-center">
       <h1 className="text-6xl font-bold text-cyan-400 mb-4">404</h1>
       <p className="text-cyan-300 mb-6">页面未找到</p>
-      <a href="/" className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors inline-block">
+      <Link to="/" className="bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-2 rounded-lg transition-colors inline-block">
         返回首页
-      </a>
+      </Link>
     </div>
   </div>
 )
