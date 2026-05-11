@@ -1041,7 +1041,7 @@ class _HomePageState extends State<HomePage>
                   currentItem != null ? (currentItem['title'] ?? currentItem['vod_name'] ?? '') : '',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
@@ -1053,31 +1053,6 @@ class _HomePageState extends State<HomePage>
                   style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () {
-                    if (_bannerList.isEmpty) return;
-                    final item = _bannerList[safeIndex];
-                    final vodId = '${item['id'] ?? item['vod_id'] ?? ''}';
-                    if (vodId.isEmpty || vodId == '0') return;
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(vodId: vodId)));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.play_arrow, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                        Text('立即播放', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
