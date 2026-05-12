@@ -99,8 +99,7 @@ export const MovieDetail: React.FC = () => {
       if (signal.aborted) return
       setMovieData(data)
       if (data?.vod_play_list) {
-        const firstValidIndex = data.vod_play_list.findIndex((s: VodSource) => (s.urls?.length || 0) > 0)
-        setActiveSourceIndex(firstValidIndex >= 0 ? firstValidIndex : 0)
+        setActiveSourceIndex(0)
       }
     } catch {
       if (signal.aborted) return
@@ -122,12 +121,12 @@ export const MovieDetail: React.FC = () => {
     navigate(-1)
   }
 
-  // 获取当前选中的播放源
-  const currentSource = movieData?.vod_play_list?.[activeSourceIndex]
-  const currentEpisodes = currentSource?.urls || []
-
   // 获取所有有效的播放源（有剧集的）
   const validSources = movieData?.vod_play_list?.filter((s: VodSource) => (s.urls?.length || 0) > 0) || []
+
+  // 获取当前选中的播放源
+  const currentSource = validSources[activeSourceIndex]
+  const currentEpisodes = currentSource?.urls || []
 
   if (loading) {
     return <MovieDetailSkeleton />
@@ -255,15 +254,11 @@ export const MovieDetail: React.FC = () => {
             {validSources.length > 1 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {validSources.map((source, index) => {
-                  // 找到该 source 在原始数组中的索引
-                  const originalIndex = movieData.vod_play_list?.findIndex(
-                    (s: VodSource) => s.name === source.name
-                  ) ?? index
-                  const isActive = originalIndex === activeSourceIndex
+                  const isActive = index === activeSourceIndex
                   return (
                     <button
                       key={source.name || index}
-                      onClick={() => setActiveSourceIndex(originalIndex)}
+                      onClick={() => setActiveSourceIndex(index)}
                       className={`
                         px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
                         ${isActive

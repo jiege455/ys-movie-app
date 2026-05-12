@@ -50,11 +50,11 @@ export const getHomeData = async (): Promise<HomeData | null> => {
 
     const hotMovies: Movie[] = (res.recommend_list || []).map(mapVodToMovie)
 
-    const typeRecommendList: TypeRecommendSection[] = (res.type_recommend_list || []).map(
+    const typeRecommendList: TypeRecommendSection[] = (res.type_list || res.type_recommend_list || []).map(
       (section: any) => ({
         type_id: String(section.type_id || ''),
         type_name: section.type_name || '',
-        list: (section.list || section.recommend_list || []).map(mapVodToMovie)
+        list: (section.recommend_list || section.list || []).map(mapVodToMovie)
       })
     )
 
