@@ -1145,30 +1145,11 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
             
             // 开发者：杰哥网络科技 (qq: 2711793818)
             // 修复：PiP按钮在竖屏和横屏都显示，不再仅限全屏模式
-            _buildIconBtn(Icons.picture_in_picture_alt, () async {
-               // 使用 BetterPlayer 自带 PiP
-               if (_controller != null) {
-                  try {
-                     bool? isPipSupported = await _controller!.isPictureInPictureSupported();
-                     if (isPipSupported == true) {
-                       final pipKey = _controller!.betterPlayerGlobalKey;
-                       if (pipKey != null) {
-                         _controller!.enablePictureInPicture(pipKey);
-                       } else {
-                         if (mounted) {
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
-                         }
-                       }
-                     } else {
-                       if (mounted) {
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
-                       }
-                     }
-                  } catch (e) {
-                     if (mounted) {
-                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
-                     }
-                  }
+            _buildIconBtn(Icons.picture_in_picture_alt, () {
+               if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                 widget.onMiniPlayerToggle?.call();
+               } else {
+                 _enableNativePiP();
                }
             }),
             if (isFullScreen) ...[
@@ -1646,45 +1627,6 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
     );
   }
 
-  Widget _pipControlBtn(IconData icon, String label, VoidCallback onTap, {double size = 28}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: size),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _enableNativePiP() async {
-    if (_controller == null) return;
-    try {
-      final isPipSupported = await _controller!.isPictureInPictureSupported();
-      if (isPipSupported == true) {
-        final pipKey = _controller!.betterPlayerGlobalKey;
-        if (pipKey != null) {
-          _controller!.enablePictureInPicture(pipKey);
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
-          }
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: ')));
-      }
-    }
-  }
-
   // 开发者：杰哥网络科技 (qq: 2711793818)
   // PiP 模式下的控制按钮（桌面端专用）
   Widget _pipControlBtn(IconData icon, String label, VoidCallback onTap, {double size = 28}) {
@@ -1699,6 +1641,32 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         ],
       ),
     );
+  }
+
+  void _enableNativePiP() async {
+    if (_controller != null) {
+      try {
+        bool? isPipSupported = await _controller!.isPictureInPictureSupported();
+        if (isPipSupported == true) {
+          final pipKey = _controller!.betterPlayerGlobalKey;
+          if (pipKey != null) {
+            _controller!.enablePictureInPicture(pipKey);
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: $e')));
+        }
+      }
+    }
   }
 
   // 开发者：杰哥网络科技 (qq: 2711793818)

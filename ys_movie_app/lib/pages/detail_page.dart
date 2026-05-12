@@ -2,13 +2,11 @@
 /// 作用：视频详情页（播放器 + 简介 + 选集 + 猜你喜欢）
 
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:better_player/better_player.dart';
-import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -84,7 +82,7 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   // 迷你播放器（桌面端PiP替代方案）
   bool _miniPlayerActive = false;
-  
+
   // Notifiers
   final ValueNotifier<int> _episodeIndexNotifier = ValueNotifier(0);
   final ValueNotifier<int> _sourceIndexNotifier = ValueNotifier(0);
@@ -182,10 +180,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
 
   void _safeDisposePlayer() {
     try {
-      _betterPlayerController?.videoPlayerController?.pause();
-    } catch (_) {}
-    try {
-      _betterPlayerController?.pause();
+      if (_betterPlayerController != null) {
+        _betterPlayerController!.pause();
+        _betterPlayerController!.videoPlayerController?.pause();
+      }
     } catch (_) {}
     try {
       _betterPlayerController?.dispose(forceDispose: true);
@@ -204,17 +202,11 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
   /// 修复：页面返回时暂停播放，防止后台继续有声音
   @override
   void deactivate() {
-    _stopPlayer();
-    super.deactivate();
-  }
-
-  void _stopPlayer() {
     try {
       _betterPlayerController?.pause();
-    } catch (_) {}
-    try {
       _betterPlayerController?.videoPlayerController?.pause();
     } catch (_) {}
+    super.deactivate();
   }
 
   Future<void> _loadData() async {
@@ -624,9 +616,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             onEpisodeSelected: (index) {
               _changeEpisode(index);
             },
-            onMiniPlayerToggle: () {
-              if (mounted) setState(() => _miniPlayerActive = !_miniPlayerActive);
-            },
             onSourceSelected: (index) {
               _changeSource(index);
             },
@@ -635,6 +624,11 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
               _checkLoginAndRun(() {
                 _showDanmakuInputDialog();
               });
+            },
+            onMiniPlayerToggle: () {
+              if (mounted) {
+                setState(() => _miniPlayerActive = !_miniPlayerActive);
+              }
             },
             onShowSources: () {
               showModalBottomSheet(
@@ -1141,17 +1135,9 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
     final iconColor = scheme.onSurface.withOpacity(0.5);
     final dividerColor = Theme.of(context).dividerColor;
 
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        _stopPlayer();
-      },
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: bgColor,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          TexturedBackground(
+      body: TexturedBackground(
         child: Stack(
         fit: StackFit.expand, // 确保 Stack 填满屏幕，使 Column 内的 Expanded 生效
         children: [
@@ -1160,10 +1146,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
             bottom: false,
             child: Column(
               children: [
-                // 1. 播放器区域（迷你播放器模式下隐藏主播放器）
-                Offstage(
-                  offstage: _miniPlayerActive,
-                  child: Container(
+                // 1. 播放器区域
+                Container(
                   color: Colors.black,
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
@@ -1179,7 +1163,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                             ),
                           ),
                   ),
-                ),
                 ),
                 
                 // 2. 内容区域
@@ -1616,7 +1599,84 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
                   ),
                 ),
           ),
+          if (_miniPlayerActive) _buildMiniPlayer(bgColor, primaryColor),
         ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniPlayer(Color bgColor, Color primaryColor) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          height: 64,
+          margin: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, -2)),
+            ],
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.replay_10, color: Colors.white, size: 28),
+                onPressed: () {
+                  final pos = _betterPlayerController?.videoPlayerController?.value.position ?? Duration.zero;
+                  _betterPlayerController?.seekTo(pos - const Duration(seconds: 10));
+                },
+                tooltip: '快退10秒',
+              ),
+              IconButton(
+                icon: Icon(
+                  _betterPlayerController?.isPlaying() == true ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                onPressed: () {
+                  if (_betterPlayerController?.isPlaying() == true) {
+                    _betterPlayerController?.pause();
+                  } else {
+                    _betterPlayerController?.play();
+                  }
+                  if (mounted) setState(() {});
+                },
+                tooltip: _betterPlayerController?.isPlaying() == true ? '暂停' : '播放',
+              ),
+              IconButton(
+                icon: const Icon(Icons.forward_10, color: Colors.white, size: 28),
+                onPressed: () {
+                  final pos = _betterPlayerController?.videoPlayerController?.value.position ?? Duration.zero;
+                  _betterPlayerController?.seekTo(pos + const Duration(seconds: 10));
+                },
+                tooltip: '快进10秒',
+              ),
+              const Spacer(),
+              Container(
+                constraints: const BoxConstraints(maxWidth: 160),
+                child: Text(
+                  "${detail['vod_name'] ?? ''} ${_episodes.isNotEmpty ? _episodes[_currentEpisodeIndex]['name'] : ''}",
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7), size: 24),
+                onPressed: () {
+                  if (mounted) setState(() => _miniPlayerActive = false);
+                },
+                tooltip: '关闭迷你播放器',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1851,108 +1911,6 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin, 
           );
         },
       ),
-      // 4. 迷你播放器（桌面端PiP替代方案）
-            if ((Platform.isWindows || Platform.isMacOS || Platform.isLinux) && _miniPlayerActive && _betterPlayerController?.videoPlayerController != null)
-              _buildMiniPlayer(),
-        ],
-      ),
-      ),
-    );
-  }
-
-  // 开发者：杰哥网络科技 (qq: 2711793818)
-  // 桌面端迷你播放器（替代原生PiP）
-  Widget _buildMiniPlayer() {
-    final vpController = _betterPlayerController?.videoPlayerController;
-    if (vpController == null) return const SizedBox.shrink();
-    return Positioned(
-      right: 8,
-      bottom: 80,
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            // Simple draggable - not perfect but functional
-          });
-        },
-        child: Container(
-          width: 220,
-          height: 140,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white24, width: 1),
-            boxShadow: [
-              BoxShadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                VideoPlayer(vpController),
-                // Close button
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _miniPlayerActive = false),
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.close, color: Colors.white, size: 16),
-                    ),
-                  ),
-                ),
-                // Control buttons
-                Positioned(
-                  bottom: 0, left: 0, right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter,
-                        colors: [Colors.black87, Colors.transparent]),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _pipBtn(Icons.replay_10, () {
-                          final pos = vpController.value.position;
-                          _betterPlayerController?.seekTo(pos - const Duration(seconds: 10));
-                        }),
-                        const SizedBox(width: 12),
-                        _pipBtn(
-                          _betterPlayerController?.isPlaying() == true ? Icons.pause : Icons.play_arrow,
-                          () {
-                            if (_betterPlayerController?.isPlaying() == true) {
-                              _betterPlayerController?.pause();
-                            } else {
-                              _betterPlayerController?.play();
-                            }
-                            if (mounted) setState(() {});
-                          },
-                        ),
-                        const SizedBox(width: 12),
-                        _pipBtn(Icons.forward_10, () {
-                          final pos = vpController.value.position;
-                          _betterPlayerController?.seekTo(pos + const Duration(seconds: 10));
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _pipBtn(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Icon(icon, color: Colors.white, size: 22),
     );
   }
 
