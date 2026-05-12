@@ -34,6 +34,7 @@ class CustomPlayerControls extends StatefulWidget {
   final int? currentSourceIndex;
   final Function(int index)? onSourceSelected;
   final Function(int index)? onEpisodeSelected;
+  final VoidCallback? onMiniPlayerToggle;
 
   const CustomPlayerControls({
     Key? key,
@@ -52,6 +53,7 @@ class CustomPlayerControls extends StatefulWidget {
     this.currentSourceIndex,
     this.onSourceSelected,
     this.onEpisodeSelected,
+    this.onMiniPlayerToggle,
   }) : super(key: key);
 
   @override
@@ -1642,6 +1644,45 @@ class _CustomPlayerControlsState extends BetterPlayerControlsState<CustomPlayerC
         child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
       ),
     );
+  }
+
+  Widget _pipControlBtn(IconData icon, String label, VoidCallback onTap, {double size = 28}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: size),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _enableNativePiP() async {
+    if (_controller == null) return;
+    try {
+      final isPipSupported = await _controller!.isPictureInPictureSupported();
+      if (isPipSupported == true) {
+        final pipKey = _controller!.betterPlayerGlobalKey;
+        if (pipKey != null) {
+          _controller!.enablePictureInPicture(pipKey);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画中画初始化未完成，请稍后重试')));
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('当前设备不支持画中画')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('画中画启动失败: ')));
+      }
+    }
   }
 
   // 开发者：杰哥网络科技 (qq: 2711793818)
