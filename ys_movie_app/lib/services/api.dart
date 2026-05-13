@@ -523,16 +523,55 @@ class MacApi {
     try {
       final resp=await _dio.get('jgappapi.index/searchList', queryParameters:{'keywords':keyword,'page':1});
       if (resp.statusCode==200&&resp.data is Map&&resp.data['code']==1) {
-        final list=(resp.data['data']['search_list'] as List?)??[];
-        final results=list.map((v){ return {'id':'${v['vod_id']??v['id']??0}','title':v['vod_name']??v['title']??'','poster':_fixUrl(v['vod_pic']??v['poster']??v['pic']),'score':double.tryParse('${v['vod_score']??v['score']??0}')??0.0,'year':'${v['vod_year']??v['year']??''}','overview':v['vod_remarks']??v['overview']??v['blurb']??'','area':v['vod_area']??v['area']??'','lang':v['vod_lang']??v['lang']??'','class':v['type_name']??v['vod_class']??v['class']??'','actor':v['vod_actor']??v['actor']??''}; }).toList();
-        if (results.isNotEmpty) { _searchCache[keyword]=results; return results; }
+        dynamic data=resp.data['data'];
+        if (data is String) { try { final decodedStr=utf8.decode(base64Decode(data)); data=jsonDecode(decodedStr); } catch (_) { try { data=jsonDecode(data); } catch (_) { data={}; } } }
+        if (data is Map) {
+          final rawList=(data['search_list'] as List?)??(data['list'] as List?)??[];
+          final results=rawList.map((v){ return {'id':'${v['vod_id']??v['id']??0}','title':v['vod_name']??v['title']??'','poster':_fixUrl(v['vod_pic']??v['poster']??v['pic']),'score':double.tryParse('${v['vod_score']??v['score']??0}')??0.0,'year':'${v['vod_year']??v['year']??''}','overview':v['vod_remarks']??v['overview']??v['blurb']??'','area':v['vod_area']??v['area']??'','lang':v['vod_lang']??v['lang']??'','class':v['type_name']??v['vod_class']??v['class']??'','actor':v['vod_actor']??v['actor']??''}; }).toList();
+          if (results.isNotEmpty) { _searchCache[keyword]=results; return results; }
+        }
       }
-    } catch (_) {}
+    } catch (e) { debugPrint('Search JgApp err: $e'); }
+    try {
+      final results=await _searchViaTypeFilter(keyword);
+      if (results.isNotEmpty) { _searchCache[keyword]=results; return results; }
+    } catch (e) { debugPrint('Search filter fallback err: $e'); }
     try {
       final resp=await _dio.get('provide/vod/', queryParameters:{'ac':'videolist','wd':keyword,'pagesize':20,'at':'json'});
-      if (resp.statusCode==200&&resp.data is Map) { final rows=(resp.data['list'] as List?)??[]; if (rows.isNotEmpty) { final results=rows.map((v)=>{'id':'${v['vod_id']??v['id']??0}','title':v['vod_name']??v['title']??'','poster':_fixUrl(v['vod_pic']??v['poster']??v['pic']),'score':double.tryParse('${v['vod_score']??v['score']??0}')??0.0,'year':'${v['vod_year']??v['year']??''}','overview':v['vod_content']??v['vod_blurb']??v['vod_remarks']??v['overview']??v['blurb']??'','area':v['vod_area']??v['area']??'','lang':v['vod_lang']??v['lang']??'','class':v['type_name']??v['vod_class']??v['class']??'','actor':v['vod_actor']??v['actor']??''}).toList(); _searchCache[keyword]=results; return results; } }
-    } catch (_) {}
+      if (resp.statusCode==200&&resp.data is Map) {
+        final respData=resp.data as Map;
+        final rows=(respData['list'] as List?)??(respData['data'] is Map?(respData['data']['list'] as List?):null)??[];
+        if (rows.isNotEmpty) { final results=rows.map((v){ return {'id':'${v['vod_id']??v['id']??0}','title':v['vod_name']??v['title']??'','poster':_fixUrl(v['vod_pic']??v['poster']??v['pic']),'score':double.tryParse('${v['vod_score']??v['score']??0}')??0.0,'year':'${v['vod_year']??v['year']??''}','overview':v['vod_content']??v['vod_blurb']??v['vod_remarks']??v['overview']??v['blurb']??'','area':v['vod_area']??v['area']??'','lang':v['vod_lang']??v['lang']??'','class':v['type_name']??v['vod_class']??v['class']??'','actor':v['vod_actor']??v['actor']??''}).toList(); _searchCache[keyword]=results; return results; }
+      }
+    } catch (e) { debugPrint('Search standard err: $e'); }
     return [];
+  }
+
+  Future<List<Map<String, dynamic>>> _searchViaTypeFilter(String keyword) async {
+    final keywordLower=keyword.toLowerCase().trim();
+    if (keywordLower.isEmpty) return [];
+    final allResults=<Map<String, dynamic>>[];
+    for (int page=1;page<=5;page++) {
+      try {
+        final resp=await _dio.get('jgappapi.index/typeFilterVodList', queryParameters:{'page':page,'limit':20,'sort':'最新'});
+        if (resp.statusCode==200&&resp.data is Map&&resp.data['code']==1) {
+          dynamic data=resp.data['data'];
+          if (data is String) { try { final decodedStr=utf8.decode(base64Decode(data)); data=jsonDecode(decodedStr); } catch (_) { try { data=jsonDecode(data); } catch (_) { data={}; } } }
+          if (data is Map) {
+            final rawList=(data['recommend_list'] as List?)??(data['list'] as List?)??(data['vod_list'] as List?)??[];
+            if (rawList.isEmpty) break;
+            final results=rawList.map((v){ return {'id':'${v['vod_id']??v['id']??0}','title':v['vod_name']??v['title']??'','poster':_fixUrl(v['vod_pic']??v['poster']??v['pic']),'score':double.tryParse('${v['vod_score']??v['score']??0}')??0.0,'year':'${v['vod_year']??v['year']??''}','overview':v['vod_remarks']??v['overview']??v['blurb']??'','area':v['vod_area']??v['area']??'','lang':v['vod_lang']??v['lang']??'','class':v['type_name']??v['vod_class']??v['class']??'','actor':v['vod_actor']??v['actor']??''}; }).toList();
+            final matched=results.where((r){
+              final title=(r['title']??'').toString().toLowerCase();
+              final actor=(r['actor']??'').toString().toLowerCase();
+              return title.contains(keywordLower)||actor.contains(keywordLower);
+            }).toList();
+            allResults.addAll(matched);
+          }
+        } else { break; }
+      } catch (_) { break; }
+    }
+    return allResults;
   }
 
   Future<Map<String, dynamic>?> getDetail(String id) async {
