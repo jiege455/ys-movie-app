@@ -35,8 +35,6 @@ def main():
     
     total = 0
     for fp in sorted(dart_files):
-        if 'api_backup' in fp:
-            continue
         broken = scan_broken_strings(fp)
         if broken:
             print(f'\n=== {fp} ===')

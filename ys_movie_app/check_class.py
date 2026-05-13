@@ -19,7 +19,7 @@ def count_brackets(filepath):
     
     return {'{': content.count('{'), '}': content.count('}'), '(': content.count('('), ')': content.count(')')}
 
-for fn in ['lib/services/api.dart', 'lib/services/api_backup.dart']:
+for fn in ['lib/services/api.dart']:
     r = count_brackets(fn)
     print(f'{fn}:')
     print(f'  {{ = {r["{"]}, }} = {r["}"]}, diff = {r["{"] - r["}"]}')
