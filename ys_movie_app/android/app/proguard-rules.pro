@@ -1,0 +1,12 @@
+-keep class com.google.android.exoplayer2.** { *; }
+-keep class com.google.android.cameraview.** { *; }
+-keep class com.jhomlala.better_player.** { *; }
+-keep class com.example.ys_movie_app.** { *; }
+-dontwarn com.google.android.exoplayer2.**
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keep class com.aliyun.player.** { *; }
+-dontwarn com.aliyun.player.**
+-keep class com.cicada.** { *; }
+-dontwarn com.cicada.**

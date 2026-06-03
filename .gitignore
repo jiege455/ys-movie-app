@@ -1,0 +1,30 @@
+# 大文件和依赖
+jdk17/
+jdk17.zip
+flutter/
+flutter_windows_*.zip
+maccms10-master/
+
+# Node.js
+node_modules/
+dist/
+
+# Flutter
+ys_movie_app/build/
+ys_movie_app/.dart_tool/
+ys_movie_app/.flutter-plugins
+ys_movie_app/.flutter-plugins-dependencies
+ys_movie_app/.packages
+ys_movie_app/pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

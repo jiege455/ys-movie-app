@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端打包 - 杰哥网络科技</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .dev-info {
+            background: #f0f8ff;
+            border-left: 4px solid #1890ff;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1890ff;
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        .btn-default {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+        }
+        .btn-default:hover {
+            background: #e8e8e8;
+        }
+        .result-box {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result-box.success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .result-box.error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .result-box.loading {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 13px;
+        }
+        .history-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-building {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        .status-success {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        .status-failed {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+        .download-link {
+            color: #1890ff;
+            text-decoration: none;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 30px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☁️ 云端打包系统</h1>
+            <p>基于 GitHub Actions 的免费云端APK构建</p>
+        </div>
+        
+        <div class="dev-info">
+            <strong>开发者：杰哥网络科技</strong> | QQ: 2711793818<br>
+            此系统使用 GitHub Actions 免费额度进行云端构建，源码不会暴露在公开仓库中。
+        </div>
+        
+        <div class="section-title">📱 APP配置</div>
+        
+        <div class="dev-info" style="background:#f6ffed;border-left-color:#52c41a;">
+            <strong>简化操作：</strong>APP名称、包名、版本号等信息会自动从CMS配置获取。<br>
+            您只需要上传应用图标即可开始打包！
+        </div>
+        
+        <form id="buildForm">
+            <div class="form-group">
+                <label>应用图标 *</label>
+                <input type="file" id="iconFile" accept="image/png,image/jpg,image/jpeg" required>
+                <div class="hint">上传应用图标，建议尺寸 512x512，PNG格式。系统会自动上传到服务器并使用。</div>
+            </div>
+            
+            <div class="form-group">
+                <label>启动图（可选）</label>
+                <input type="file" id="splashFile" accept="image/png,image/jpg,image/jpeg">
+                <div class="hint">上传启动图，建议尺寸 1080x1920，PNG格式（留空使用默认启动图）</div>
+            </div>
+            
+            <div class="form-group">
+                <label>包名（自动生成，固定不变）</label>
+                <input type="text" id="packageNameDisplay" value="加载中..." disabled style="background:#f5f5f5;color:#333;">
+                <div class="hint" style="color:#52c41a;">✅ 同一网站包名永远不变，确保每次打包都能覆盖安装</div>
+            </div>
+            
+            <div class="form-group">
+                <label>版本号 *</label>
+                <input type="text" id="appVersion" placeholder="1.0.0" value="1.0.0" required>
+                <div class="hint">手动输入版本号，建议新包版本号大于旧包（如 1.0.0 → 1.0.1），确保覆盖安装</div>
+            </div>
+            
+            <div class="form-group">
+                <label>API接口地址</label>
+                <input type="text" id="apiBaseUrl" value="自动获取当前网站域名" disabled style="background:#f5f5f5;">
+                <div class="hint">系统会自动使用当前网站域名作为API地址</div>
+            </div>
+            
+            <div class="form-group">
+                <label>构建平台 *</label>
+                <select id="buildPlatform" required>
+                    <option value="android">📱 仅 Android（完全免费，推荐）</option>
+                    <option value="ios">🍎 仅 iOS（消耗macOS额度）</option>
+                    <option value="all">📱🍎 Android + iOS（同时构建）</option>
+                </select>
+                <div class="hint">
+                    <span style="color:#52c41a;">Android：完全免费，无限额度</span> | 
+                    <span style="color:#faad14;">iOS：每月2000分钟免费额度</span>
+                </div>
+            </div>
+            
+            <div class="section-title">🔧 GitHub配置</div>
+            
+            <div class="form-group">
+                <label>GitHub用户名</label>
+                <input type="text" id="githubUsername" placeholder="你的GitHub用户名">
+                <div class="hint">留空则使用系统默认账号</div>
+            </div>
+            
+            <div class="form-group">
+                <label>GitHub Token</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                <div class="hint">留空则使用系统默认Token。如需使用自己的账号，请提供Personal Access Token</div>
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">🚀 开始打包</button>
+                <button type="button" class="btn btn-default" onclick="loadHistory()">📋 构建历史</button>
+            </div>
+        </form>
+        
+        <div id="resultBox" class="result-box"></div>
+        
+        <div id="historySection" style="display:none;">
+            <div class="section-title">📋 构建历史</div>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>构建ID</th>
+                        <th>APP名称</th>
+                        <th>版本</th>
+                        <th>状态</th>
+                        <th>平台</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="historyList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'cloud_build.php';
+        
+        // 页面加载时自动获取包名
+        (async function init() {
+            try {
+                const response = await fetch(`${API_BASE}?ac=getPackageInfo`);
+                const data = await response.json();
+                if (data.code === 1) {
+                    document.getElementById('packageNameDisplay').value = data.data.package_name;
+                }
+            } catch (e) {
+                document.getElementById('packageNameDisplay').value = '加载失败，请刷新';
+            }
+        })();
+        
+        // 上传文件到服务器
+        async function uploadFile(file, type) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', type);
+            
+            const response = await fetch('upload_icon.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.code === 1) {
+                return data.data.url;
+            } else {
+                throw new Error(data.msg || '上传失败');
+            }
+        }
+        
+        // 表单提交
+        document.getElementById('buildForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultBox = document.getElementById('resultBox');
+            resultBox.className = 'result-box loading';
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '⏳ 正在上传图标并创建构建任务，请稍候...';
+            
+            try {
+                // 上传图标（必填）
+                const iconFile = document.getElementById('iconFile').files[0];
+                if (!iconFile) {
+                    throw new Error('请选择应用图标');
+                }
+                
+                resultBox.innerHTML = '⏳ 正在上传图标...';
+                const iconUrl = await uploadFile(iconFile, 'icon');
+                
+                // 上传启动图（可选）
+                let splashUrl = '';
+                const splashFile = document.getElementById('splashFile').files[0];
+                if (splashFile) {
+                    resultBox.innerHTML = '⏳ 正在上传启动图...';
+                    splashUrl = await uploadFile(splashFile, 'splash');
+                }
+                
+                resultBox.innerHTML = '⏳ 正在创建构建任务...';
+                
+                const buildPlatform = document.getElementById('buildPlatform').value;
+                
+                const params = new URLSearchParams({
+                ac: 'createBuild',
+                app_version: document.getElementById('appVersion').value,
+                icon_url: iconUrl,
+                splash_url: splashUrl,
+                build_platform: buildPlatform,
+                github_username: document.getElementById('githubUsername').value,
+                github_token: document.getElementById('githubToken').value,
+            });
+                
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 1) {
+                    resultBox.className = 'result-box success';
+                    resultBox.innerHTML = `
+                        <strong>✅ 构建任务已创建！</strong><br>
+                        构建ID：${data.data.build_id}<br>
+                        仓库地址：<a href="${data.data.repo_url}" target="_blank">${data.data.repo_url}</a><br>
+                        <br>
+                        <button class="btn btn-primary" onclick="checkBuild('${data.data.build_id}')">🔍 查询构建状态</button>
+                    `;
+                } else {
+                    resultBox.className = 'result-box error';
+                    resultBox.innerHTML = `<strong>❌ 创建失败：</strong>${data.msg}`;
+                }
+            } catch (error) {
+                resultBox.className = 'result-box error';
+                resultBox.innerHTML = `<strong>❌ 请求失败：</strong>${error.message}`;
+            }
+        });
+        
+        // 查询构建状态
+        async function checkBuild(buildId) {
+            const resultBox = document.getElementById('resultBox');
+            resultBox.className = 'result-box loading';
+            resultBox.innerHTML = '⏳ 正在查询构建状态...';
+            
+            try {
+                const response = await fetch(`${API_BASE}?ac=checkBuild&build_id=${buildId}`);
+                const data = await response.json();
+                
+                if (data.code === 1) {
+                    const status = data.data.status;
+                    const buildPlatform = data.data.build_platform || 'android';
+                    let statusHtml = '';
+                    
+                    if (status === 'building') {
+                        statusHtml = `
+                            <strong>⏳ 正在构建中...</strong><br>
+                            构建ID：${data.data.build_id}<br>
+                            APP名称：${data.data.app_name}<br>
+                            版本：${data.data.app_version}<br>
+                            构建平台：${buildPlatform === 'all' ? 'Android + iOS' : buildPlatform === 'ios' ? 'iOS' : 'Android'}<br>
+                            创建时间：${data.data.create_time}<br>
+                            <br>
+                            <button class="btn btn-primary" onclick="checkBuild('${data.data.build_id}')">🔄 刷新状态</button>
+                        `;
+                        resultBox.className = 'result-box loading';
+                    } else if (status === 'success') {
+                        let downloadButtons = '';
+                        if (buildPlatform === 'android' || buildPlatform === 'all') {
+                            downloadButtons += `<a href="${data.data.download_url}" class="btn btn-primary" target="_blank" style="margin-right:10px;">⬇️ 下载 Android APK</a>`;
+                        }
+                        if (buildPlatform === 'ios' || buildPlatform === 'all') {
+                            downloadButtons += `<a href="${data.data.ios_download_url || data.data.download_url}" class="btn btn-primary" target="_blank">⬇️ 下载 iOS IPA</a>`;
+                        }
+                        
+                        statusHtml = `
+                            <strong>✅ 构建成功！</strong><br>
+                            构建ID：${data.data.build_id}<br>
+                            APP名称：${data.data.app_name}<br>
+                            版本：${data.data.app_version}<br>
+                            构建平台：${buildPlatform === 'all' ? 'Android + iOS' : buildPlatform === 'ios' ? 'iOS' : 'Android'}<br>
+                            完成时间：${data.data.finish_time}<br>
+                            <br>
+                            ${downloadButtons}
+                        `;
+                        resultBox.className = 'result-box success';
+                    } else {
+                        statusHtml = `
+                            <strong>❌ 构建失败</strong><br>
+                            构建ID：${data.data.build_id}<br>
+                            请检查GitHub Actions日志获取详细错误信息。
+                        `;
+                        resultBox.className = 'result-box error';
+                    }
+                    
+                    resultBox.innerHTML = statusHtml;
+                } else {
+                    resultBox.className = 'result-box error';
+                    resultBox.innerHTML = `<strong>❌ 查询失败：</strong>${data.msg}`;
+                }
+            } catch (error) {
+                resultBox.className = 'result-box error';
+                resultBox.innerHTML = `<strong>❌ 请求失败：</strong>${error.message}`;
+            }
+        }
+        
+        // 加载构建历史
+        async function loadHistory() {
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+            
+            historySection.style.display = 'block';
+            historyList.innerHTML = '<tr><td colspan="7" style="text-align:center;">加载中...</td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE}?ac=buildHistory&page=1&limit=20`);
+                const data = await response.json();
+                
+                if (data.code === 1 && data.data.list.length > 0) {
+                    historyList.innerHTML = data.data.list.map(item => {
+                        const statusClass = item.status === 'success' ? 'status-success' : 
+                                          item.status === 'building' ? 'status-building' : 'status-failed';
+                        const statusText = item.status === 'success' ? '成功' : 
+                                         item.status === 'building' ? '构建中' : '失败';
+                        const platformText = item.build_platform === 'all' ? 'Android+iOS' : 
+                                           item.build_platform === 'ios' ? 'iOS' : 'Android';
+                        
+                        return `
+                            <tr>
+                                <td>${item.build_id}</td>
+                                <td>${item.app_name}</td>
+                                <td>${item.app_version}</td>
+                                <td><span class="status-tag ${statusClass}">${statusText}</span></td>
+                                <td>${platformText}</td>
+                                <td>${item.create_time}</td>
+                                <td>
+                                    ${item.status === 'success' && item.download_url ? 
+                                        `<a href="${item.download_url}" class="download-link" target="_blank">下载</a>` : 
+                                        `<a href="javascript:checkBuild('${item.build_id}')">查询</a>`}
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    historyList.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无构建记录</td></tr>';
+                }
+            } catch (error) {
+                historyList.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ff4d4f;">加载失败：${error.message}</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>

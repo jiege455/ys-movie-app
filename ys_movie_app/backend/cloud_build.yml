@@ -1,0 +1,328 @@
+# 开发者：杰哥网络科技 (qq: 2711793818)
+# 功能：GitHub Actions云端打包工作流（Android + iOS）
+# 说明：此工作流运行在公开仓库，但源码从外部服务器下载，不暴露源码
+# iOS构建为未签名产物，用户需自行用Xcode签名导出IPA
+
+name: Cloud Build Android & iOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # ============================================================
+  # Job 0: 读取配置（决定构建哪些平台）
+  # ============================================================
+  read-config:
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.config.outputs.app_name }}
+      package_name: ${{ steps.config.outputs.package_name }}
+      app_version: ${{ steps.config.outputs.app_version }}
+      api_base_url: ${{ steps.config.outputs.api_base_url }}
+      icon_url: ${{ steps.config.outputs.icon_url }}
+      splash_url: ${{ steps.config.outputs.splash_url }}
+      source_url: ${{ steps.config.outputs.source_url }}
+      source_token: ${{ steps.config.outputs.source_token }}
+      build_platform: ${{ steps.config.outputs.build_platform }}
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Read Build Config
+      id: config
+      run: |
+        echo "Reading build_config.json..."
+        APP_NAME=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['app_name'])" 2>/dev/null || echo "MyApp")
+        PACKAGE_NAME=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['package_name'])" 2>/dev/null || echo "com.example.app")
+        APP_VERSION=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['app_version'])" 2>/dev/null || echo "1.0.0")
+        API_BASE_URL=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['api_base_url'])" 2>/dev/null || echo "")
+        ICON_URL=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['icon_url'])" 2>/dev/null || echo "")
+        SPLASH_URL=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['splash_url'])" 2>/dev/null || echo "")
+        SOURCE_URL=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['source_url'])" 2>/dev/null || echo "")
+        SOURCE_TOKEN=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['source_token'])" 2>/dev/null || echo "")
+        BUILD_PLATFORM=$(cat build_config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['build_platform'])" 2>/dev/null || echo "android")
+        
+        echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+        echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+        echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+        echo "api_base_url=$API_BASE_URL" >> $GITHUB_OUTPUT
+        echo "icon_url=$ICON_URL" >> $GITHUB_OUTPUT
+        echo "splash_url=$SPLASH_URL" >> $GITHUB_OUTPUT
+        echo "source_url=$SOURCE_URL" >> $GITHUB_OUTPUT
+        echo "source_token=$SOURCE_TOKEN" >> $GITHUB_OUTPUT
+        echo "build_platform=$BUILD_PLATFORM" >> $GITHUB_OUTPUT
+        
+        echo ""
+        echo "========================================"
+        echo "  Build Config Summary"
+        echo "========================================"
+        echo "  App Name : $APP_NAME"
+        echo "  Package  : $PACKAGE_NAME"
+        echo "  Version  : $APP_VERSION"
+        echo "  API URL  : $API_BASE_URL"
+        echo "  Platform : $BUILD_PLATFORM"
+        echo "========================================"
+
+  # ============================================================
+  # Job 1: 构建 Android APK（在 Ubuntu 上运行，完全免费）
+  # ============================================================
+  build-android:
+    needs: read-config
+    if: needs.read-config.outputs.build_platform == 'android' || needs.read-config.outputs.build_platform == 'all'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Download Flutter Source
+      run: |
+        echo "Downloading Flutter source code..."
+        if [ -n "${{ needs.read-config.outputs.source_url }}" ]; then
+          curl -L \
+            -H "Authorization: Bearer ${{ needs.read-config.outputs.source_token }}" \
+            -o source.zip \
+            "${{ needs.read-config.outputs.source_url }}"
+          
+          if [ -f "source.zip" ]; then
+            unzip -q source.zip -d flutter_source
+            echo "Source downloaded successfully"
+          else
+            echo "Failed to download source"
+            exit 1
+          fi
+        else
+          echo "No source URL provided"
+          exit 1
+        fi
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Configure and Build Android
+      working-directory: ./flutter_source
+      run: |
+        # 下载图标和启动图
+        if [ -n "${{ needs.read-config.outputs.icon_url }}" ]; then
+          echo "Downloading icon..."
+          curl -L -o assets/images/logo.png "${{ needs.read-config.outputs.icon_url }}"
+        fi
+        
+        if [ -n "${{ needs.read-config.outputs.splash_url }}" ]; then
+          echo "Downloading splash..."
+          curl -L -o assets/images/splash.png "${{ needs.read-config.outputs.splash_url }}"
+        fi
+        
+        # 更新Android应用名称
+        sed -i "s/android:label=\"[^\"]*\"/android:label=\"${{ needs.read-config.outputs.app_name }}\"/" android/app/src/main/AndroidManifest.xml
+        
+        # 更新包名
+        sed -i "s/applicationId \".*\"/applicationId \"${{ needs.read-config.outputs.package_name }}\"/" android/app/build.gradle.kts
+        
+        # 更新版本号
+        sed -i "s/^version: .*/version: ${{ needs.read-config.outputs.app_version }}/" pubspec.yaml
+        
+        # 安装依赖
+        flutter pub get
+        
+        # 构建Release APK
+        flutter build apk --release --dart-define=API_BASE_URL=${{ needs.read-config.outputs.api_base_url }}
+        
+        cp build/app/outputs/flutter-apk/app-release.apk ../app-release.apk
+    
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: app-release.apk
+    
+    - name: Cleanup Source
+      run: |
+        echo "Cleaning up source code..."
+        rm -rf flutter_source/
+        rm -f source.zip
+        echo "Cleanup completed"
+
+  # ============================================================
+  # Job 2: 构建 iOS 未签名产物（在 macOS 上运行）
+  # 注意：macOS runner 有免费额度限制，公开仓库每月 2000 分钟
+  # ============================================================
+  build-ios:
+    needs: read-config
+    if: needs.read-config.outputs.build_platform == 'ios' || needs.read-config.outputs.build_platform == 'all'
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Download Flutter Source
+      run: |
+        echo "Downloading Flutter source code..."
+        if [ -n "${{ needs.read-config.outputs.source_url }}" ]; then
+          curl -L \
+            -H "Authorization: Bearer ${{ needs.read-config.outputs.source_token }}" \
+            -o source.zip \
+            "${{ needs.read-config.outputs.source_url }}"
+          
+          if [ -f "source.zip" ]; then
+            unzip -q source.zip -d flutter_source
+            echo "Source downloaded successfully"
+          else
+            echo "Failed to download source"
+            exit 1
+          fi
+        else
+          echo "No source URL provided"
+          exit 1
+        fi
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+    
+    - name: Install CocoaPods
+      run: |
+        sudo gem install cocoapods || true
+    
+    - name: Configure and Build iOS
+      working-directory: ./flutter_source
+      run: |
+        # 下载图标和启动图
+        if [ -n "${{ needs.read-config.outputs.icon_url }}" ]; then
+          echo "Downloading icon..."
+          curl -L -o assets/images/logo.png "${{ needs.read-config.outputs.icon_url }}"
+        fi
+        
+        if [ -n "${{ needs.read-config.outputs.splash_url }}" ]; then
+          echo "Downloading splash..."
+          curl -L -o assets/images/splash.png "${{ needs.read-config.outputs.splash_url }}"
+        fi
+        
+        # 更新iOS应用名称和包名（Bundle Identifier）
+        /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ needs.read-config.outputs.app_name }}" ios/Runner/Info.plist
+        /usr/libexec/PlistBuddy -c "Set :CFBundleName ${{ needs.read-config.outputs.app_name }}" ios/Runner/Info.plist
+        /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${{ needs.read-config.outputs.package_name }}" ios/Runner/Info.plist
+        
+        # 更新版本号
+        sed -i '' "s/^version: .*/version: ${{ needs.read-config.outputs.app_version }}/" pubspec.yaml
+        
+        # 安装依赖
+        flutter pub get
+        
+        # 安装Pods
+        cd ios && pod install --repo-update || true && cd ..
+        
+        # 构建iOS（不签名）
+        flutter build ios --release --no-codesign --dart-define=API_BASE_URL=${{ needs.read-config.outputs.api_base_url }}
+        
+        # 打包为IPA结构（未签名，用户自行签名）
+        echo "Packaging unsigned IPA..."
+        mkdir -p Payload
+        cp -R build/ios/iphoneos/Runner.app Payload/
+        zip -r Runner_unsigned.ipa Payload
+        rm -rf Payload
+        echo "Unsigned IPA created: Runner_unsigned.ipa"
+        
+        cp Runner_unsigned.ipa ../Runner_unsigned.ipa
+    
+    - name: Upload iOS Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-unsigned
+        path: Runner_unsigned.ipa
+    
+    - name: Cleanup Source
+      run: |
+        echo "Cleaning up source code..."
+        rm -rf flutter_source/
+        rm -f source.zip
+        echo "Cleanup completed"
+
+  # ============================================================
+  # Job 3: 创建GitHub Release（合并Android和iOS产物）
+  # ============================================================
+  create-release:
+    needs: [build-android, build-ios]
+    if: always() && (needs.build-android.result == 'success' || needs.build-ios.result == 'success' || needs.build-android.result == 'skipped' || needs.build-ios.result == 'skipped')
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 下载Android APK（Android构建成功时才下载）
+    - name: Download Android APK
+      if: needs.build-android.result == 'success'
+      uses: actions/download-artifact@v4
+      with:
+        name: android-apk
+        path: ./release/
+    
+    # 2. 下载iOS产物（iOS构建成功时才下载）
+    - name: Download iOS Artifacts
+      if: needs.build-ios.result == 'success'
+      uses: actions/download-artifact@v4
+      with:
+        name: ios-unsigned
+        path: ./release/ios/
+    
+    # 3. 整理文件
+    - name: Organize Files
+      run: |
+        mkdir -p ./release
+        
+        # 处理Android APK
+        if [ -f "./release/app-release.apk" ]; then
+          cp "./release/app-release.apk" "./release/android-release.apk"
+        fi
+        
+        # 处理iOS IPA
+        if [ -f "./release/ios/Runner_unsigned.ipa" ]; then
+          cp "./release/ios/Runner_unsigned.ipa" "./release/ios-unsigned.ipa"
+        fi
+        
+        echo "Files ready for release:"
+        ls -la ./release/
+        ls -la ./release/ios/ 2>/dev/null || echo "No iOS files"
+    
+    # 4. 创建GitHub Release
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./release/android-release.apk
+          ./release/ios-unsigned.ipa
+        fail_on_unmatched_files: false
+        tag_name: v${{ github.run_number }}
+        name: 云端打包 v${{ github.run_number }}
+        body: |
+          🚀 自动构建的APP安装包
+          
+          ## Android
+          - 文件名：`android-release.apk`
+          - 直接下载安装即可
+          
+          ## iOS（未签名）
+          - 文件名：`ios-unsigned.ipa`
+          - ⚠️ 此IPA未签名，需要自行用Xcode或签名工具签名后才能安装
+          - 签名方法：
+            1. 使用Apple开发者账号和Xcode签名
+            2. 或使用第三方签名服务（如爱思助手、牛蛙助手等）
+          
+          开发者：杰哥网络科技 (qq: 2711793818)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

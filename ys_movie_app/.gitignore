@@ -1,0 +1,47 @@
+# 文件名：.gitignore
+# 作者：杰哥（by：杰哥 / qq：2711793818）
+# 创建日期：2025-12-28
+# 作用：Flutter 项目忽略清单，避免提交构建产物与本地环境文件
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Build outputs
+build/
+**/GeneratedPluginRegistrant.*
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/release/
+android/app/debug/
+android/app/profile/
+android/app/google-services.json
+*.keystore
+*.jks
+
+# iOS
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/build/
+Runner.app
+Runner.xcarchive
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
