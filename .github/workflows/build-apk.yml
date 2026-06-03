@@ -21,7 +21,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.24.0'
+        flutter-version: '3.24.5'
         channel: 'stable'
     
     - name: Setup Java
@@ -36,7 +36,7 @@ jobs:
     
     - name: Build APK
       working-directory: ./ys_movie_app
-      run: flutter build apk --release --dart-define=API_BASE_URL=https://ys.ddgg888.my/api.php
+      run: flutter build apk --release
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
