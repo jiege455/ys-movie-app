@@ -18,17 +18,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.24.5'
-        channel: 'stable'
-    
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
-        java-version: '17'
+        distribution: temurin
+        java-version: "17"
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: "3.24.5"
+        channel: stable
     
     - name: Get Flutter dependencies
       working-directory: ./ys_movie_app
@@ -52,7 +52,7 @@ jobs:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         body: |
-          狐狸影视 APK 自动构建
-          开发者：杰哥网络科技 (qq: 2711793818)
+          APK auto build
+          dev: jiege455
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
